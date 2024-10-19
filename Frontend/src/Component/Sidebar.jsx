@@ -81,12 +81,10 @@ const Sidebar = () => {
           </ul>
         </nav>
       </aside>
-
-      {/* Backdrop for small screens */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-30 "
-          onClick={() => setIsOpen(false)}  // Clicking outside closes the sidebar
+          onClick={() => setIsOpen(false)}
         ></div>
       )}
     </>
