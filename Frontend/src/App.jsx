@@ -13,6 +13,15 @@ const App = () => {
   return (
     <div>
       <Sidebar />
+      <div className="flex-grow p-6"> {/* This div will take the remaining space */}
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/launchpad" element={<Launchpad />} />
+          <Route path="/myreports" element={<Reports />} />
+          <Route path="/myaccount" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </div>
     </div>
   )
 }
