@@ -16,7 +16,9 @@ const App = () => {
       
       {/* Content Area */}
       <div className="flex-1 md:ml-48 mt-20 md:mt-0">{/* Add margin on large screens */}
-        <Navbar />
+        <div className='hidden md:block'>
+          <Navbar />
+        </div>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/launchpad" element={<Launchpad />} />

@@ -16,17 +16,26 @@ const Sidebar = () => {
 
   return (
     <>
-      <button
-        className="md:hidden p-4 bg-blue-600 text-white fixed top-4 left-4 z-50"
-        onClick={() => setIsOpen((isOpen) => !isOpen)}
-      >
-        {/* Hamburger icon */}
-        <div className="space-y-1">
-          <span className="block w-6 h-0.5 bg-white"></span>
-          <span className="block w-6 h-0.5 bg-white"></span>
-          <span className="block w-6 h-0.5 bg-white"></span>
+      <div className="md:hidden flex items-center justify-between p-4 bg-white fixed top-0 left-0 w-full z-50 shadow-md space-x-4">
+        {/* Sidebar Menu Button */}
+        <button
+          className="p-4 bg-blue-600 text-white"
+          onClick={() => setIsOpen((isOpen) => !isOpen)}
+        >
+          {/* Hamburger icon */}
+          <div className="space-y-1">
+            <span className="block w-6 h-0.5 bg-white"></span>
+            <span className="block w-6 h-0.5 bg-white"></span>
+            <span className="block w-6 h-0.5 bg-white"></span>
+          </div>
+        </button>
+
+        {/* Title next to the menu button on small screens */}
+        <div className="text-2xl font-bold text-blue-600">
+          SRU <span className="text-xs">CS-AI</span>
         </div>
-      </button>
+        <div> navbar</div>
+      </div>
 
       {/* Sidebar */}
       <aside
