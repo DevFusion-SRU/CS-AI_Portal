@@ -10,6 +10,7 @@ import Notfound from './Component/Notfound';
 import Login from './Pages/Login';
 import Layout from "./Component/Layout"
 import PrivateRoutes from './Context/PrivateRoutes';
+import Private from './Context/Private';
 import { AuthProvider } from './Context/AuthContect';
 
 const App = () => {
@@ -17,18 +18,20 @@ const App = () => {
     <AuthProvider>
       {/* Removed BrowserRouter here */}
       <Routes>
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+        <Route element={<Private />}>
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+        </Route>
         <Route element={<PrivateRoutes />}>
-          <Route path="/" element={<Layout/>}>
-            <Route  index element={<Dashboard />} />
+          <Route  element={<Layout/>}>
+            <Route  path="/" element={<Dashboard />} />
             <Route path="launchpad" element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
             <Route path="myaccount" element={<Profile />} />
           </Route>
         </Route>
-        <Route path="*" element={<Notfound />} />
+        <Route path="*" element={<Notfound/>}/>
       </Routes>
     </AuthProvider>
   );
