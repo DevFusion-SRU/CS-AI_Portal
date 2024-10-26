@@ -23,15 +23,15 @@ const App = () => {
           <Route path="/login" element={<Login />} />
         </Route>
         <Route element={<PrivateRoutes />}>
-          <Route  element={<Layout/>}>
-            <Route  path="/" element={<Dashboard />} />
+          <Route path="/" element={<Layout/>}>
+            <Route index  element={<Dashboard />} />
             <Route path="launchpad" element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
             <Route path="myaccount" element={<Profile />} />
           </Route>
         </Route>
-        <Route path="*" element={<Notfound/>}/>
+        <Route path="*" element={<Login/>}/>
       </Routes>
     </AuthProvider>
   );
