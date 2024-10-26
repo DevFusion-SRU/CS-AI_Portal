@@ -8,25 +8,25 @@ const Login = () => {
   const passwordRef = useRef();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, user} = useAuth(); 
+  const { login, currentUser} = useAuth(); 
   const navigate=useNavigate()
-  if (user){
+  if (currentUser){
     console.log(user.email)
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setLoading(true);
     try {
-      setError('');
-      setLoading(true);
       await login(emailRef.current.value, passwordRef.current.value);
-      navigate("/")
-    } catch (error) {
-      console.error("Signup error:", error); // Log error for debugging
-      setError("Failed to login " + (error.code ? error.code : ''));
+      console.log("Navigation triggered"); // Check if this logs
+      navigate('/');
+    } catch {
+      setError("Failed to login");
     }
     setLoading(false);
   }
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">

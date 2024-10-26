@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from "./AuthContect"; 
 
 const Private = () => {
-    const { currentUser } = useAuth(); // Use currentUser instead of user
+    const { currentUser } = useAuth(); 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -13,7 +13,7 @@ const Private = () => {
         }
     }, [currentUser, navigate]); // Add navigate to dependencies
 
-    return currentUser ? <Outlet /> : null; // Only render Outlet if currentUser is defined
+    return !currentUser ? <Outlet/> : null; // Only render Outlet if currentUser is defined
 }
 
 export default Private;
