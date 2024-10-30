@@ -6,7 +6,6 @@ import Reports from './Pages/Reports';
 import Settings from './Pages/Settings';
 import Profile from './Pages/Profile';
 import Signup from './Pages/Signup';
-import Notfound from './Component/Notfound';
 import Login from './Pages/Login';
 import Layout from "./Component/Layout"
 import PrivateRoutes from './Context/PrivateRoutes';
