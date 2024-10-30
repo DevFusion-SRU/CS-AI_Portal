@@ -5,13 +5,15 @@ import MyAccount from '../assets/MyAccount.png';
 import MyReports from '../assets/MyReports.png';
 import Settings from '../assets/Settings.png';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../Context/AuthContect';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0); // To track the active menu item index
+  const [activeIndex, setActiveIndex] = useState(0);
+  const {signout}=useAuth()
 
   const handleMenuClick = (index) => {
-    setActiveIndex(index); // Update the active index when a menu item is clicked
+    setActiveIndex(index); 
   };
 
   return (
@@ -111,6 +113,13 @@ const Sidebar = () => {
             </NavLink>
           </ul>
         </nav>
+        <button
+            onClick={() => signout()} // Replace with your actual logout function
+            className="flex items-center space-x-3 mt-56 text-gray-500 hover:text-red-600"
+          >
+            <div>🔴</div>
+            <span className="text-sm">Logout</span>
+          </button>
       </aside>
 
       {/* Overlay to close the sidebar on smaller screens */}
