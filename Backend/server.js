@@ -14,6 +14,16 @@ app.get("/", async (req, res) => {
     res.send("Server is ready!");
 });
 
+app.get("/api/jobs", async  (req, res) => {
+    try {
+        const jobs = await Job.find({});
+        res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+        console.error("Error in fetching Jobs: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+});
+
 app.post("/api/jobs", async (req, res) => {
     const job = req.body; // Admin will send this data
     if (!job.id || !job.name || !job.company || !job.applyLink) {

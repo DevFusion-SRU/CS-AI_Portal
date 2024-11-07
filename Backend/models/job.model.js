@@ -7,6 +7,9 @@ const jobSchema = new mongoose.Schema({
     name:{
         type: String, required: true
     },
+    type:{
+        type: String, required: false
+    },
     company:{
         type: String, required: true
     },
