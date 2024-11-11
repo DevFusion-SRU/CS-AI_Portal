@@ -1,4 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Connection for the Job Database
 export const jobConn = mongoose.createConnection(process.env.JOB_MONGO_URI);

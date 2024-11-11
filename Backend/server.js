@@ -41,6 +41,31 @@ app.post("/api/jobs", async (req, res) => {
     }
 });
 
+app.post("/api/jobs/batch", async (req, res) => {
+    const jobs = req.body;
+
+    // Check if the request body is an array
+    if (!Array.isArray(jobs) || jobs.length === 0) {
+        return res.status(400).json({ success: false, message: "Provide an array of jobs with all required fields!" });
+    }
+
+    // Validate each job in the array
+    for (const job of jobs) {
+        if (!job.id || !job.name || !job.company || !job.applyLink) {
+            return res.status(400).json({ success: false, message: "Each job must include id, name, company, and applyLink!" });
+        }
+    }
+
+    try {
+        // Save all jobs in bulk using `insertMany`
+        const newJobs = await Job.insertMany(jobs);
+        res.status(201).json({ success: true, data: newJobs });
+    } catch (error) {
+        console.error("Error in entering Job details: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+});
+
 app.delete("/api/jobs/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -70,7 +95,7 @@ app.get("/api/students", async (req, res) => {
 
 app.post("/api/students", async (req, res) => {
     const student = req.body;
-    if (!student.rollNumber || !student.name || !student.email) {
+    if (!student.rollNumber || !student.name || !student.email || !student.course) {
         return res.status(400).json({ success: false, message: "Provide all required fields!!" });
     }
 
@@ -83,6 +108,32 @@ app.post("/api/students", async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 });
+
+app.post("/api/students/batch", async (req, res) => {
+    const students = req.body;
+
+    // Check if the request body is an array
+    if (!Array.isArray(students) || students.length === 0) {
+        return res.status(400).json({ success: false, message: "Provide an array of students with all required fields!" });
+    }
+
+    // Validate each student in the array
+    for (const student of students) {
+        if (!student.rollNumber || !student.name || !student.email || !student.course) {
+            return res.status(400).json({ success: false, message: "Each student must include rollNumber, name, email, and course!" });
+        }
+    }
+
+    try {
+        // Save all students in bulk using `insertMany`
+        const newStudents = await Student.insertMany(students);
+        res.status(201).json({ success: true, data: newStudents });
+    } catch (error) {
+        console.error("Error in entering Student details: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+});
+
 
 // Start server and connect to databases
 const PORT = 5000;
