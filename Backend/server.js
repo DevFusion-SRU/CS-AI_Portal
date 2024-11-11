@@ -4,7 +4,7 @@ import { jobConn, studentConn } from "./config/db.js"; // Ensure these connectio
 
 import jobRoutes from "./routes/job.js";
 import appliedJobsRoutes from "./routes/appliedJobs.js";
-import studebtRoutes from "./routes/student.js";
+import studentRoutes from "./routes/student.js";
 
 const app = express();
 app.use(express.json()); // Express middleware: to accept JSON data in req.body
@@ -16,14 +16,12 @@ app.get("/", (req, res) => {
 
 // Routes for Jobs
 app.use("/api/jobs", jobRoutes);
-
 // Routes for AppliedJobs
 app.use("/api/appliedJobs", appliedJobsRoutes);
-
 // Routes for Students
-app.use("/api/students", studebtRoutes);
-
+app.use("/api/students", studentRoutes);
 // Start server and connect to databases
+
 const PORT = 5000;
 app.listen(PORT, () => {
     jobConn; // Establish Job DB connection
