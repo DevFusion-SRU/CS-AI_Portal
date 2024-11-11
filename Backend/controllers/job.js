@@ -1,20 +1,8 @@
-import express from "express";
-import dotenv from "dotenv";
-import { connectDB } from "./config/db.js";
-import Job from "./models/job.model.js";
+import mongoose from "mongoose";
 
-dotenv.config();
+import Job from "../models/job.js"; // Job model using jobConn
 
-const app = express();
-
-app.use(express.json()); // Express middleware: to accpet JSON data in req.body
-
-// Test Route
-app.get("/", (req, res) => {
-    res.send("Server is ready!");
-});
-
-app.get("/api/jobs", async  (req, res) => {
+export const getJobs = async (req, res) => {
     try {
         const jobs = await Job.find({});
         res.status(200).json({ success: true, data: jobs });
@@ -22,10 +10,10 @@ app.get("/api/jobs", async  (req, res) => {
         console.error("Error in fetching Jobs: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
-});
+};
 
-app.post("/api/jobs", async (req, res) => {
-    const job = req.body; // Admin will send this data
+export const addJob = async (req, res) => {
+    const job = req.body;
     if (!job.id || !job.name || !job.company || !job.applyLink) {
         return res.status(400).json({ success: false, message: "Provide all required fields!!" });
     }
@@ -38,13 +26,37 @@ app.post("/api/jobs", async (req, res) => {
         console.error("Error in entering Job details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
-});
+};
 
-app.delete("/api/jobs/:id", async (req, res) => {
+export const addJobsBatch = async (req, res) => {
+    const jobs = req.body;
+
+    // Check if the request body is an array
+    if (!Array.isArray(jobs) || jobs.length === 0) {
+        return res.status(400).json({ success: false, message: "Provide an array of jobs with all required fields!" });
+    }
+
+    // Validate each job in the array
+    for (const job of jobs) {
+        if (!job.id || !job.name || !job.company || !job.applyLink) {
+            return res.status(400).json({ success: false, message: "Each job must include id, name, company, and applyLink!" });
+        }
+    }
+
+    try {
+        // Save all jobs in bulk using `insertMany`
+        const newJobs = await Job.insertMany(jobs);
+        res.status(201).json({ success: true, data: newJobs });
+    } catch (error) {
+        console.error("Error in entering Job details: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+export const deleteJob = async (req, res) => {
     const { id } = req.params;
 
     try {
-        // await Job.findByIdAndDelete(id);
         const job = await Job.findOneAndDelete({ id: id });
         if (!job) {
             return res.status(404).json({ success: false, message: "Job not found!" });
@@ -55,11 +67,4 @@ app.delete("/api/jobs/:id", async (req, res) => {
         console.error("Error deleting job: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
-});
-
-const PORT = 5000;
-app.listen(PORT, () => {
-    jobConn; // Establish Job DB connection
-    studentConn; // Establish Student DB connection
-    console.log(`Server Started at Port http://localhost:${PORT}`);
-});
+};
