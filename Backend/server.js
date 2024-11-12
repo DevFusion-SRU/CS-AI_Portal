@@ -1,4 +1,11 @@
 import express from "express";
+import cors from "cors"
+import dotenv from "dotenv";
+dotenv.config();
+const corsOptions={
+    origin:["http://localhost:5173"]
+}
+
 
 import { jobConn, studentConn } from "./config/db.js"; // Ensure these connections are imported
 
@@ -7,7 +14,15 @@ import appliedJobsRoutes from "./routes/appliedJobs.js";
 import studentRoutes from "./routes/student.js";
 
 const app = express();
-app.use(express.json()); // Express middleware: to accept JSON data in req.body
+app.use(express.json());
+app.use(cors(corsOptions))
+app.use(express.json());
+app.use(cors({
+    origin: 'http://localhost:5173', // Specify allowed origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+ // Express middleware: to accept JSON data in req.body
 
 // Test Route
 app.get("/", (req, res) => {
