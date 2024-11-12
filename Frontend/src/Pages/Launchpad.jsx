@@ -106,7 +106,7 @@ const Launchpad = () => {
                   {filteredOpportunities.map((opportunity, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition-all">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{opportunity.description}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobId}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{opportunity.id}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{opportunity.type}</td>
                       <td className="px-6 py-4">
                         <button className="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-all">

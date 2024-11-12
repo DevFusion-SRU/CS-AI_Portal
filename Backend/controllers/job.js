@@ -4,10 +4,26 @@ import Job from "../models/job.js"; // Job model using jobConn
 
 export const getJobs = async (req, res) => {
     try {
-        const jobs = await Job.find({});
-        res.status(200).json({ success: true, data: jobs });
+        const page = parseInt(req.query.page) || 1; // Default to page 1
+        const limit = parseInt(req.query.limit) || 10; // Default to 10 jobs per page
+        const skip = (page - 1) * limit;
+        const type = req.query.type; // Type passed in query param
+
+        // If type is provided (other than 'all'), filter jobs by type
+        const filter = type && type !== "all" ? { type } : {};
+
+        // Fetch jobs based on type and paginate them
+        const jobs = await Job.find(filter).skip(skip).limit(limit); 
+        const totalJobs = await Job.countDocuments(filter); // Total jobs count based on type
+
+        res.status(200).json({
+            success: true,
+            data: jobs,
+            totalPages: Math.ceil(totalJobs / limit), // Total pages based on filtered jobs
+            currentPage: page,
+        });
     } catch (error) {
-        console.error("Error in fetching Jobs: ", error.message);
+        console.error("Error in fetching Jobs:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
