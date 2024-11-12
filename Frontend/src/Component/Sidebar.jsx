@@ -58,7 +58,7 @@ const Sidebar = () => {
         <nav className="space-y-5">
           <ul className="items-start space-y-6 font-medium">
             <NavLink
-              to="/dashboard"
+              to="/"
               className={({ isActive }) =>
                 `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
               }
