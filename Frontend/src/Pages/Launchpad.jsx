@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 
 const Launchpad = () => {
+  const tabs = ["all", "Jobs", "Internship", "Hackathons"];
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [opportunities, setOpportunities] = useState([]);
@@ -8,51 +9,46 @@ const Launchpad = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Ref to track if the data has been fetched
   const hasFetchedData = useRef(false);
 
-  // Switch tab and reset the page number to 1
   const openTab = (tab) => {
     if (activeTab !== tab) {
       setActiveTab(tab);
-      setCurrentPage(1);  // Reset page when changing tab
+      setCurrentPage(1);
     }
   };
 
-  // Fetch data only when activeTab or currentPage changes
   const fetchAPI = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const response = await fetch(`http://localhost:5000/api/jobs?page=${page}&limit=10&type=${activeTab}`);
       const json = await response.json();
       if (json.success && Array.isArray(json.data)) {
-        setOpportunities(json.data); // Set the jobs for the current tab (e.g., Fulltime, Hackathons, etc.)
-        setTotalPages(json.totalPages); // Update the total pages based on the filtered jobs
-        setCurrentPage(json.currentPage); // Update the current page
+        setOpportunities(json.data);
+        setTotalPages(json.totalPages);
+        setCurrentPage(json.currentPage);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
     setLoading(false);
-  }, [activeTab]); // Re-run fetchAPI only when activeTab changes
+  }, [activeTab]);
 
   useEffect(() => {
     if (hasFetchedData.current) {
       fetchAPI(currentPage);
     } else {
-      hasFetchedData.current = true;  // Flag to make sure it fetches once initially
+      hasFetchedData.current = true;
     }
-  }, [fetchAPI, currentPage]); // Dependency on fetchAPI and currentPage to avoid unnecessary rerenders
+  }, [fetchAPI, currentPage]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1);  // Reset page when search query changes
+    setCurrentPage(1);
   };
 
   const filteredOpportunities = opportunities
-    .filter((opportunity) =>
-      activeTab === "all" || opportunity.type === activeTab
-    )
+    .filter((opportunity) => activeTab === "all" || opportunity.type === activeTab)
     .filter((opportunity) => {
       const description = opportunity.description ? opportunity.description.toLowerCase() : "";
       return description.includes(searchQuery.toLowerCase());
@@ -60,33 +56,40 @@ const Launchpad = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Main Content */}
-      <main className="w-full flex flex-col items-center px-4 py-8">
-        <header className="w-full flex justify-between items-center py-4 bg-white shadow-md px-6 mb-6">
-          <input
-            type="text"
-            placeholder="Search for something"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="border border-gray-300 rounded-lg p-2 w-full max-w-sm focus:ring-2 focus:ring-blue-500"
-          />
-        </header>
-
-        <section className="w-full max-w-6xl">
-          <div className="flex justify-center space-x-4 mb-6">
-            {["all", "Fulltime", "Internship", "Hackathon"].map((tab) => (
-              <button
-                key={tab}
-                className={`py-2 px-6 rounded-full text-sm font-medium ${
-                  activeTab === tab
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-600 hover:bg-blue-100"
-                }`}
-                onClick={() => openTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+      
+      <main className="w-full flex flex-col items-start px-8 py-8">
+        <section className="w-full max-w-7xl">
+          <div className="flex justify-start mb-6 relative overflow-x-auto">
+            <ul className="list-none flex space-x-4 p-0 border-b border-gray-200 relative">
+              {tabs.map((tab) => (
+                <li
+                  key={tab}
+                  onClick={() => openTab(tab)}
+                  className="cursor-pointer relative transition-all duration-300"
+                >
+                  <span
+                    className={`py-2 px-4 sm:px-6 text-sm sm:text-base md:text-lg font-medium ${
+                      activeTab === tab ? "text-blue-600" : "text-gray-600"
+                    } hover:text-blue-600`}
+                    style={{ transition: "all 0.3s ease" }}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </span>
+                  {activeTab === tab && (
+                    <span
+                      className="absolute left-0 bottom-0 h-0.5 w-full bg-blue-600 transition-all duration-500"
+                      style={{
+                        transform: "scaleX(1)",
+                        height:"5px",
+                        borderTopLeftRadius: "8px",
+                        borderTopRightRadius:"8px",
+                        transition: "transform 0.5s ease",
+                      }}
+                    ></span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {loading ? (
