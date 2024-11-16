@@ -59,32 +59,26 @@ const Launchpad = () => {
     });
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Main Content */}
-      <main className="w-full flex flex-col items-center px-4 py-8">
-        <header className="w-full flex justify-between items-center py-4 bg-white shadow-md px-6 mb-6">
-          <input
-            type="text"
-            placeholder="Search for something"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="border border-gray-300 rounded-lg p-2 w-full max-w-sm focus:ring-2 focus:ring-blue-500"
-          />
-        </header>
+          <main className="w-full flex flex-col items-center px-4 py-8">
 
-        <section className="w-full max-w-6xl">
-          <div className="flex justify-center space-x-4 mb-6">
-            {["all", "Fulltime", "Internship", "Hackathon"].map((tab) => (
+                <section className="w-full max-w-6xl">
+                <div className="flex justify-start space-x-8 mb-4 border-b border-gray-200">
+            {[
+              { id: "all", label: "All Opportunities" },
+              { id: "Fulltime", label: "Jobs" },
+              { id: "Internship", label: "Internships" },
+              { id: "Hackathon", label: "Hackathons" }
+            ].map((tab) => (
               <button
-                key={tab}
-                className={`py-2 px-6 rounded-full text-sm font-medium ${
-                  activeTab === tab
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-600 hover:bg-blue-100"
+                key={tab.id}
+                className={`pb-2 text-sm font-medium transition-colors duration-200 ${
+                  activeTab === tab.id
+                    ? "text-blue-600 border-b-2 border-blue-600 font-semibold"
+                    : "text-gray-500 hover:text-blue-600"
                 }`}
-                onClick={() => openTab(tab)}
+                onClick={() => openTab(tab.id)}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -141,7 +135,6 @@ const Launchpad = () => {
           </div>
         </section>
       </main>
-    </div>
   );
 };
 
