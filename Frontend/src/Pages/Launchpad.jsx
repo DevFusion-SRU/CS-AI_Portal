@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useAuth } from "../Context/AuthContect"; 
 
 const Launchpad = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -7,7 +8,8 @@ const Launchpad = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [viewingJobId, setViewingJobId] = useState(null); // Tracks which job's confirmation is shown
+  const [viewingJobId, setViewingJobId] = useState(null);
+  const { currentUser} = useAuth();  // Tracks which job's confirmation is shown
 
   const hasFetchedData = useRef(false);
 
@@ -108,12 +110,12 @@ const Launchpad = () => {
         {loading ? (
           <p>Loading...</p>
         ) : (
-          <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+          <div className="overflow-x-auto bg-white shadow-md rounded-2xl">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Description
+                    Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Job ID
@@ -131,7 +133,7 @@ const Launchpad = () => {
                   <React.Fragment key={opportunity.id}>
                     <tr className="hover:bg-gray-50 transition-all">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {opportunity.description}
+                        {opportunity.company}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {opportunity.id}
@@ -152,12 +154,12 @@ const Launchpad = () => {
                       </td>
                     </tr>
                     {viewingJobId === opportunity.id && (
-                      <tr className="w-full flex justify-center">
+                      <tr className=" flex justify-end">
                         <td colSpan={4} className="px-6 py-4 bg-gray-50">
                           <p>Did you apply for this job?</p>
                           <button
                             className="bg-green-500 text-white py-1 px-4 rounded-lg mr-4 hover:bg-green-600"
-                            onClick={() => handleConfirm(opportunity)}
+                            onClick={() => handleConfirm({"email":currentUser.email, "id":opportunity.id})}
                           >
                             Yes
                           </button>
