@@ -24,7 +24,6 @@ const App = () => {
           <Route path="/" element={<Layout/>}>
             <Route index  element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />
-            <Route path="settings" element={<Settings />} />
             <Route path="myaccount" element={<Profile />} />
           </Route>
         </Route>
