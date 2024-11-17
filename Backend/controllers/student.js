@@ -14,7 +14,7 @@ export const getStudents = async (req, res) => {
 
 export const addStudent = async (req, res) => {
     const student = req.body;
-    if (!student.rollNumber || !student.name || !student.email || !student.course) {
+    if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
         return res.status(400).json({ success: false, message: "Provide all required fields!!" });
     }
 
@@ -38,8 +38,8 @@ export const addStudentBatch = async (req, res) => {
 
     // Validate each student in the array
     for (const student of students) {
-        if (!student.rollNumber || !student.name || !student.email || !student.course) {
-            return res.status(400).json({ success: false, message: "Each student must include rollNumber, name, email, and course!" });
+        if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
+            return res.status(400).json({ success: false, message: "Each student must include rollNumber, firstName, email, and course!" });
         }
     }
 

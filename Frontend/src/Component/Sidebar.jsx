@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import Dashboard from '../assets/Dashboard.png';
 import launchpad from '../assets/launchpad.png';
 import MyAccount from '../assets/MyAccount.png';
 import MyReports from '../assets/MyReports.png';
+import Settings from '../assets/Settings.png';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContect';
 
@@ -55,14 +57,23 @@ const Sidebar = () => {
 
         <nav className="space-y-5">
           <ul className="items-start space-y-6 font-medium">
-            
-
             <NavLink
               to="/"
               className={({ isActive }) =>
                 `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
               }
               onClick={() => handleMenuClick(0)}
+            >
+              <img src={Dashboard} alt="Dashboard" />
+              <li className="text-sm">Dashboard</li>
+            </NavLink>
+
+            <NavLink
+              to="/launchpad"
+              className={({ isActive }) =>
+                `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
+              }
+              onClick={() => handleMenuClick(1)}
             >
               <img src={launchpad} alt="Launchpad" />
               <li className="text-sm">Launchpad</li>
@@ -73,7 +84,7 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
               }
-              onClick={() => handleMenuClick(1)}
+              onClick={() => handleMenuClick(2)}
             >
               <img src={MyReports} alt="My Reports" />
               <li className="text-sm">My reports</li>
@@ -84,13 +95,22 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
               }
-              onClick={() => handleMenuClick(2)}
+              onClick={() => handleMenuClick(3)}
             >
               <img className="w-100 h-min" src={MyAccount} alt="My Account" />
               <li className="text-sm">My account</li>
             </NavLink>
 
-            
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
+              }
+              onClick={() => handleMenuClick(4)}
+            >
+              <img src={Settings} alt="Settings" />
+              <li className="text-sm">Settings</li>
+            </NavLink>
           </ul>
         </nav>
         <button
