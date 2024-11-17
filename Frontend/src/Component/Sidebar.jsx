@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import Dashboard from '../assets/Dashboard.png';
 import launchpad from '../assets/launchpad.png';
 import MyAccount from '../assets/MyAccount.png';
 import MyReports from '../assets/MyReports.png';
-import Settings from '../assets/Settings.png';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContect';
 
