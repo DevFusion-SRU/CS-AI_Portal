@@ -12,6 +12,21 @@ export const getStudents = async (req, res) => {
     }
 };
 
+export const getStudentDetails = async (req, res) => {
+    const { rollNumber } = req.params;
+    try {
+        const studentDetails = await Student.findOne({ rollNumber });
+        if (!studentDetails) {
+            return res.status(404).json({ success: false, message: "No details found for this student!" });
+        }
+        
+        res.status(200).json({ success: true, data: studentDetails });
+    } catch (error) {
+        console.error("Error fetching student details: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 export const addStudent = async (req, res) => {
     const student = req.body;
     if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
