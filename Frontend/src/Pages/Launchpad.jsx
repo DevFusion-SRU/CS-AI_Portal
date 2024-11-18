@@ -68,7 +68,8 @@ const Launchpad = () => {
 
   const handleConfirm = async (job) => {
     try {
-      const response = await fetch("http://localhost:5000/api/students", {
+      console.log(job)
+      const response = await fetch("http://localhost:5000/api/appliedJobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(job),
@@ -118,6 +119,9 @@ const Launchpad = () => {
                     Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Job ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -135,6 +139,9 @@ const Launchpad = () => {
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         {opportunity.company}
                       </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {opportunity.name}
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {opportunity.id}
                       </td>
@@ -143,7 +150,7 @@ const Launchpad = () => {
                       </td>
                       <td className="px-6 py-4">
                         <a
-                          href="https://github.com/sairamarapu"
+                          href={opportunity.applyLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-all"
@@ -159,7 +166,7 @@ const Launchpad = () => {
                           <p>Did you apply for this job?</p>
                           <button
                             className="bg-green-500 text-white py-1 px-4 rounded-lg mr-4 hover:bg-green-600"
-                            onClick={() => handleConfirm({"email":currentUser.email, "id":opportunity.id})}
+                            onClick={() => handleConfirm({"rollNumber":currentUser.email.split('@')[0].toUpperCase(), "jobId":opportunity.id})}
                           >
                             Yes
                           </button>
