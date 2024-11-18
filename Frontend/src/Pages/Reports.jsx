@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useAuth } from "../Context/AuthContect"; 
+import { useAuth } from "../Context/AuthContect";
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState("applied");
@@ -9,8 +9,7 @@ const Reports = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewingJobId, setViewingJobId] = useState(null);
-  const { currentUser} = useAuth();  // Tracks which job's confirmation is shown
-
+  const { currentUser } = useAuth();
   const hasFetchedData = useRef(false);
 
   const openTab = (tab) => {
@@ -20,23 +19,26 @@ const Reports = () => {
     }
   };
 
-  const fetchAPI = useCallback(async (page = 1) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/reports?page=${page}&limit=10&type=${activeTab}&email=${currentUser.email}`
-      );
-      const json = await response.json();
-      if (json.success && Array.isArray(json.data)) {
-        setOpportunities(json.data);
-        setTotalPages(json.totalPages);
-        setCurrentPage(json.currentPage);
+  const fetchAPI = useCallback(
+    async (page = 1) => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/appliedJobs/${currentUser.email.split('@')[0].toUpperCase()}`
+        );
+        const json = await response.json();
+        if (json.success && Array.isArray(json.data)) {
+          setOpportunities(json.data);
+          setTotalPages(json.totalPages);
+          setCurrentPage(json.currentPage);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-    setLoading(false);
-  }, [activeTab, currentUser]);
+      setLoading(false);
+    },
+    [activeTab, currentUser]
+  );
 
   useEffect(() => {
     if (hasFetchedData.current) {
@@ -62,18 +64,15 @@ const Reports = () => {
       return description.includes(searchQuery.toLowerCase());
     });
 
-  const handleViewClick = (jobId) => {
-    setViewingJobId(viewingJobId === jobId ? null : jobId);
-  };
-
   return (
     <main className="w-full flex flex-col items-center px-4 py-8">
       <section className="w-full max-w-6xl">
         <div className="flex justify-start space-x-8 mb-4 border-b border-gray-200">
-          {[{ id: "applied", label: "Applied Jobs" },
+          {[
+            { id: "applied", label: "Applied Jobs" },
             { id: "selected", label: "Selected" },
             { id: "shortlisted", label: "Shortlisted" },
-            { id: "rejected", label: "Rejected" }
+            { id: "rejected", label: "Rejected" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -87,6 +86,16 @@ const Reports = () => {
               {tab.label}
             </button>
           ))}
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
         </div>
 
         {loading ? (
@@ -124,36 +133,14 @@ const Reports = () => {
                         {opportunity.status}
                       </td>
                       <td className="px-6 py-4">
-                        <a
-                          href="https://github.com/sairamarapu"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
                           className="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-all"
-                          onClick={() => handleViewClick(opportunity.id)}
                         >
-                          View
-                        </a>
+                          Applied
+                        </button>
                       </td>
                     </tr>
-                    {viewingJobId === opportunity.id && (
-                      <tr className="flex justify-end">
-                        <td colSpan={4} className="px-6 py-4 bg-gray-50">
-                          <p>Did you apply for this job?</p>
-                          <button
-                            className="bg-green-500 text-white py-1 px-4 rounded-lg mr-4 hover:bg-green-600"
-                            onClick={() => handleConfirm({"email":currentUser.email, "id":opportunity.id})}
-                          >
-                            Yes
-                          </button>
-                          <button
-                            className="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600"
-                            onClick={() => setViewingJobId(null)}
-                          >
-                            No
-                          </button>
-                        </td>
-                      </tr>
-                    )}
+                    
                   </React.Fragment>
                 ))}
               </tbody>

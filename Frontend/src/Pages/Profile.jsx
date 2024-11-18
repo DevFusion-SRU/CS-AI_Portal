@@ -1,40 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../Context/AuthContect"; 
+import { useAuth } from "../Context/AuthContect";
 import axios from "axios";
 
 const EditProfile = () => {
   const [userData, setUserData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     dob: "",
-    username: "",
-    password: "",
-    hallTicket: "",
-    pan: "",
-    mentor: "",
-    aadhar: "",
-    phone: "",
-    profileImage: "", // New property for profile image
+    rollNumber: "",
+    mobile: "",
+    course: "",
+    profileImage: "", // Profile image URL
   });
 
   const [loading, setLoading] = useState(true);
-  const { currentUser} = useAuth(); 
+  const [error, setError] = useState(""); // To capture error messages
+  const { currentUser } = useAuth();
 
   // Fetch user data from the backend
   useEffect(() => {
+    // Fetch user data from the backend using email as query parameter
     axios
-      .get("https://your-backend-api.com/user-profile")
+      .get(`http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}`)
       .then((response) => {
-        setUserData(response.data);
-        setLoading(false);
+        setUserData(response.data); // Set user data from backend
+        setLoading(false); // Set loading state to false
       })
       .catch((error) => {
         console.error("Error fetching user data:", error);
-        setLoading(false);
+        setLoading(false); // Set loading to false in case of error
       });
-  }, []);
+  }, [currentUser.email]); 
 
   if (loading) return <p className="text-center">Loading...</p>;
+  if (error) return <p className="text-center text-red-600">{error}</p>;
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-50">
@@ -52,21 +52,21 @@ const EditProfile = () => {
         {/* User Details Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium">Your Name</label>
+            <label className="block text-sm font-medium">First Name</label>
             <input
               type="text"
-              name="name"
-              value={userData.name}
+              name="firstName"
+              value={userData.firstName || "N/A"}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">User Name</label>
+            <label className="block text-sm font-medium">Last Name</label>
             <input
               type="text"
-              name="username"
-              value={userData.username}
+              name="lastName"
+              value={userData.lastName || "N/A"}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
@@ -76,17 +76,7 @@ const EditProfile = () => {
             <input
               type="email"
               name="email"
-              value={currentUser.email}
-              readOnly
-              className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={userData.password}
+              value={userData.email || "N/A"}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
@@ -96,7 +86,7 @@ const EditProfile = () => {
             <input
               type="date"
               name="dob"
-              value={userData.dob}
+              value={userData.dob || ""}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
@@ -105,33 +95,32 @@ const EditProfile = () => {
             <label className="block text-sm font-medium">Hallticket Number</label>
             <input
               type="text"
-              name="hallTicket"
-              value={userData.hallTicket}
+              name="rollNumber"
+              value={userData.rollNumber || "N/A"}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
           </div>
           <div>
-          <label className="block text-sm font-medium">Phone</label>
+            <label className="block text-sm font-medium">Phone</label>
             <input
               type="tel"
-              name="phone"
-              value={userData.phone}
+              name="mobile"
+              value={userData.mobile || "N/A"}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Mentor</label>
+            <label className="block text-sm font-medium">Course</label>
             <input
               type="text"
-              name="mentor"
-              value={userData.mentor}
+              name="course"
+              value={userData.course || "N/A"}
               readOnly
               className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
             />
           </div>
-          
         </div>
       </div>
     </div>
