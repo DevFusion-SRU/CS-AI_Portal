@@ -1,14 +1,14 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Dashboard from './Pages/Dashboard';
 import Launchpad from './Pages/Launchpad';
 import Reports from './Pages/Reports';
-import Settings from './Pages/Settings';
+import Dashboard from './Pages/Dashboard';
 import Profile from './Pages/Profile';
 import Signup from './Pages/Signup';import Login from './Pages/Login';
 import Layout from "./Component/Layout"
 import PrivateRoutes from './Context/PrivateRoutes';
 import Private from './Context/Private';
+import Addjob from './Pages/Addjob'
 import { AuthProvider } from './Context/AuthContect';
 
 const App = () => {
@@ -24,6 +24,8 @@ const App = () => {
           <Route path="/" element={<Layout/>}>
             <Route index  element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />
+            <Route path="dashboard" element={<Dashboard />}/>
+            <Route path="addjob" element={<Addjob/>}/>
             <Route path="myaccount" element={<Profile />} />
           </Route>
         </Route>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { NavLink } from 'react-router-dom';
 import { useAuth } from "../Context/AuthContect"; 
 
 const Launchpad = () => {
@@ -9,7 +10,7 @@ const Launchpad = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewingJobId, setViewingJobId] = useState(null);
-  const { currentUser} = useAuth();  // Tracks which job's confirmation is shown
+  const { currentUser, currentUserRole} = useAuth();  // Tracks which job's confirmation is shown
 
   const hasFetchedData = useRef(false);
 
@@ -107,6 +108,20 @@ const Launchpad = () => {
             </button>
           ))}
         </div>
+        {currentUserRole === 'admin' && (<div className="flex justify-end space-x-4 mb-5">
+            <NavLink
+              to='/addjob'
+              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100"
+            >
+              Add
+            </NavLink>
+            <button
+              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100"
+            >
+              Edit
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <p>Loading...</p>
@@ -153,14 +168,14 @@ const Launchpad = () => {
                           href={opportunity.applyLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-all"
+                          className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100"
                           onClick={() => handleViewClick(opportunity.id)}
                         >
                           View
                         </a>
                       </td>
                     </tr>
-                    {viewingJobId === opportunity.id && (
+                    {viewingJobId === opportunity.id && currentUserRole === 'student' && (
                       <tr className=" flex justify-end">
                         <td colSpan={4} className="px-6 py-4 bg-gray-50">
                           <p>Did you apply for this job?</p>
