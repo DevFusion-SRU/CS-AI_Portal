@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import launchpad from '../assets/launchpad.png';
-import MyAccount from '../assets/MyAccount.png';
-import MyReports from '../assets/MyReports.png';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContect';
+import { FaRocket, FaChartBar, FaUser, FaSignOutAlt } from 'react-icons/fa'; 
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +30,7 @@ const Sidebar = () => {
 
         {/* Title next to the menu button on small screens */}
         <div className="text-2xl font-bold text-blue-600">
-          SRU <span className="text-xs">CS-AI</span>
+          SRU <span className="text-lg">CS-AI</span>
         </div>
         <div> navbar</div>
       </div>
@@ -43,63 +41,65 @@ const Sidebar = () => {
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="text-2xl font-bold text-blue-600 mb-9">
+        <div className="text-2xl font-extrabold text-blue-600 text-center mb-10">
           SRU <span className="text-xs md:inline hidden">CS-AI</span>
         </div>
 
         {/* Sliding Pointer */}
         <div
-          className="absolute left-0 w-1 mt-16 rounded-md bg-blue-600 transition-all duration-300"
-          style={{ top: `${activeIndex * 43 + 25}px`, height: '35px' }} 
+          className="absolute left-0 w-1 mt-9 rounded-md bg-blue-600 transition-all duration-300"
+          style={{ top: `${activeIndex * 60 + 60}px`, height: '50px' }} 
         ></div>
 
-        <nav className="space-y-5">
-          <ul className="items-start space-y-6 font-medium">
-            
-
+<nav className="space-y-8">
+          <ul className="text-center font-medium text-lg space-y-10">
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
+                `flex items-center justify-center space-x-4 ${
+                  isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
+                }`
               }
               onClick={() => handleMenuClick(0)}
             >
-              <img src={launchpad} alt="Launchpad" />
-              <li className="text-sm">Launchpad</li>
+              <FaRocket className="text-1xl" />
+              <span>Launchpad</span>
             </NavLink>
 
             <NavLink
               to="/myreports"
               className={({ isActive }) =>
-                `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
+                `flex items-center justify-center space-x-4 ${
+                  isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
+                }`
               }
               onClick={() => handleMenuClick(1)}
             >
-              <img src={MyReports} alt="My Reports" />
-              <li className="text-sm">My reports</li>
+              <FaChartBar className="text-1xl" />
+              <span>My Reports</span>
             </NavLink>
 
             <NavLink
               to="/myaccount"
               className={({ isActive }) =>
-                `flex items-center space-x-3 ${isActive ? 'text-blue-600' : 'text-gray-600'}` 
+                `flex items-center justify-center space-x-4 ${
+                  isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
+                }`
               }
               onClick={() => handleMenuClick(2)}
             >
-              <img className="w-100 h-min" src={MyAccount} alt="My Account" />
-              <li className="text-sm">My account</li>
+              <FaUser className="text-1xl" />
+              <span>My Account</span>
             </NavLink>
-
-            
           </ul>
         </nav>
         <button
             onClick={() => signout()} // Replace with your actual logout function
-            className="flex items-center space-x-3 mt-56 text-gray-500 hover:text-red-600"
+            className="flex items-center space-x-3  mt-56 text-gray-500 hover:text-red-600"
           >
-            <div>🔴</div>
-            <span className="text-sm">Logout</span>
-          </button>
+            <FaSignOutAlt className="text-2xl" />
+          <span className="text-lg font-semibold">Logout</span>
+        </button>
       </aside>
 
       {/* Overlay to close the sidebar on smaller screens */}
