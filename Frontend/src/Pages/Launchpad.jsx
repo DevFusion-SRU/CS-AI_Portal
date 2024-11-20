@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { NavLink } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContect"; 
 
 const Launchpad = () => {
@@ -11,8 +11,13 @@ const Launchpad = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [viewingJobId, setViewingJobId] = useState(null);
   const { currentUser, currentUserRole} = useAuth();  // Tracks which job's confirmation is shown
+  const navigate = useNavigate();
+  const handleAddClick = () => {
+    navigate('/Addjobs'); // Redirect to AddJobs page
+  };
 
   const hasFetchedData = useRef(false);
+  
 
   const openTab = (tab) => {
     if (activeTab !== tab) {
@@ -109,12 +114,11 @@ const Launchpad = () => {
           ))}
         </div>
         {currentUserRole === 'admin' && (<div className="flex justify-end space-x-4 mb-5">
-            <NavLink
-              to='/addjob'
-              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100"
-            >
-              Add
-            </NavLink>
+          <button 
+            onClick={handleAddClick} 
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md shadow hover:bg-blue-600">
+            Add
+          </button>
             <button
               className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100"
             >
