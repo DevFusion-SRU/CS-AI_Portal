@@ -8,7 +8,6 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [viewingJobId, setViewingJobId] = useState(null);
   const { currentUser } = useAuth();
   const hasFetchedData = useRef(false);
 

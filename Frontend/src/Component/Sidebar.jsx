@@ -6,7 +6,7 @@ import { FaRocket, FaChartBar, FaUser, FaSignOutAlt } from 'react-icons/fa';
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const {signout}=useAuth()
+  const {signout, currentUserRole}=useAuth()
 
   const handleMenuClick = (index) => {
     setActiveIndex(index); 
@@ -48,11 +48,11 @@ const Sidebar = () => {
         {/* Sliding Pointer */}
         <div
           className="absolute left-0 w-1 mt-9 rounded-md bg-blue-600 transition-all duration-300"
-          style={{ top: `${activeIndex * 60 + 60}px`, height: '50px' }} 
+          style={{ top: `${activeIndex * 60 + 50}px`, height: '40px' }} 
         ></div>
 
 <nav className="space-y-8">
-          <ul className="text-center font-medium text-lg space-y-10">
+          <ul className="text-center font-medium text-base space-y-8">
             <NavLink
               to="/"
               className={({ isActive }) =>
@@ -67,7 +67,8 @@ const Sidebar = () => {
             </NavLink>
 
             <NavLink
-              to="/myreports"
+              to={currentUserRole === 'student' ? '/myreports' : '/dashboard'}
+
               className={({ isActive }) =>
                 `flex items-center justify-center space-x-4 ${
                   isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
@@ -76,7 +77,7 @@ const Sidebar = () => {
               onClick={() => handleMenuClick(1)}
             >
               <FaChartBar className="text-1xl" />
-              <span>My Reports</span>
+              <span>{currentUserRole === 'student' ? 'My reports' : 'Dashboard'}</span>
             </NavLink>
 
             <NavLink
