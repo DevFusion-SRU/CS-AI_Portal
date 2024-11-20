@@ -8,7 +8,7 @@ import Signup from './Pages/Signup';import Login from './Pages/Login';
 import Layout from "./Component/Layout"
 import PrivateRoutes from './Context/PrivateRoutes';
 import Private from './Context/Private';
-import Addjob from './Pages/Addjob'
+import Addjobs from './Pages/addjobs';
 import { AuthProvider } from './Context/AuthContect';
 
 const App = () => {
@@ -25,8 +25,8 @@ const App = () => {
             <Route index  element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />
             <Route path="dashboard" element={<Dashboard />}/>
-            <Route path="addjob" element={<Addjob/>}/>
             <Route path="myaccount" element={<Profile />} />
+            <Route path="addjobs" element={<Addjobs />} />
           </Route>
         </Route>
         <Route path="*" element={<Login/>}/>
