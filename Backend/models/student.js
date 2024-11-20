@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { studentConn } from "../config/db.js";
+import { demographicConn } from "../config/db.js";
 
 const studentSchema = new mongoose.Schema({
     rollNumber: { type: String, required: true, unique: true },
@@ -13,6 +13,6 @@ const studentSchema = new mongoose.Schema({
     // timestamps: true //createdAt, updatedAt
 });
 
-const Student = studentConn.model("Student", studentSchema);
+const Student = demographicConn.model("Student", studentSchema);
 
 export default Student;

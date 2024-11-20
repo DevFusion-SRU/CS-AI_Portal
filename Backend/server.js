@@ -7,7 +7,7 @@ const corsOptions={
 }
 
 
-import { jobConn, studentConn } from "./config/db.js"; // Ensure these connections are imported
+import { jobConn, demographicConn } from "./config/db.js"; // Ensure these connections are imported
 
 import jobRoutes from "./routes/job.js";
 import appliedJobsRoutes from "./routes/appliedJobs.js";
@@ -40,6 +40,6 @@ app.use("/api/students", studentRoutes);
 const PORT = 5000;
 app.listen(PORT, () => {
     jobConn; // Establish Job DB connection
-    studentConn; // Establish Student DB connection
+    demographicConn; // Establish Student DB connection
     console.log(`Server Started at Port http://localhost:${PORT}`);
 });
