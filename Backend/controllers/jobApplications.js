@@ -37,8 +37,8 @@ export const addApplication = async (req, res) => {
             appliedStudentsEntry = new AppliedStudents({ jobId, applications: [rollNumber] });
         } else {
             // If entry exists, add the student's rollNumber if not already present
-            if (!appliedStudentsEntry.rollNumbers.includes(rollNumber)) {
-                appliedStudentsEntry.rollNumbers.push(rollNumber);
+            if (!appliedStudentsEntry.applications.includes(rollNumber)) {
+                appliedStudentsEntry.applications.push(rollNumber);
             } else {
                 return res.status(400).json({ success: false, message: "This student has already applied for this job!" });
             }
