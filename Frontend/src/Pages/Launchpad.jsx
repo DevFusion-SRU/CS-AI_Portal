@@ -68,9 +68,35 @@ const Launchpad = () => {
       return description.includes(searchQuery.toLowerCase());
     });
 
-  const handleViewClick = (jobId) => {
-    setViewingJobId(viewingJobId === jobId ? null : jobId);
-  };
+    const handleViewClick = async (id) => {
+      setViewingJobId(viewingJobId === id ? null : id);
+    
+      if (currentUser && currentUser.email) {
+        const payload = {
+          "rollNumber": currentUser.email.split("@")[0].toUpperCase(),
+          "jobId":id,
+        };
+    
+        try {
+          const response = await fetch("http://localhost:5000/api/appliedJobs/view", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+    
+          if (response.ok) {
+            console.log("View logged successfully.");
+          } else {
+            console.error("Failed to log view.");
+          }
+        } catch (error) {
+          console.error("Error logging view:", error);
+        }
+      }
+    };
+    
 
   const handleConfirm = async (job) => {
     try {
@@ -112,6 +138,15 @@ const Launchpad = () => {
               {tab.label}
             </button>
           ))}
+        </div>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
         </div>
         {currentUserRole === 'admin' && (<div className="flex justify-end space-x-4 mb-5">
           <button 
@@ -185,7 +220,10 @@ const Launchpad = () => {
                           <p>Did you apply for this job?</p>
                           <button
                             className="bg-green-500 text-white py-1 px-4 rounded-lg mr-4 hover:bg-green-600"
-                            onClick={() => handleConfirm({"rollNumber":currentUser.email.split('@')[0].toUpperCase(), "jobId":opportunity.id})}
+                            onClick={() => {
+                              handleConfirm({"rollNumber":currentUser.email.split('@')[0].toUpperCase(), "jobId":opportunity.id})
+                              setViewingJobId(null)
+                            }}
                           >
                             Yes
                           </button>

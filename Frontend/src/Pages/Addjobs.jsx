@@ -7,44 +7,48 @@ const Addjobs = () => {
     id: "",
     name: "",
     company: "",
-    type: "",
+    type: "Internship",
     description: "",
-    applylink: ""
+    applyLink: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setJobData((prevData) => ({
       ...prevData,
-      [name]: value // Dynamically set the key based on the name attribute
+      [name]: value,
     }));
   };
-
-  // State for file upload
-  const [fileName, setFileName] = useState('');
 
   const handleAddClick = () => {
     navigate('/');
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFileName(file.name);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send jobData to a backend API
-    // Example for form submission with file upload (using FormData):
-    // const formData = new FormData();
-    // formData.append("jobData", JSON.stringify(jobData));
-    // formData.append("file", file);
-
-    // Example submission logic
-    alert("Job added successfully!");
-    navigate('/');
+    console.log(jobData) // Prevent page refresh on form submission
+    try {
+      const response = await fetch("http://localhost:5000/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jobData),
+      });
+      if (response.ok) {
+        alert("Job successfully added!");
+        setJobData({
+          id: "",
+          name: "",
+          company: "",
+          type: "Internship",
+          description: "",
+          applyLink: "",
+        });
+      } else {
+        alert("Failed to add job application.");
+      }
+    } catch (error) {
+      console.error("Error submitting job application:", error);
+    }
   };
 
   return (
@@ -59,7 +63,7 @@ const Addjobs = () => {
               </label>
               <input
                 type="text"
-                name="name" // Changed to match state
+                name="name"
                 value={jobData.name}
                 onChange={handleChange}
                 placeholder="Enter job title"
@@ -73,7 +77,7 @@ const Addjobs = () => {
               </label>
               <input
                 type="text"
-                name="id" // Changed to match state
+                name="id"
                 value={jobData.id}
                 onChange={handleChange}
                 placeholder="Enter job ID"
@@ -112,8 +116,8 @@ const Addjobs = () => {
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="Internship">Internship</option>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
+                <option value="Fulltime">Fulltime</option>
+                <option value="Parttime">Hackathon</option>
               </select>
             </div>
           </div>
@@ -134,26 +138,20 @@ const Addjobs = () => {
             ></textarea>
           </div>
 
-          {/* Upload Icon */}
+          {/* Apply URL */}
           <div>
-            <label htmlFor="upload" className="block text-sm font-medium text-gray-700">
-              Upload File
+            <label htmlFor="applyLink" className="block text-sm font-medium text-gray-700">
+              URL
             </label>
-            <div className="mt-1 flex items-center space-x-4">
-              <input
-                type="file"
-                id="upload"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <label
-                htmlFor="upload"
-                className="px-4 py-2 bg-gray-200 text-sm font-medium text-gray-700 rounded-md shadow cursor-pointer hover:bg-gray-300"
-              >
-                Choose File
-              </label>
-              <span className="text-gray-500 text-sm">{fileName || 'No file chosen'}</span>
-            </div>
+            <input
+              type="url"
+              name="applyLink"
+              value={jobData.applyLink}
+              onChange={handleChange}
+              placeholder="Enter URL"
+              required
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
           {/* Buttons */}
