@@ -1,10 +1,11 @@
 import express from "express";
 
-import { addAppliedJob, getAppliedJob } from "../controllers/appliedJobs.js";
+import { addApplication, addView, getApplications } from "../controllers/jobApplications.js";
 
 const router = express.Router();
 
-router.post("/", addAppliedJob);
-router.get("/:rollNumber", getAppliedJob);
+router.post("/", addApplication);
+router.post("/view", addView);
+router.get("/:rollNumber", getApplications);
 
 export default router;
