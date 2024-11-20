@@ -8,7 +8,7 @@ import Signup from './Pages/Signup';import Login from './Pages/Login';
 import Layout from "./Component/Layout"
 import PrivateRoutes from './Context/PrivateRoutes';
 import Private from './Context/Private';
-import Addjobs from './Pages/Addjobs';
+import Addjobs from './Pages/addjobs';
 import { AuthProvider } from './Context/AuthContect';
 
 const App = () => {

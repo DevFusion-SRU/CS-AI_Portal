@@ -19,8 +19,21 @@ export const getStudentDetails = async (req, res) => {
         if (!studentDetails) {
             return res.status(404).json({ success: false, message: "No details found for this student!" });
         }
-        
-        res.status(200).json({ success: true, data: studentDetails });
+
+        const response = {
+            rollNumber: studentDetails.rollNumber,
+            firstName: studentDetails.firstName,
+            lastName: studentDetails.lastName,
+            course: studentDetails.course,
+            email: studentDetails.email,
+            mobile: studentDetails.mobile,
+        };
+
+        if (studentDetails.photo && studentDetails.photoType) {
+            response.photo = `data:${studentDetails.photoType};base64,${studentDetails.photo.toString("base64")}`;
+        }
+
+        res.status(200).json({ success: true, data: response });
     } catch (error) {
         console.error("Error fetching student details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
