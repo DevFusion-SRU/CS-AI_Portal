@@ -10,6 +10,7 @@ import PrivateRoutes from './Context/PrivateRoutes';
 import Private from './Context/Private';
 import Addjobs from './Pages/addjobs';
 import { AuthProvider } from './Context/AuthContect';
+import AdminRoute from './Context/AdminRoute';
 
 const App = () => {
 
@@ -26,9 +27,12 @@ const App = () => {
           <Route path="/" element={<Layout/>}>
             <Route index  element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />
-            <Route path="dashboard" element={<Dashboard />}/>
+            <Route element={<AdminRoute/>}>
+              <Route path="dashboard" element={<Dashboard />}/>
+              <Route path="addjobs" element={<Addjobs />} />
+            </Route>
             <Route path="myaccount" element={<Profile />} />
-            <Route path="addjobs" element={<Addjobs />} />
+            
           </Route>
         </Route>
         <Route path="*" element={<Login/>}/>
