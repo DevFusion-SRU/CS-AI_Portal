@@ -12,6 +12,8 @@ import Addjobs from './Pages/addjobs';
 import { AuthProvider } from './Context/AuthContect';
 
 const App = () => {
+
+  
   return (
     <AuthProvider>
       {/* Removed BrowserRouter here */}

@@ -43,6 +43,32 @@ export const addStudent = async (req, res) => {
     }
 };
 
+export const uploadStudentPhoto = async (req, res) => {
+    const { rollNumber } = req.params;
+
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: "Photo file is required!" });
+    }
+
+    const { buffer, mimetype } = req.file;
+
+    try {
+        const student = await Student.findOne({ rollNumber });
+        if (!student) {
+            return res.status(404).json({ success: false, message: "Student not found!" });
+        }
+
+        student.photo = buffer;
+        student.photoType = mimetype;
+
+        await student.save();
+        res.status(200).json({ success: true, message: "Photo uploaded successfully!" });
+    } catch (error) {
+        console.error("Error uploading photo: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 export const addStudentBatch = async (req, res) => {
     const students = req.body;
 

@@ -11,42 +11,106 @@ const EditProfile = () => {
     rollNumber: "",
     mobile: "",
     course: "",
-    profileImage: "", // Profile image URL
+    photo: "", // Profile image URL
   });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(""); // To capture error messages
   const { currentUser } = useAuth();
 
-  // Fetch user data from the backend
   useEffect(() => {
-    // Fetch user data from the backend using email as query parameter
-    axios
-      .get(`http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}`)
-      .then((response) => {
-        setUserData(response.data); // Set user data from backend
-        setLoading(false); // Set loading state to false
-      })
-      .catch((error) => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}`
+        );
+        setUserData(response.data.data);
+        console.log(response.data.data)
+      } catch (error) {
         console.error("Error fetching user data:", error);
-        setLoading(false); // Set loading to false in case of error
-      });
-  }, [currentUser.email]); 
+        setError("Failed to load user data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [currentUser.email]); // Only run the effect if `currentUser.email` changes
 
   if (loading) return <p className="text-center">Loading...</p>;
   if (error) return <p className="text-center text-red-600">{error}</p>;
+
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append('photo', file); // Ensure this matches multer's field name
+
+    try {
+        const response = await axios.patch(`http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}/photo`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        console.log('Image uploaded successfully:', response.data);
+        setUserData((prevState) => ({
+          ...prevState,
+          photo: <response className="data photo"></response>,
+      }));
+    } catch (error) {
+        console.error('Error uploading image:', error.response?.data || error.message);
+    }
+};
+
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-50">
       <div className="w-full max-w-4xl p-6 bg-white shadow-md rounded-lg">
         {/* Profile Image Section */}
         <div className="flex flex-col items-center mb-6">
-          <img
-            src={userData.profileImage || "https://via.placeholder.com/150"}
-            alt="Profile"
-            className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+          {userData.photo ? (
+            <img
+              src={userData.photo}
+              alt="Profile"
+              className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+            />
+          ) : (
+            <div className="relative w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+              <img
+                src="https://via.placeholder.com/150"
+                alt="Default Profile"
+                className="absolute inset-0 w-full h-full object-cover rounded-full"
+              />
+              <div
+                className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 cursor-pointer"
+                onClick={() => document.getElementById("photoUpload").click()}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
+          <p className="mt-2 text-sm text-gray-500">
+            {userData.photo ? "Profile Picture" : "Add Profile Picture"}
+          </p>
+
+          {/* Hidden file input */}
+          <input
+            type="file"
+            id="photoUpload"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageChange}
           />
-          <p className="mt-2 text-sm text-gray-500">Profile Picture</p>
         </div>
 
         {/* User Details Section */}
@@ -92,7 +156,7 @@ const EditProfile = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Hallticket Number</label>
+            <label className="block text-sm font-medium">Roll Number</label>
             <input
               type="text"
               name="rollNumber"
