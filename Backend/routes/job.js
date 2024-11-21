@@ -1,12 +1,20 @@
 import express from "express";
-
-import { addJob, addJobsBatch, deleteJob, getJobs } from "../controllers/job.js";
+import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import {
+    addJob,
+    addJobsBatch,
+    deleteJob,
+    getJobs
+} from "../controllers/job.js";
 
 const router = express.Router();
 
+// Public route
 router.get("/", getJobs);
-router.post("/", addJob);
-router.post("/batch", addJobsBatch);
-router.delete("/:id", deleteJob);
+
+// Protected routes for admin
+router.post("/", authenticateToken, authorizeRole("admin"), addJob);
+router.post("/batch", authenticateToken, authorizeRole("admin"), addJobsBatch);
+router.delete("/:id", authenticateToken, authorizeRole("admin"), deleteJob);
 
 export default router;

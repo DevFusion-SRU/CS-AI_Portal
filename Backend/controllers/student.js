@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 
 import Student from "../models/student.js"; // Student model using studentConn
+import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateConn
 
 export const getStudents = async (req, res) => {
     try {
@@ -43,15 +45,27 @@ export const getStudentDetails = async (req, res) => {
 export const addStudent = async (req, res) => {
     const student = req.body;
     if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
-        return res.status(400).json({ success: false, message: "Provide all required fields!!" });
+        return res.status(400).json({ success: false, message: "Provide all required fields!" });
     }
 
     const newStudent = new Student(student);
+
     try {
+        // Save student in the Student collection
         await newStudent.save();
+
+        // Add student entry to Authentication collection
+        const hashedPassword = await bcrypt.hash("Student@2025", 10); // Hash the default password
+        const newAuthentication = new Authenticate({
+            username: student.rollNumber,
+            password: hashedPassword,
+            role: "student",
+        });
+        await newAuthentication.save();
+
         res.status(201).json({ success: true, data: newStudent });
     } catch (error) {
-        console.error("Error in entering Student details: ", error.message);
+        console.error("Error in adding Student details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -100,6 +114,20 @@ export const addStudentBatch = async (req, res) => {
     try {
         // Save all students in bulk using `insertMany`
         const newStudents = await Student.insertMany(students);
+
+        // Add each student to Authentication collection
+        const authenticationEntries = await Promise.all(
+            students.map(async (student) => {
+                const hashedPassword = await bcrypt.hash("Student@2025", 10); // Hash the default password
+                return {
+                    username: student.rollNumber,
+                    password: hashedPassword,
+                    role: "student",
+                };
+            })
+        );
+        await Authenticate.insertMany(authenticationEntries); // Bulk insert into Authentication collection
+
         res.status(201).json({ success: true, data: newStudents });
     } catch (error) {
         console.error("Error in entering Student details: ", error.message);

@@ -1,12 +1,18 @@
 import express from "express";
-
-import { addApplication, addView, getApplications, getAppliedStudents } from "../controllers/jobApplications.js";
+import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import { 
+    addApplication,
+    addView,
+    getApplications,
+    getAppliedStudents
+} from "../controllers/jobApplications.js";
 
 const router = express.Router();
 
-router.post("/", addApplication);
-router.post("/view", addView);
-router.get("/allDetails", getAppliedStudents);
-router.get("/:rollNumber", getApplications);
+// Only authenticated users can access these routes
+router.post("/", authenticateToken, authorizeRole("student"), addApplication);
+router.post("/view", authenticateToken, authorizeRole("student"), addView);
+router.get("/allDetails", authenticateToken, authorizeRole("admin"), getAppliedStudents); // Admin-only access
+router.get("/:rollNumber", authenticateToken, authorizeRole("student"), getApplications);
 
 export default router;
