@@ -13,7 +13,7 @@ const Launchpad = () => {
   const { currentUser, currentUserRole} = useAuth();  // Tracks which job's confirmation is shown
   const navigate = useNavigate();
   const handleAddClick = () => {
-    navigate('/Addjobs'); // Redirect to AddJobs page
+    navigate('/dashboard/addjobs'); // Redirect to AddJobs page
   };
 
   const hasFetchedData = useRef(false);
