@@ -73,7 +73,7 @@ export const addView = async (req, res) => {
             if (!viewedStudentsEntry.views.includes(rollNumber)) {
                 viewedStudentsEntry.views.push(rollNumber);
             } else {
-                return res.status(400).json({ success: false, message: "This student has already viewed this job!" });
+                // return res.status(400).json({ success: false, message: "This student has already viewed this job!" });
             }
         }
 
@@ -85,7 +85,7 @@ export const addView = async (req, res) => {
         console.error("Error in adding applied job: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
-}; 
+};
 
 export const getApplications = async (req, res) => {
     const { rollNumber } = req.params;
@@ -101,6 +101,59 @@ export const getApplications = async (req, res) => {
         res.status(200).json({ success: true, data: jobDetails });
     } catch (error) {
         console.error("Error fetching applied jobs: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+export const getAppliedStudents = async (req, res) => {
+    try {
+        // Fetch all entries from the AppliedStudents collection
+        console.log("hi");
+        const appliedStudentsEntries = await AppliedStudents.find();
+
+        // Fetch all job details
+        const allJobs = await Job.find();  // Fetch all jobs, without needing jobId in the request
+
+        if (!allJobs || allJobs.length === 0) {
+            return res.status(404).json({ success: false, message: "No jobs found!" });
+        }
+
+        // Initialize an empty array to store details for each job
+        const allDetails = [];
+
+        // Loop over each job and check its related students in AppliedStudents collection
+        for (const job of allJobs) {
+            // Find the AppliedStudents entry for this job by comparing jobId to job.id
+            const appliedStudentsEntry = appliedStudentsEntries.find(entry => entry.jobId === job.id);
+
+            // If no AppliedStudents entry is found, initialize empty arrays and counts
+            let appliedStudents = [];
+            let viewedStudents = [];
+            let appliedCount = 0;
+            let viewedCount = 0;
+
+            if (appliedStudentsEntry) {
+                // If there is an AppliedStudents entry for this job, use its data
+                appliedStudents = appliedStudentsEntry.applications || [];
+                viewedStudents = appliedStudentsEntry.views || [];
+                appliedCount = appliedStudents.length;
+                viewedCount = viewedStudents.length;
+            }
+
+            // Push the result with job details and students count
+            allDetails.push({
+                jobDetails: job,  // Return the full job details
+                appliedStudentsCount: appliedCount,
+                appliedStudentsDetails: appliedStudents,  // Array of student IDs or populated student details
+                viewedStudentsCount: viewedCount,
+                viewedStudentsDetails: viewedStudents  // Array of student IDs or populated student details
+            });
+        }
+
+        // Send the response with all the jobs and their respective details
+        res.status(200).json({ success: true, data: allDetails });
+    } catch (error) {
+        console.error("Error fetching applied students: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
