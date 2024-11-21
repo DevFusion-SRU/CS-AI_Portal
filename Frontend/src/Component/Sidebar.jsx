@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContect';
 import { FaRocket, FaChartBar, FaUser, FaSignOutAlt } from 'react-icons/fa'; 
 
-const Sidebar = () => {
+const Sidebar = ({ userPhoto }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const {signout, currentUserRole}=useAuth()
@@ -32,10 +32,24 @@ const Sidebar = () => {
         <div className="text-2xl font-bold text-blue-600">
           SRU <span className="text-lg">CS-AI</span>
         </div>
-        <div> navbar</div>
+        <div className="flex items-center space-x-4">
+        {/* Profile Image Section */}
+        <div className="relative">
+          {userPhoto ? (
+            <img
+              src={userPhoto}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+              <span className="text-white">?</span>
+            </div>
+          )}
+          
+        </div>
       </div>
-
-      {/* Sidebar */}
+      </div>
       <aside
         className={`w-48 h-screen bg-white shadow-md p-6 fixed z-40 border-r-2 border-gray-200 transition-transform transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
@@ -95,15 +109,13 @@ const Sidebar = () => {
           </ul>
         </nav>
         <button
-            onClick={() => signout()} // Replace with your actual logout function
+            onClick={() => signout()}
             className="flex items-center space-x-3  mt-56 text-gray-500 hover:text-red-600"
           >
             <FaSignOutAlt className="text-2xl" />
           <span className="text-lg font-semibold">Logout</span>
         </button>
       </aside>
-
-      {/* Overlay to close the sidebar on smaller screens */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-30"
