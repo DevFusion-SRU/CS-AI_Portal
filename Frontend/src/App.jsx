@@ -11,6 +11,8 @@ import Private from './Context/Private';
 import Addjobs from './Pages/addjobs';
 import { AuthProvider } from './Context/AuthContect';
 import AdminRoute from './Context/AdminRoute';
+import UserManagement from './Pages/usermanagement';
+import AddUsers from './Pages/AddUsers';
 
 const App = () => {
 
@@ -31,6 +33,11 @@ const App = () => {
               <Route path="dashboard" element={<Dashboard />}/>
               <Route path="addjobs" element={<Addjobs />} />
             </Route>
+            <Route element={<AdminRoute/>}>
+              <Route path="/usermanagement" element={<UserManagement />} />
+              <Route path="/AddUsers" element={<AddUsers />} />
+            </Route>
+            
             <Route path="myaccount" element={<Profile />} />
             
           </Route>
