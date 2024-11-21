@@ -93,6 +93,20 @@ const Sidebar = ({ userData, setUserData }) => {
               <FaChartBar className="text-1xl" />
               <span>{currentUserRole === 'student' ? 'My reports' : 'Dashboard'}</span>
             </NavLink>
+            {currentUserRole === 'admin' && (
+              <NavLink
+                to="/usermanagement"
+                className={({ isActive }) =>
+                  `flex items-center justify-center space-x-4 ${
+                    isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
+                  }`
+                }
+                onClick={() => handleMenuClick(2)}
+              >
+                <FaUser className="text-1xl" />
+                <span>User Management</span>
+              </NavLink>
+            )}
 
             <NavLink
               to="/myaccount"
@@ -101,7 +115,7 @@ const Sidebar = ({ userData, setUserData }) => {
                   isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
                 }`
               }
-              onClick={() => handleMenuClick(2)}
+              onClick={() => handleMenuClick(3)}
             >
               <FaUser className="text-1xl" />
               <span>My Account</span>

@@ -12,7 +12,9 @@ import Private from './Context/Private';
 import Addjobs from './Pages/addjobs';
 import { useAuth } from "./Context/AuthContect";
 import AdminRoute from './Context/AdminRoute';
-import axios from 'axios';
+import UserManagement from './Pages/usermanagement';
+import AddUsers from './Pages/AddUsers';
+
 
 const App = () => {
   const [userData, setUserData] = useState({
@@ -71,6 +73,14 @@ const App = () => {
                 <Route path="addjobs" element={<Addjobs />} />
               </Route>
             </Route>
+
+            <Route element={<AdminRoute/>}>
+              <Route path="/usermanagement" element={<UserManagement />} />
+              <Route path="/AddUsers" element={<AddUsers />} />
+            </Route>
+            
+            
+          
             <Route
               path="myaccount"
               element={<Profile userData={userData} setUserData={setUserData} />} // Pass state to Profile
