@@ -7,7 +7,7 @@ const PrivateRoutes = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log(currentUser); // Log the current user
+         // Log the current user
         if (!currentUser) {
             navigate("/login");
         }

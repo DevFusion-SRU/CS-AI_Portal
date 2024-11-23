@@ -34,12 +34,9 @@ const App = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      try {
-        const currentUserEmail = currentUser?.email.split('@')[0].toUpperCase() // Replace this with actual email fetching logic
-        if (!currentUserEmail) return;
-
-        const emailPrefix = currentUserEmail.split('@')[0].toUpperCase();
-        const response = await axios.get(`http://localhost:5000/api/students/${emailPrefix}`);
+      try { 
+        if (!currentUser) return;
+        const response = await axios.get(`http://localhost:5000/api/students/${currentUser.username}`);
         setUserData(response.data.data);
       } catch (err) {
         console.error("Failed to fetch user data:", err);
