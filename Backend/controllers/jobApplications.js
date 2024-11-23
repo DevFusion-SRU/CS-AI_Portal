@@ -108,7 +108,6 @@ export const getApplications = async (req, res) => {
 export const getAppliedStudents = async (req, res) => {
     try {
         // Fetch all entries from the AppliedStudents collection
-        console.log("hi");
         const appliedStudentsEntries = await AppliedStudents.find();
 
         // Fetch all job details
