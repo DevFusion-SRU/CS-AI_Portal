@@ -14,7 +14,7 @@ import { useAuth } from "./Context/AuthContect";
 import AdminRoute from './Context/AdminRoute';
 import UserManagement from './Pages/usermanagement';
 import AddUsers from './Pages/AddUsers';
-
+import axios from "axios";
 
 const App = () => {
   const [userData, setUserData] = useState({
@@ -55,6 +55,9 @@ const App = () => {
   }, [currentUser]);
 
   if (loading) return <p className="text-center">Loading...</p>;
+
+
+
   return (
       <Routes>
         <Route element={<Private />}>
