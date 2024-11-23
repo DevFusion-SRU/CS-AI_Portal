@@ -111,7 +111,7 @@ export function AuthProvider({ children }) {
       const response = await fetch("http://localhost:5000/api/auth/logout", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem(getAuthToken())}`, // Ensure token is being sent
+          Authorization: `Bearer ${getAuthToken()}`, // Ensure token is being sent
         },
         credentials: "include", // Ensure cookies are sent if needed
       });
@@ -155,6 +155,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = getAuthToken();
+    //console.log(document.cookie);
     console.log(token)
     if (token) {
       console.log('festif')
