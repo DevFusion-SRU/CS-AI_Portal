@@ -9,14 +9,14 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [appliedCount, setAppliedCount] = useState(0);
-  const [clicksCount, setClicksCount] = useState(0);
+  const [filters, setFilters] = useState({ year: "", batch: "" });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { currentUser, currentUserRole } = useAuth(); // Tracks the current user and role
   const navigate = useNavigate();
   const hasFetchedData = useRef(false);
 
   const handleAddClick = () => {
-    navigate("/Addjobs"); // Redirect to AddJobs page
+    navigate("Addjobs"); // Redirect to AddJobs page
   };
 
   const openTab = (tab) => {
@@ -27,23 +27,37 @@ const Dashboard = () => {
   };
 
   const fetchAPI = useCallback(async (page = 1) => {
-    setLoading(true);
+    setLoading(true); // Start loading state
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/jobs?page=${page}&limit=10&type=${activeTab}`
-      );
-      const json = await response.json();
-      if (json.success && Array.isArray(json.data)) {
-        setOpportunities(json.data);
-        setTotalPages(json.totalPages);
-        setCurrentPage(json.currentPage);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-    setLoading(false);
-  }, [activeTab]);
+        const response = await fetch(
+            `http://localhost:5000/api/appliedJobs/allDetails`
+        );
 
+        // Ensure the response status is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Parse the JSON response
+        const json = await response.json();
+
+        // Log the actual data
+        console.log("Data received from API:", json.data);
+
+        // Check if the response indicates success
+        if (json.success && Array.isArray(json.data)) {
+            setOpportunities(json.data); // Update opportunities
+            setTotalPages(json.totalPages || 1); // Use default value if not present
+            setCurrentPage(json.currentPage || 1); // Use default value if not present
+        } else {
+            console.error("Unexpected data format:", json);
+        }
+    } catch (error) {
+        console.error("Error fetching data:", error); // Log any errors
+    } finally {
+        setLoading(false); // End loading state
+    }
+}, []);
   useEffect(() => {
     if (hasFetchedData.current) {
       fetchAPI(currentPage);
@@ -56,6 +70,35 @@ const Dashboard = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
   };
+  const toggleFilterMenu = () => {
+    setIsFilterOpen(prevState => !prevState);
+};
+
+
+  useEffect(() => {
+    if (hasFetchedData.current) {
+        fetchAPI(currentPage);
+    } else {
+        hasFetchedData.current = true;
+    }
+}, [fetchAPI, currentPage, filters]);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prevState => ({
+        ...prevState,
+        [name]: value
+    }));
+};
+
+  const filteredStudents = students.filter((student) => {
+    const fullName = `${student.firstName} ${student.lastName || ""}`.toLowerCase();
+    const matchesSearchQuery = fullName.includes(searchQuery.toLowerCase()) || student.rollNumber.includes(searchQuery);
+    const matchesYearFilter = filters.year ? student.year === filters.year : true;
+    const matchesBatchFilter = filters.batch ? student.batch === filters.batch : true;
+
+    return matchesSearchQuery && matchesYearFilter && matchesBatchFilter;
+});
 
   const filteredOpportunities = opportunities
     .filter(
@@ -68,30 +111,7 @@ const Dashboard = () => {
       return description.includes(searchQuery.toLowerCase());
     });
 
-  const handleAnalysis = async (jobId, actionType) => {
-    try {
-      const endpoint =
-        actionType === "applied"
-          ? `/api/jobs/${jobId}/students-applied`
-          : `/api/jobs/${jobId}/job-clicks`;
 
-      const response = await fetch(`http://localhost:5000${endpoint}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        if (actionType === "applied") {
-          setAppliedCount(data.count || 0); // Default to 0 if data.count is undefined
-        } else if (actionType === "clicks") {
-          setClicksCount(data.count || 0); // Default to 0 if data.count is undefined
-        }
-      } else {
-        alert("Failed to fetch analysis data.");
-      }
-    } catch (error) {
-      console.error("Error fetching analysis data:", error);
-      alert("An error occurred while fetching analysis data.");
-    }
-  };
 
   return (
     <main className="w-full flex flex-col items-center px-4 py-8">
@@ -160,24 +180,24 @@ const Dashboard = () => {
     <tbody className="bg-white divide-y divide-gray-200">
       {filteredOpportunities.map((opportunity) => (
         <tr key={opportunity.id} className="hover:bg-gray-100 transition-all">
-          <td className="px-6 py-4 text-sm text-gray-900">{opportunity.company}</td>
-          <td className="px-6 py-4 text-sm text-gray-900">{opportunity.name}</td>
-          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.id}</td>
-          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.type}</td>
+          <td className="px-6 py-4 text-sm text-gray-900">{opportunity.jobDetails.company}</td>
+          <td className="px-6 py-4 text-sm text-gray-900">{opportunity.jobDetails.name}</td>
+          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobDetails.name}</td>
+          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobDetails.id}</td>
           <td className="px-6 py-4 text-center">
             <button
-              onClick={() => handleAnalysis(opportunity.id, "clicks")}
+              
               className="w-24 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
             >
-              Visits: {clicksCount}
+              Visits: {opportunity.viewedStudentsCount}
             </button>
           </td>
           <td className="px-6 py-4 text-center">
             <button
-              onClick={() => handleAnalysis(opportunity.id, "applied")}
+              
               className="w-24 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
             >
-              Applied: {appliedCount}
+              Applied: {opportunity.appliedStudentsCount}
             </button>
           </td>
         </tr>

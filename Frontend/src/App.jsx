@@ -14,7 +14,7 @@ import { useAuth } from "./Context/AuthContect";
 import AdminRoute from './Context/AdminRoute';
 import UserManagement from './Pages/usermanagement';
 import AddUsers from './Pages/AddUsers';
-
+import axios from "axios";
 
 const App = () => {
   const [userData, setUserData] = useState(null); // Store user details
@@ -43,7 +43,6 @@ const App = () => {
   }, []);
 
   if (loading) return <p className="text-center">Loading...</p>;
-  if (error) return <p className="text-center text-red-600">{error}</p>;
 
   return (
       <Routes>
