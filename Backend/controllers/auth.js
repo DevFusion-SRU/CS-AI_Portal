@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import Authenticate from "../models/authentication.js";
-import { generateToken } from "../utils/jwt.js";
+import { generateToken, verifyToken } from "../utils/jwt.js";
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -37,4 +37,22 @@ export const login = async (req, res) => {
 export const logout = (req, res) => {
     res.clearCookie("token");
     res.status(200).json({ success: true, message: "Logged out successfully!" });
+};
+
+export const verifyTokenController = (req, res) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, message: 'Authorization header missing or invalid' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = verifyToken(token); // Using the utility function
+        console.log("Token verification successful:", decoded);
+        return res.status(200).json({ success: true, user: decoded });
+    } catch (error) {
+        console.error("Token verification failed:", error.message);
+        return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
 };
