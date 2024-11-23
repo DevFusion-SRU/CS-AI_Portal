@@ -1,69 +1,48 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../Context/AuthContect";
+import React, { useState } from "react";
 import axios from "axios";
 
-const EditProfile = () => {
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    dob: "",
-    rollNumber: "",
-    mobile: "",
-    course: "",
-    photo: "", // Profile image URL
-  });
-
-  const [loading, setLoading] = useState(true);
+const Profile = ({ userData, setUserData }) => {
   const [error, setError] = useState(""); // To capture error messages
-  const { currentUser } = useAuth();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}`
-        );
-        setUserData(response.data.data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError("Failed to load user data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [currentUser.email]);
-
-  if (loading) return <p className="text-center">Loading...</p>;
-  if (error) return <p className="text-center text-red-600">{error}</p>;
 
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
-    const formData = new FormData();
-    formData.append('photo', file); // Ensure this matches multer's field name
+    if (!file) return;
 
-    try {
-      const response = await axios.patch(
-        `http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}/photo`,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
-      console.log('Image uploaded successfully:', response.data);
-
-      // Update the photo in the userData state with the URL returned by the backend
+    // Temporary live preview
+    const reader = new FileReader();
+    reader.onload = () => {
       setUserData((prevState) => ({
         ...prevState,
-        photo: response.data.photo,  // Assuming the backend returns the image URL in response.data.photo
+        photo: reader.result, // Temporary preview of the selected image
+      }));
+    };
+    reader.readAsDataURL(file);
+
+    // Upload image
+    const formData = new FormData();
+    formData.append("photo", file); // Ensure this matches multer's field name
+
+    try {
+      const emailPrefix = userData.email.split("@")[0].toUpperCase();
+      const response = await axios.patch(
+        `http://localhost:5000/api/students/${emailPrefix}/photo`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log("Image uploaded successfully:", response.data);
+      setUserData((prevState) => ({
+        ...prevState,
+        photo: response.data.photo, // Update the photo URL with the new one from the response
       }));
     } catch (error) {
-      console.error('Error uploading image:', error.response?.data || error.message);
-      setError("Failed to upload image");
+      console.error("Error uploading image:", error.response?.data || error.message);
+      setError("Failed to upload profile image");
     }
   };
+
+  if (!userData) return <p className="text-center">Loading...</p>;
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-50">
@@ -76,7 +55,8 @@ const EditProfile = () => {
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
             />
-            <div
+            <button
+              type='submit'
               className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 cursor-pointer"
               onClick={() => document.getElementById("photoUpload").click()}
             >
@@ -94,7 +74,7 @@ const EditProfile = () => {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-            </div>
+            </button>
           </div>
           <p className="mt-2 text-sm text-gray-500">
             {userData.photo ? "Profile Picture" : "Add Profile Picture"}
@@ -137,4 +117,4 @@ const EditProfile = () => {
   );
 };
 
-export default EditProfile;
+export default Profile;

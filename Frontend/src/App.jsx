@@ -17,7 +17,17 @@ import AddUsers from './Pages/AddUsers';
 import axios from "axios";
 
 const App = () => {
-  const [userData, setUserData] = useState(null); // Store user details
+  const [userData, setUserData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    dob: "",
+    rollNumber: "",
+    mobile: "",
+    course: "",
+    photo: "", // Profile image URL
+  });
+
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(""); // Error state
   const { currentUser} = useAuth()
@@ -38,11 +48,15 @@ const App = () => {
         setLoading(false);
       }
     };
+    
 
     fetchUserData();
-  }, []);
+    console.log(userData)
+  }, [currentUser]);
 
   if (loading) return <p className="text-center">Loading...</p>;
+
+
 
   return (
       <Routes>
@@ -53,7 +67,7 @@ const App = () => {
         <Route element={<PrivateRoutes />}>
           <Route
             path="/"
-            element={<Layout userPhoto={userData?.photo} />} // Pass photo to Layout
+            element={<Layout userData={userData} setUserData={setUserData}/>} // Pass photo to Layout
           >
             <Route index element={<Launchpad />} />
             <Route path="myreports" element={<Reports />} />

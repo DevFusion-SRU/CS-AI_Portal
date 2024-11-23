@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContect';
 import { FaRocket, FaChartBar, FaUser, FaSignOutAlt } from 'react-icons/fa'; 
 
-const Sidebar = ({ userPhoto }) => {
+const Sidebar = ({ userData, setUserData }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const {signout, currentUserRole}=useAuth()
@@ -35,9 +35,9 @@ const Sidebar = ({ userPhoto }) => {
         <div className="flex items-center space-x-4">
         {/* Profile Image Section */}
         <div className="relative">
-          {userPhoto ? (
+          {userData ?.photo? (
             <img
-              src={userPhoto}
+              src={userData.photo}
               alt="Profile"
               className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
             />
@@ -123,7 +123,20 @@ const Sidebar = ({ userPhoto }) => {
           </ul>
         </nav>
         <button
-            onClick={() => signout()}
+            onClick={() => 
+              {
+                setUserData({
+                  firstName: "",
+                  lastName: "",
+                  email: "",
+                  dob: "",
+                  rollNumber: "",
+                  mobile: "",
+                  course: "",
+                  photo: "",
+                })
+                signout()
+              }}
             className="flex items-center space-x-3  mt-56 text-gray-500 hover:text-red-600"
           >
             <FaSignOutAlt className="text-2xl" />
