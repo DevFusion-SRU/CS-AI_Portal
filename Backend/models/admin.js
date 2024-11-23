@@ -5,7 +5,7 @@ const adminSchema = new mongoose.Schema({
     employeeId: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: false },
-    department: { type: String, required: false },
+    department: { type: String, required: true },
     email: { type: String, required: true },
     mobile: { type: Number, required: false },
     photo: { type: Buffer, required: false }, // Store photo as a binary buffer
@@ -13,6 +13,6 @@ const adminSchema = new mongoose.Schema({
     // timestamps: true //createdAt, updatedAt
 });
 
-const Admin = demographicConn.model("Amin", adminSchema);
+const Admin = demographicConn.model("Admin", adminSchema);
 
 export default Admin;
