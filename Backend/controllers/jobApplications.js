@@ -106,26 +106,55 @@ export const getApplications = async (req, res) => {
 };
 
 export const getAppliedStudents = async (req, res) => {
+    const filters = {};
+
+    // Type filter passed in query param
+    const type = req.query.type;
+    if (type && type !== "all") {
+        filters.type = type;
+    }
+    // Normalize and handle case-insensitive search for company, id, and name
+    if (req.query.company) {
+        const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
+        filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search
+    }
+    if (req.query.name) {
+        const nameQuery = req.query.name.trim().replace(/\s+/g, " ");
+        filters.name = { $regex: new RegExp(nameQuery, "i") };
+    }
+    if (req.query.id) {
+        const idQuery = req.query.id.trim().replace(/\s+/g, " ");
+        filters.id = { $regex: new RegExp(idQuery, "i") };
+    }
+
     try {
-        // Fetch all entries from the AppliedStudents collection
-        const appliedStudentsEntries = await AppliedStudents.find();
 
-        // Fetch all job details
-        const allJobs = await Job.find();  // Fetch all jobs, without needing jobId in the request
+        // Pagination setup
+        const page = parseInt(req.query.page) || 1; // Default to page 1
+        const limit = parseInt(req.query.limit) || 25; // Default to 25 jobs per page
+        const skip = (page - 1) * limit;
 
-        if (!allJobs || allJobs.length === 0) {
-            return res.status(404).json({ success: false, message: "No jobs found!" });
+        // Parallelize querying jobs, counting jobs, and querying applied students entries to reduce response time
+        const [jobs, totalJobs, appliedStudentsEntries] = await Promise.all([
+            Job.find(filters).skip(skip).limit(limit),  // Fetch filtered jobs with pagination
+            Job.countDocuments(filters),  // Count total jobs matching the filters
+            AppliedStudents.find(),  // Fetch all applied students entries
+        ]);
+
+        // If no jobs are found
+        if (jobs.length === 0) {
+            return res.status(404).json({ success: false, message: "No jobs found matching the search criteria." });
         }
 
         // Initialize an empty array to store details for each job
         const allDetails = [];
 
         // Loop over each job and check its related students in AppliedStudents collection
-        for (const job of allJobs) {
+        for (const job of jobs) {
             // Find the AppliedStudents entry for this job by comparing jobId to job.id
-            const appliedStudentsEntry = appliedStudentsEntries.find(entry => entry.jobId === job.id);
+            const appliedStudentsEntry = appliedStudentsEntries.find(entry => entry.jobId.toString() === job.id.toString());
 
-            // If no AppliedStudents entry is found, initialize empty arrays and counts
+            // Initialize variables for counts and student arrays
             let appliedStudents = [];
             let viewedStudents = [];
             let appliedCount = 0;
@@ -149,8 +178,13 @@ export const getAppliedStudents = async (req, res) => {
             });
         }
 
-        // Send the response with all the jobs and their respective details
-        res.status(200).json({ success: true, data: allDetails });
+        // Send the response with all the jobs and their respective details, including pagination info
+        res.status(200).json({
+            success: true,
+            data: allDetails,
+            totalPages: Math.ceil(totalJobs / limit),  // Total pages based on filtered jobs
+            currentPage: page,  // Current page
+        });
     } catch (error) {
         console.error("Error fetching applied students: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });

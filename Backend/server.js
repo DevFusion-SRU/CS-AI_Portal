@@ -11,7 +11,6 @@ import appliedJobsRoutes from "./routes/appliedJobs.js";
 import authRoutes from "./routes/auth.js";
 import studentRoutes from "./routes/student.js";
 import adminRoutes from "./routes/admin.js";
-import searchRoutes from "./routes/search.js";
 
 const app = express();
 
@@ -39,7 +38,6 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/appliedJobs", appliedJobsRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/admins", adminRoutes);
-app.use("/api/search/", searchRoutes);
 
 // Start server
 const PORT = 5000;

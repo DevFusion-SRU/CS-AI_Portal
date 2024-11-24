@@ -3,23 +3,48 @@ import mongoose from "mongoose";
 import Job from "../models/job.js"; // Job model using jobConn
 
 export const getJobs = async (req, res) => {
+    const filters = {};
+    
+    // Type filter passed in query param
+    const type = req.query.type;
+    if (type && type !== "all") {
+        filters.type = type;
+    }
+    // Normalize and handle case-insensitive search for company, id, and name
+    if (req.query.company) {
+        const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
+        filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search
+    }
+    if (req.query.name) {
+        const nameQuery = req.query.name.trim().replace(/\s+/g, " ");
+        filters.name = { $regex: new RegExp(nameQuery, "i") };
+    }
+    if (req.query.id) {
+        const idQuery = req.query.id.trim().replace(/\s+/g, " ");
+        filters.id = { $regex: new RegExp(idQuery, "i") };
+    }
+    
     try {
+        // Pagination setup
         const page = parseInt(req.query.page) || 1; // Default to page 1
-        const limit = parseInt(req.query.limit) || 10; // Default to 10 jobs per page
+        const limit = parseInt(req.query.limit) || 25; // Default to 25 jobs per page
         const skip = (page - 1) * limit;
-        const type = req.query.type; // Type passed in query param
 
-        // If type is provided (other than 'all'), filter jobs by type
-        const filter = type && type !== "all" ? { type } : {};
+        // Parallelize querying jobs and counting documents to reduce response time
+        const [jobs, totalJobs] = await Promise.all([
+            Job.find(filters).skip(skip).limit(limit),  // Jobs query with pagination
+            Job.countDocuments(filters)  // Count the filtered documents (optional but helps with pagination info)
+        ]);
 
-        // Fetch jobs based on type and paginate them
-        const jobs = await Job.find(filter).skip(skip).limit(limit); 
-        const totalJobs = await Job.countDocuments(filter); // Total jobs count based on type
+        if (jobs.length === 0) {
+            return res.status(404).json({ success: false, message: "No jobs found matching the search criteria." });
+        }
 
+        // Send the response with the total pages and current page information
         res.status(200).json({
             success: true,
             data: jobs,
-            totalPages: Math.ceil(totalJobs / limit), // Total pages based on filtered jobs
+            totalPages: Math.ceil(totalJobs / limit),  // Total pages based on filtered jobs
             currentPage: page,
         });
     } catch (error) {

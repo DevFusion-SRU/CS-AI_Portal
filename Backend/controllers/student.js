@@ -5,9 +5,51 @@ import Student from "../models/student.js"; // Student model using studentConn
 import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateConn
 
 export const getStudents = async (req, res) => {
+    const { rollNumber, firstName, lastName } = req.query;
+    
+    // Ensure only one filter is applied at a time
+    if ((rollNumber && firstName) || (rollNumber && lastName) || (firstName && lastName)) {
+        return res.status(400).json({
+            success: false,
+            message: "Only one search filter (rollNumber, firstName, or lastName) is allowed at a time.",
+        });
+    }
+
+    const filters = {};
+
+    if (rollNumber) {
+        filters.rollNumber = new RegExp(rollNumber.trim(), "i");  // Case-insensitive regex search
+    } else if (firstName) {
+        filters.firstName = new RegExp(firstName.trim(), "i"); // Case-insensitive search
+    } else if (lastName) {
+        filters.lastName = new RegExp(lastName.trim(), "i"); // Case-insensitive search
+    }
+
     try {
-        const students = await Student.find({});
-        res.status(200).json({ success: true, data: students });
+        // Pagination setup
+        const page = parseInt(req.query.page) || 1; // Default to page 1
+        const limit = parseInt(req.query.limit) || 25; // Default to 25 students per page
+        const skip = (page - 1) * limit;
+
+        // Fetch only necessary fields to optimize the data size
+        const fields = 'rollNumber firstName lastName course email mobile'; // No photo
+
+        // Parallelize querying students and counting documents to reduce response time
+        const [students, totalStudents] = await Promise.all([
+            Student.find(filters).skip(skip).limit(limit).select(fields), // Students query with pagination and fields projection
+            Student.countDocuments(filters)  // Count the filtered documents (optional but helps with pagination info)
+        ]);
+
+        if (students.length === 0) {
+            return res.status(404).json({ success: false, message: "No students found matching the criteria." });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: students,
+            totalPages: Math.ceil(totalStudents / limit), // Total pages based on filtered students
+            currentPage: page,
+        });
     } catch (error) {
         console.error("Error in fetching Students: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
