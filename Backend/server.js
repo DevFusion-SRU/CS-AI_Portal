@@ -18,7 +18,7 @@ const app = express();
 const corsOptions = {
   origin: process.env.CLIENT_URL, // Allow requests from the client
   credentials: true, // Allow cookies to be sent
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"], // Allowed HTTP methods
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"], // Allowed HTTP methods
   allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 };
 

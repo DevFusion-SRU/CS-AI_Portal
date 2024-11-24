@@ -49,7 +49,6 @@ export const verifyTokenController = (req, res) => {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = verifyToken(token); // Using the utility function
-        console.log("Token verification successful:", decoded);
         return res.status(200).json({ success: true, user: decoded });
     } catch (error) {
         console.error("Token verification failed:", error.message);
