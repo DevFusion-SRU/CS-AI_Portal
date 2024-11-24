@@ -7,7 +7,6 @@ const Private = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log(currentUser); // Log the current user
         if (currentUser) {
             navigate("/");
         }

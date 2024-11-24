@@ -147,7 +147,6 @@ export function AuthProvider({ children }) {
     return match ? match[2] : null;
   }
 
-  // Handle error messages
   const handleError = (message) => {
     setErrorMessage(message);
     setTimeout(() => setErrorMessage(""), 5000);
@@ -155,10 +154,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = getAuthToken();
-    //console.log(document.cookie);
-    console.log(token)
     if (token) {
-      console.log('festif')
       fetchCurrentUser();
     } else {
       setLoading(false);
@@ -168,6 +164,7 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     currentUserRole,
+    getAuthToken,
     signup,
     login,
     signout,

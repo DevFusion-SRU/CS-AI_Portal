@@ -1,95 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Launchpad from './Pages/Launchpad';
-import Reports from './Pages/Reports';
-import Dashboard from './Pages/Dashboard';
-import Profile from './Pages/Profile';
-import Signup from './Pages/Signup';
-import Login from './Pages/Login';
+import React, { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import Launchpad from "./Pages/Launchpad";
+import Reports from "./Pages/Reports";
+import Dashboard from "./Pages/Dashboard";
+import Profile from "./Pages/Profile";
+import Signup from "./Pages/Signup";
+import Login from "./Pages/Login";
 import Layout from "./Component/Layout";
-import PrivateRoutes from './Context/PrivateRoutes';
-import Private from './Context/Private';
-import Addjobs from './Pages/addjobs';
+import PrivateRoutes from "./Context/PrivateRoutes";
+import Private from "./Context/Private";
+import Addjobs from "./Pages/addjobs";
 import { useAuth } from "./Context/AuthContect";
-import AdminRoute from './Context/AdminRoute';
-import UserManagement from './Pages/usermanagement';
-import AddUsers from './Pages/AddUsers';
-import axios from "axios";
+import AdminRoute from "./Context/AdminRoute";
+import UserManagement from "./Pages/usermanagement";
+import AddUsers from "./Pages/AddUsers";
 
 const App = () => {
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    dob: "",
-    rollNumber: "",
-    mobile: "",
-    course: "",
-    photo: "", // Profile image URL
-  });
+  const { currentUser,currentUserRole, getAuthToken } = useAuth();
+  const [userData, setUserData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(""); // Error state
-  const { currentUser} = useAuth()
+  const fetchUserData = async () => {
+    try {
+      if (!currentUser) return;
+      let endpoint;
+    
+      if (currentUserRole === "admin") {
+        endpoint = `http://localhost:5000/api/admins/${currentUser.username}`;
+      } else if (currentUserRole === "student") {
+        endpoint = `http://localhost:5000/api/students/${currentUser.username}`;
+      } else {
+        throw new Error("Unknown role or unauthorized access");
+      }
+      const response = await fetch(
+        endpoint,{
+          method: "GET",
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUserData(data.data);
+    } catch (err) {
+      console.error("Failed to fetch user data:", err);
+      setError("Error fetching user data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try { 
-        if (!currentUser) return;
-        const response = await axios.get(`http://localhost:5000/api/students/${currentUser.username}`);
-        setUserData(response.data.data);
-      } catch (err) {
-        console.error("Failed to fetch user data:", err);
-        setError("Error fetching user data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-
     fetchUserData();
-    console.log(userData)
-  }, [currentUser]);
+  }, [currentUser, getAuthToken]);
 
   if (loading) return <p className="text-center">Loading...</p>;
-
-
+  if (error) return <p className="text-center text-danger">{error}</p>;
 
   return (
-      <Routes>
-        <Route element={<Private />}>
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-        </Route>
-        <Route element={<PrivateRoutes />}>
-          <Route
-            path="/"
-            element={<Layout userData={userData} setUserData={setUserData}/>} // Pass photo to Layout
-          >
-            <Route index element={<Launchpad />} />
-            <Route path="myreports" element={<Reports />} />
-            <Route element={<AdminRoute />}>
-              <Route path="dashboard" element={<Dashboard />}>
-                <Route path="addjobs" element={<Addjobs />} />
-              </Route>
+    <Routes>
+      <Route element={<Private />}>
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+      </Route>
+      <Route element={<PrivateRoutes />}>
+        <Route
+          path="/"
+          element={<Layout userData={userData} setUserData={setUserData} />}
+        >
+          <Route index element={<Launchpad />} />
+          <Route path="myreports" element={<Reports />} />
+          <Route element={<AdminRoute />}>
+            <Route path="dashboard" element={<Dashboard />}>
+              <Route path="addjobs" element={<Addjobs />} />
             </Route>
-
-            <Route element={<AdminRoute/>}>
-              <Route path="/usermanagement" element={<UserManagement />} />
-              <Route path="/AddUsers" element={<AddUsers />} />
-            </Route>
-            
-            
-          
-            <Route
-              path="myaccount"
-              element={<Profile userData={userData} setUserData={setUserData} />} // Pass state to Profile
-            />
+            <Route path="/usermanagement" element={<UserManagement />} />
+            <Route path="/AddUsers" element={<AddUsers />} />
           </Route>
+          <Route
+            path="myaccount"
+            element={<Profile userData={userData} setUserData={setUserData} />}
+          />
         </Route>
-        <Route path="*" element={<Login />} />
-      </Routes>
-
+      </Route>
+     
+    </Routes>
   );
 };
 

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useAuth } from "../Context/AuthContect";
 import axios from "axios";
 
 const Profile = ({ userData, setUserData }) => {
-  const [error, setError] = useState(""); // To capture error messages
+  const [error, setError] = useState("");
+  const { currentUser, getAuthToken, currentUserRole } = useAuth();
 
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
@@ -13,28 +15,29 @@ const Profile = ({ userData, setUserData }) => {
     reader.onload = () => {
       setUserData((prevState) => ({
         ...prevState,
-        photo: reader.result, // Temporary preview of the selected image
+        photo: reader.result,
       }));
     };
     reader.readAsDataURL(file);
 
     // Upload image
     const formData = new FormData();
-    formData.append("photo", file); // Ensure this matches multer's field name
+    formData.append("photo", file);
 
     try {
-      const emailPrefix = userData.email.split("@")[0].toUpperCase();
       const response = await axios.patch(
-        `http://localhost:5000/api/students/${emailPrefix}/photo`,
+        `http://localhost:5000/api/${currentUserRole === "student" ? "students" : "admins"}/${currentUser.username}/photo`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
         }
       );
-      console.log("Image uploaded successfully:", response.data);
       setUserData((prevState) => ({
         ...prevState,
-        photo: response.data.photo, // Update the photo URL with the new one from the response
+        photo: response.data.photo,
       }));
     } catch (error) {
       console.error("Error uploading image:", error.response?.data || error.message);
@@ -43,6 +46,27 @@ const Profile = ({ userData, setUserData }) => {
   };
 
   if (!userData) return <p className="text-center">Loading...</p>;
+
+  // Define fields dynamically based on role
+  const userFields =
+    currentUserRole === "student"
+      ? [
+          { label: "First Name", value: userData.firstName },
+          { label: "Last Name", value: userData.lastName },
+          { label: "Email", value: userData.email },
+          { label: "Date of Birth", value: userData.dob },
+          { label: "Roll Number", value: userData.rollNumber },
+          { label: "Phone", value: userData.mobile },
+          { label: "Course", value: userData.course },
+        ]
+      : [
+          { label: "First Name", value: userData.firstName },
+          { label: "Last Name", value: userData.lastName },
+          { label: "Email", value: userData.email },
+          { label: "Phone", value: userData.mobile },
+          { label: "Employee ID", value: userData.employeeId },
+          { label: "Department", value: userData.department },
+        ];
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-50">
@@ -56,7 +80,7 @@ const Profile = ({ userData, setUserData }) => {
               className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
             />
             <button
-              type='submit'
+              type="button"
               className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 cursor-pointer"
               onClick={() => document.getElementById("photoUpload").click()}
             >
@@ -92,15 +116,7 @@ const Profile = ({ userData, setUserData }) => {
 
         {/* User Details Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { label: "First Name", value: userData.firstName },
-            { label: "Last Name", value: userData.lastName },
-            { label: "Email", value: userData.email },
-            { label: "Date of Birth", value: userData.dob },
-            { label: "Roll Number", value: userData.rollNumber },
-            { label: "Phone", value: userData.mobile },
-            { label: "Course", value: userData.course },
-          ].map(({ label, value }, index) => (
+          {userFields.map(({ label, value }, index) => (
             <div key={index}>
               <label className="block text-sm font-medium">{label}</label>
               <input
@@ -112,6 +128,8 @@ const Profile = ({ userData, setUserData }) => {
             </div>
           ))}
         </div>
+
+        {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
     </div>
   );

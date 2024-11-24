@@ -10,7 +10,7 @@ const Launchpad = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewingJobId, setViewingJobId] = useState(null);
-  const { currentUser, currentUserRole} = useAuth();  // Tracks which job's confirmation is shown
+  const { currentUser, currentUserRole, getAuthToken} = useAuth();  // Tracks which job's confirmation is shown
   const navigate = useNavigate();
   const handleAddClick = () => {
     navigate('/dashboard/addjobs'); // Redirect to AddJobs page
@@ -103,14 +103,21 @@ const Launchpad = () => {
       console.log(job)
       const response = await fetch("http://localhost:5000/api/appliedJobs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getAuthToken()}`, 
+        },
         body: JSON.stringify(job),
       });
+      const data = await response.json();
+      console.log("Server response:", data);
       if (response.ok) {
         alert("Job application submitted successfully!");
       } else {
+        console.error("Error:", data); // Log server error
         alert("Failed to submit job application.");
       }
+      
     } catch (error) {
       console.error("Error submitting job application:", error);
     }
@@ -221,7 +228,7 @@ const Launchpad = () => {
                           <button
                             className="bg-green-500 text-white py-1 px-4 rounded-lg mr-4 hover:bg-green-600"
                             onClick={() => {
-                              handleConfirm({"rollNumber":currentUser.email.split('@')[0].toUpperCase(), "jobId":opportunity.id})
+                              handleConfirm({"rollNumber":currentUser.username, "jobId":opportunity.id})
                               setViewingJobId(null)
                             }}
                           >
