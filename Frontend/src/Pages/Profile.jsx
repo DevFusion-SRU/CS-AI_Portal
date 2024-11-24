@@ -1,69 +1,72 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../Context/AuthContect";
 import axios from "axios";
 
-const EditProfile = () => {
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    dob: "",
-    rollNumber: "",
-    mobile: "",
-    course: "",
-    photo: "", // Profile image URL
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""); // To capture error messages
-  const { currentUser } = useAuth();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}`
-        );
-        setUserData(response.data.data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError("Failed to load user data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [currentUser.email]);
-
-  if (loading) return <p className="text-center">Loading...</p>;
-  if (error) return <p className="text-center text-red-600">{error}</p>;
+const Profile = ({ userData, setUserData }) => {
+  const [error, setError] = useState("");
+  const { currentUser, getAuthToken, currentUserRole } = useAuth();
 
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
+    if (!file) return;
+
+    // Temporary live preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUserData((prevState) => ({
+        ...prevState,
+        photo: reader.result,
+      }));
+    };
+    reader.readAsDataURL(file);
+
+    // Upload image
     const formData = new FormData();
-    formData.append('photo', file); // Ensure this matches multer's field name
+    formData.append("photo", file);
 
     try {
       const response = await axios.patch(
-        `http://localhost:5000/api/students/${currentUser.email.split('@')[0].toUpperCase()}/photo`,
+        `http://localhost:5000/api/${currentUserRole === "student" ? "students" : "admins"}/${currentUser.username}/photo`,
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
         }
       );
-      console.log('Image uploaded successfully:', response.data);
-
-      // Update the photo in the userData state with the URL returned by the backend
       setUserData((prevState) => ({
         ...prevState,
-        photo: response.data.photo,  // Assuming the backend returns the image URL in response.data.photo
+        photo: response.data.photo,
       }));
     } catch (error) {
-      console.error('Error uploading image:', error.response?.data || error.message);
-      setError("Failed to upload image");
+      console.error("Error uploading image:", error.response?.data || error.message);
+      setError("Failed to upload profile image");
     }
   };
+
+  if (!userData) return <p className="text-center">Loading...</p>;
+
+  // Define fields dynamically based on role
+  const userFields =
+    currentUserRole === "student"
+      ? [
+          { label: "First Name", value: userData.firstName },
+          { label: "Last Name", value: userData.lastName },
+          { label: "Email", value: userData.email },
+          { label: "Date of Birth", value: userData.dob },
+          { label: "Roll Number", value: userData.rollNumber },
+          { label: "Phone", value: userData.mobile },
+          { label: "Course", value: userData.course },
+        ]
+      : [
+          { label: "First Name", value: userData.firstName },
+          { label: "Last Name", value: userData.lastName },
+          { label: "Email", value: userData.email },
+          { label: "Phone", value: userData.mobile },
+          { label: "Employee ID", value: userData.employeeId },
+          { label: "Department", value: userData.department },
+        ];
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-50">
@@ -76,7 +79,8 @@ const EditProfile = () => {
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
             />
-            <div
+            <button
+              type="button"
               className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 cursor-pointer"
               onClick={() => document.getElementById("photoUpload").click()}
             >
@@ -94,7 +98,7 @@ const EditProfile = () => {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-            </div>
+            </button>
           </div>
           <p className="mt-2 text-sm text-gray-500">
             {userData.photo ? "Profile Picture" : "Add Profile Picture"}
@@ -112,15 +116,7 @@ const EditProfile = () => {
 
         {/* User Details Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { label: "First Name", value: userData.firstName },
-            { label: "Last Name", value: userData.lastName },
-            { label: "Email", value: userData.email },
-            { label: "Date of Birth", value: userData.dob },
-            { label: "Roll Number", value: userData.rollNumber },
-            { label: "Phone", value: userData.mobile },
-            { label: "Course", value: userData.course },
-          ].map(({ label, value }, index) => (
+          {userFields.map(({ label, value }, index) => (
             <div key={index}>
               <label className="block text-sm font-medium">{label}</label>
               <input
@@ -132,9 +128,11 @@ const EditProfile = () => {
             </div>
           ))}
         </div>
+
+        {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
     </div>
   );
 };
 
-export default EditProfile;
+export default Profile;

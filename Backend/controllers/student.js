@@ -1,11 +1,55 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 
 import Student from "../models/student.js"; // Student model using studentConn
+import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateConn
 
 export const getStudents = async (req, res) => {
+    const { rollNumber, firstName, lastName } = req.query;
+    
+    // Ensure only one filter is applied at a time
+    if ((rollNumber && firstName) || (rollNumber && lastName) || (firstName && lastName)) {
+        return res.status(400).json({
+            success: false,
+            message: "Only one search filter (rollNumber, firstName, or lastName) is allowed at a time.",
+        });
+    }
+
+    const filters = {};
+
+    if (rollNumber) {
+        filters.rollNumber = new RegExp(rollNumber.trim(), "i");  // Case-insensitive regex search
+    } else if (firstName) {
+        filters.firstName = new RegExp(firstName.trim(), "i"); // Case-insensitive search
+    } else if (lastName) {
+        filters.lastName = new RegExp(lastName.trim(), "i"); // Case-insensitive search
+    }
+
     try {
-        const students = await Student.find({});
-        res.status(200).json({ success: true, data: students });
+        // Pagination setup
+        const page = parseInt(req.query.page) || 1; // Default to page 1
+        const limit = parseInt(req.query.limit) || 25; // Default to 25 students per page
+        const skip = (page - 1) * limit;
+
+        // Fetch only necessary fields to optimize the data size
+        const fields = 'rollNumber firstName lastName course email mobile'; // No photo
+
+        // Parallelize querying students and counting documents to reduce response time
+        const [students, totalStudents] = await Promise.all([
+            Student.find(filters).skip(skip).limit(limit).select(fields), // Students query with pagination and fields projection
+            Student.countDocuments(filters)  // Count the filtered documents (optional but helps with pagination info)
+        ]);
+
+        if (students.length === 0) {
+            return res.status(404).json({ success: false, message: "No students found matching the criteria." });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: students,
+            totalPages: Math.ceil(totalStudents / limit), // Total pages based on filtered students
+            currentPage: page,
+        });
     } catch (error) {
         console.error("Error in fetching Students: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
@@ -43,15 +87,27 @@ export const getStudentDetails = async (req, res) => {
 export const addStudent = async (req, res) => {
     const student = req.body;
     if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
-        return res.status(400).json({ success: false, message: "Provide all required fields!!" });
+        return res.status(400).json({ success: false, message: "Provide all required fields!" });
     }
 
     const newStudent = new Student(student);
+
     try {
+        // Save student in the Student collection
         await newStudent.save();
+
+        // Add student entry to Authentication collection
+        const hashedPassword = await bcrypt.hash("Student@2025", 10); // Hash the default password
+        const newAuthentication = new Authenticate({
+            username: student.rollNumber,
+            password: hashedPassword,
+            role: "student",
+        });
+        await newAuthentication.save();
+
         res.status(201).json({ success: true, data: newStudent });
     } catch (error) {
-        console.error("Error in entering Student details: ", error.message);
+        console.error("Error in adding Student details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
@@ -100,6 +156,20 @@ export const addStudentBatch = async (req, res) => {
     try {
         // Save all students in bulk using `insertMany`
         const newStudents = await Student.insertMany(students);
+
+        // Add each student to Authentication collection
+        const authenticationEntries = await Promise.all(
+            students.map(async (student) => {
+                const hashedPassword = await bcrypt.hash("Student@2025", 10); // Hash the default password
+                return {
+                    username: student.rollNumber,
+                    password: hashedPassword,
+                    role: "student",
+                };
+            })
+        );
+        await Authenticate.insertMany(authenticationEntries); // Bulk insert into Authentication collection
+
         res.status(201).json({ success: true, data: newStudents });
     } catch (error) {
         console.error("Error in entering Student details: ", error.message);

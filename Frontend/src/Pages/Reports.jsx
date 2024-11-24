@@ -8,7 +8,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { currentUser } = useAuth();
+  const { currentUser, getAuthToken } = useAuth();
   const hasFetchedData = useRef(false);
 
   const openTab = (tab) => {
@@ -23,8 +23,12 @@ const Reports = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:5000/api/appliedJobs/${currentUser.email.split('@')[0].toUpperCase()}`
-        );
+          `http://localhost:5000/api/appliedJobs/${currentUser.username}`,
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${getAuthToken()}` },
+            credentials: "include",
+          })
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
           setOpportunities(json.data);
