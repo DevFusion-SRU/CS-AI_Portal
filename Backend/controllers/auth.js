@@ -23,7 +23,7 @@ export const login = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: false, // Prevents client-side JavaScript from accessing the cookie
             secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-            sameSite: "strict", // Prevent CSRF
+            sameSite: "None", // Prevent CSRF
             maxAge: 60 * 60 * 24000, // 24 hour
         });
 
