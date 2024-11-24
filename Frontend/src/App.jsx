@@ -12,7 +12,7 @@ import Private from './Context/Private';
 import Addjobs from './Pages/addjobs';
 import { useAuth } from "./Context/AuthContect";
 import AdminRoute from './Context/AdminRoute';
-import UserManagement from './Pages/usermanagement';
+import UserManagement from './Pages/UserManagement';
 import AddUsers from './Pages/AddUsers';
 import axios from "axios";
 

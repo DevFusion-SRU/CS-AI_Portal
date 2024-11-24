@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContect";
+import { FaSearch } from "react-icons/fa";
 
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
 
 const UserManagement = () => {
     const [activeTab, setActiveTab] = useState("all");
@@ -12,26 +21,18 @@ const UserManagement = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [filters, setFilters] = useState({ year: "", batch: "" });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const { currentUser, currentUserRole } = useAuth(); // Tracks the current user and role
+    const { currentUser, currentUserRole } = useAuth();
     const navigate = useNavigate();
     const hasFetchedData = useRef(false);
-  
+
     const handleAddClick = () => {
-        navigate("/AddUsers"); // Redirect to AddUsers page
+        navigate("/AddUsers");
     };
 
     const toggleFilterMenu = () => {
-        setIsFilterOpen(prevState => !prevState);
+        setIsFilterOpen((prevState) => !prevState);
     };
-  
-    const openTab = (tab) => {
-        if (activeTab !== tab) {
-            setActiveTab(tab);
-            // Optionally, reset the page when switching tabs
-            setCurrentPage(1);
-        }
-    };
-  
+
     const fetchAPI = useCallback(async (page = 1) => {
         setLoading(true);
         try {
@@ -49,7 +50,7 @@ const UserManagement = () => {
         }
         setLoading(false);
     }, [activeTab, filters]);
-  
+
     useEffect(() => {
         if (hasFetchedData.current) {
             fetchAPI(currentPage);
@@ -57,41 +58,72 @@ const UserManagement = () => {
             hasFetchedData.current = true;
         }
     }, [fetchAPI, currentPage, filters]);
-  
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
-        setCurrentPage(1);
+
+    const handleSearchChange = async (e) => {
+        const query = e.target.value.trim();
+        console.log(query)
+        setSearchQuery(query);
+
+        const params = new URLSearchParams();
+        console.log(params)
+
+        if (/^\d/.test(query)) {
+            params.append("rollNumber", query);
+        } else {
+            const words = query.split(" ");
+            params.append("firstName", words[0]);
+
+            if (words.length > 1) {
+                params.append("lastName", query);
+            }
+        }
+
+        try {
+            setLoading(true);
+            const response = await fetch(`http://localhost:5000/api/students?${params.toString()}`);
+            const json = await response.json();
+
+            if (json.success) {
+                if (params.has("rollNumber")) {
+                    const filteredStudents = json.data.filter((student) => student.rollNumber === query);
+                    setStudents(filteredStudents);
+                } else {
+                    setStudents(json.data);
+                }
+            } else {
+                setStudents([]);
+                console.error(json.message || "No students found.");
+            }
+        } catch (error) {
+            console.error("Error fetching search results:", error);
+        } finally {
+            setLoading(false);
+        }
     };
-  
+
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prevState => ({
+        setFilters((prevState) => ({
             ...prevState,
-            [name]: value
+            [name]: value,
         }));
     };
 
-    const filteredStudents = students.filter((student) => {
-        const fullName = `${student.firstName} ${student.lastName || ""}`.toLowerCase();
-        const matchesSearchQuery = fullName.includes(searchQuery.toLowerCase()) || student.rollNumber.includes(searchQuery);
-        const matchesYearFilter = filters.year ? student.year === filters.year : true;
-        const matchesBatchFilter = filters.batch ? student.batch === filters.batch : true;
-
-        return matchesSearchQuery && matchesYearFilter && matchesBatchFilter;
-    });
-  
     return (
         <main className="w-full flex flex-col items-center px-4 py-8">
             <section className="w-full max-w-6xl">
                 <div className="flex justify-between items-center mb-4 border-b border-gray-200">
                     <div className="flex space-x-4">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                            placeholder="Search by Roll Number or Name"
-                            className="px-4 py-2 border border-gray-300 rounded-md shadow-md"
-                        />
+                        <div className="relative w-full max-w-xs">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                placeholder="Search by Roll Number or Name"
+                                className="px-4 py-2 w-full border border-gray-300 rounded-md shadow-md focus:ring-2 focus:ring-blue-500 pl-10"
+                            />
+                            <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+                        </div>
                         <button
                             onClick={toggleFilterMenu}
                             className="px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600"
@@ -111,7 +143,6 @@ const UserManagement = () => {
                     )}
                 </div>
 
-                {/* Filter Dropdown */}
                 {isFilterOpen && (
                     <div className="absolute top-16 right-0 w-48 bg-white shadow-lg p-4 rounded-lg">
                         <div className="flex flex-col space-y-2">
@@ -158,7 +189,7 @@ const UserManagement = () => {
                         </div>
                     </div>
                 )}
-    
+
                 {loading ? (
                     <p>Loading...</p>
                 ) : (
@@ -175,19 +206,19 @@ const UserManagement = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredStudents.map((student) => (
+                                {students.map((student) => (
                                     <tr key={student.rollNumber} className="hover:bg-gray-100 transition-all">
                                         <td className="px-6 py-4 text-sm text-gray-900">{student.rollNumber}</td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
                                             {student.firstName} {student.lastName || ""}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{student.year}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{student.batch}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-900">{student.year}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-900">{student.batch}</td>
                                         <td className="px-6 py-4 text-center">
-                                            <button className="w-24 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg">View</button>
+                                            <button className="text-indigo-600 hover:text-indigo-900">View</button>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <button className="w-24 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg">Remove</button>
+                                            <button className="text-red-600 hover:text-red-900">Remove</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -195,42 +226,6 @@ const UserManagement = () => {
                         </table>
                     </div>
                 )}
-    
-                <div className="flex flex-col sm:flex-row justify-center items-center mt-4 space-y-4 sm:space-y-0 sm:space-x-4">
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Previous
-                    </button>
-    
-                    <div className="flex items-center space-x-2">
-                        <span className="text-gray-700 text-sm">Page</span>
-                        <input
-                            type="number"
-                            value={currentPage}
-                            min="1"
-                            max={totalPages}
-                            onChange={(e) => setCurrentPage(Number(e.target.value))}
-                            onBlur={(e) => {
-                                const value = Math.min(Math.max(Number(e.target.value), 1), totalPages);
-                                setCurrentPage(value);
-                                fetchAPI(value);
-                            }}
-                            className="w-20 px-3 py-2 border border-gray-300 rounded-md text-center text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        />
-                        <span className="text-gray-700 text-sm">of {totalPages}</span>
-                    </div>
-    
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-5 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Next
-                    </button>
-                </div>
             </section>
         </main>
     );

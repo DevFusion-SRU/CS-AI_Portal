@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContect";
+import { FaSearch } from "react-icons/fa";
+
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -58,6 +60,9 @@ const Dashboard = () => {
         setLoading(false); // End loading state
     }
 }, []);
+
+
+
   useEffect(() => {
     if (hasFetchedData.current) {
       fetchAPI(currentPage);
@@ -70,35 +75,13 @@ const Dashboard = () => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
   };
-  const toggleFilterMenu = () => {
-    setIsFilterOpen(prevState => !prevState);
-};
+  
 
 
-  useEffect(() => {
-    if (hasFetchedData.current) {
-        fetchAPI(currentPage);
-    } else {
-        hasFetchedData.current = true;
-    }
-}, [fetchAPI, currentPage, filters]);
+  
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prevState => ({
-        ...prevState,
-        [name]: value
-    }));
-};
+  
 
-  const filteredStudents = students.filter((student) => {
-    const fullName = `${student.firstName} ${student.lastName || ""}`.toLowerCase();
-    const matchesSearchQuery = fullName.includes(searchQuery.toLowerCase()) || student.rollNumber.includes(searchQuery);
-    const matchesYearFilter = filters.year ? student.year === filters.year : true;
-    const matchesBatchFilter = filters.batch ? student.batch === filters.batch : true;
-
-    return matchesSearchQuery && matchesYearFilter && matchesBatchFilter;
-});
 
   const filteredOpportunities = opportunities
     .filter(
@@ -110,6 +93,7 @@ const Dashboard = () => {
         : "";
       return description.includes(searchQuery.toLowerCase());
     });
+    
 
 
 
@@ -138,15 +122,21 @@ const Dashboard = () => {
         </div>
         {currentUserRole === "admin" && (
           <div className="flex justify-end space-x-4 mb-5">
-            <button
-              onClick={handleAddClick}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md shadow hover:bg-blue-600"
-            >
-              Add
-            </button>
-            <button className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100">
-              Edit
-            </button>
+            <div className="flex space-x-4">
+              <div className="relative w-full max-w-xs">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            placeholder=" Search"
+                          
+                            className="px-4 py-2 w-full border border-gray-300 rounded-md shadow-md focus:ring-2 focus:ring-blue-500 pl-10"
+
+                        />
+                        <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                </div>
+            
           </div>
         )}
 
@@ -154,59 +144,59 @@ const Dashboard = () => {
           <p>Loading...</p>
         ) : (
           <div className="overflow-x-auto bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg rounded-lg p-6 border border-gray-200">
-  <table className="min-w-full divide-y divide-gray-200">
-    <thead className="bg-gray-50">
-      <tr>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-          Company
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-          Role
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-          Job ID
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-          Type
-        </th>
-        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-          Visits
-        </th>
-        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-          Applications
-        </th>
-      </tr>
-    </thead>
-    <tbody className="bg-white divide-y divide-gray-200">
-      {filteredOpportunities.map((opportunity) => (
-        <tr key={opportunity.id} className="hover:bg-gray-100 transition-all">
-          <td className="px-6 py-4 text-sm text-gray-900">{opportunity.jobDetails.company}</td>
-          <td className="px-6 py-4 text-sm text-gray-900">{opportunity.jobDetails.name}</td>
-          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobDetails.name}</td>
-          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobDetails.id}</td>
-          <td className="px-6 py-4 text-center">
-            <button
-              
-              className="w-24 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
-            >
-              Visits: {opportunity.viewedStudentsCount}
-            </button>
-          </td>
-          <td className="px-6 py-4 text-center">
-            <button
-              
-              className="w-24 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
-            >
-              Applied: {opportunity.appliedStudentsCount}
-            </button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Company
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Job ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  Visits
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  Applications
+                </th>
+              </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredOpportunities.map((opportunity) => (
+              <tr key={opportunity.id} className="hover:bg-gray-100 transition-all">
+                <td className="px-6 py-4 text-sm text-gray-900">{opportunity.jobDetails.company}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{opportunity.jobDetails.name}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobDetails.name}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobDetails.id}</td>
+                <td className="px-6 py-4 text-center">
+                  <button
+                    
+                    className="w-24 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
+                  >
+                    Visits: {opportunity.viewedStudentsCount}
+                  </button>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <button
+                    
+                    className="w-24 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
+                  >
+                    Applied: {opportunity.appliedStudentsCount}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        )}
+              )}
 
       <div className="flex flex-col sm:flex-row justify-center items-center mt-4 space-y-4 sm:space-y-0 sm:space-x-4">
         <button
