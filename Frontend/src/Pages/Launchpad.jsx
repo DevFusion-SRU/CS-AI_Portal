@@ -140,7 +140,7 @@ const Launchpad = () => {
         'jobId': id,
       };
       try {
-        const response = await fetch("${BASE_URL}appliedJobs/view", {
+        const response = await fetch(`${BASE_URL}appliedJobs/view`, {
           method: "POST",
           headers: { "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("authToken")}`
@@ -159,7 +159,7 @@ const Launchpad = () => {
   // Handle job application submission
   const handleConfirm = async (job) => {
     try {
-      const response = await fetch("${BASE_URL}appliedJobs", {
+      const response = await fetch(`${BASE_URL}appliedJobs`, {
         method: "POST",
         headers: { "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`
