@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from "./AuthContect"; 
+import { useAuth } from "./AuthContext"; 
 
 const PrivateRoutes = () => {
     const { currentUser } = useAuth(); // Use currentUser instead of user

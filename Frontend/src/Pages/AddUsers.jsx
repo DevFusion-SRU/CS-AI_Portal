@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../Context/AuthContect";
+import { useAuth } from "../Context/AuthContext";
 import axios from "axios";
 const AddUsers = () => {
     

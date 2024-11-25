@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useAuth } from "../Context/AuthContect"; 
+import { useAuth } from "../Context/AuthContext"; 
 import { NavLink, useNavigate } from 'react-router-dom';
 
 const Signup = () => {
