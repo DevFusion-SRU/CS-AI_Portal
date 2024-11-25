@@ -13,7 +13,7 @@ const Launchpad = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { currentUser, currentUserRole } = useAuth();
+  const { currentUser, currentUserRole, BASE_URL } = useAuth();
   const [filters, setFilters] = useState({ company: "", role: "", jobId: "" });
   const navigate = useNavigate();
   const hasFetchedData = useRef(false);
@@ -47,7 +47,7 @@ const Launchpad = () => {
         ).toString();
   
         const response = await fetch(
-          `http://localhost:5000/api/jobs?page=${page}&limit=10&type=${activeTab}&${queryParams}`
+          `${BASE_URL}jobs?page=${page}&limit=10&type=${activeTab}&${queryParams}`
         );
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
@@ -140,7 +140,7 @@ const Launchpad = () => {
         'jobId': id,
       };
       try {
-        const response = await fetch("http://localhost:5000/api/appliedJobs/view", {
+        const response = await fetch("${BASE_URL}appliedJobs/view", {
           method: "POST",
           headers: { "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("authToken")}`
@@ -159,7 +159,7 @@ const Launchpad = () => {
   // Handle job application submission
   const handleConfirm = async (job) => {
     try {
-      const response = await fetch("http://localhost:5000/api/appliedJobs", {
+      const response = await fetch("${BASE_URL}appliedJobs", {
         method: "POST",
         headers: { "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`

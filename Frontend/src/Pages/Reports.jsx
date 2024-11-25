@@ -8,7 +8,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { currentUser, getAuthToken } = useAuth();
+  const { currentUser, BASE_URL } = useAuth();
   const hasFetchedData = useRef(false);
 
   const openTab = (tab) => {
@@ -23,7 +23,7 @@ const Reports = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:5000/api/appliedJobs/${currentUser.username}`,
+          `${BASE_URL}appliedJobs/${currentUser.username}`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },

@@ -21,7 +21,7 @@ const UserManagement = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [filters, setFilters] = useState({ year: "", batch: "" });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const { currentUser, currentUserRole } = useAuth();
+    const { currentUser, currentUserRole, BASE_URL } = useAuth();
     const navigate = useNavigate();
     const hasFetchedData = useRef(false);
 
@@ -37,7 +37,7 @@ const UserManagement = () => {
         setLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:5000/api/students?page=${page}&limit=10&type=${activeTab}&year=${filters.year}&batch=${filters.batch}`, {
+                `${BASE_URL}students?page=${page}&limit=10&type=${activeTab}&year=${filters.year}&batch=${filters.batch}`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("authToken")}`
@@ -85,7 +85,7 @@ const UserManagement = () => {
 
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/api/students?${params.toString()}`);
+            const response = await fetch(`${BASE_URL}students?${params.toString()}`);
             const json = await response.json();
 
             if (json.success) {
