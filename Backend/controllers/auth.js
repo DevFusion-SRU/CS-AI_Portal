@@ -23,7 +23,8 @@ export const login = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
             secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-            sameSite: "strict", // Prevent CSRF
+            sameSite: "None", // Allows cookies to be sent in cross-site requests
+            partitioned: true, // Enable partitioned cookies (for better privacy on some browsers)
             maxAge: 60 * 60 * 24000, // 24 hour
         });
 
@@ -49,7 +50,6 @@ export const verifyTokenController = (req, res) => {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = verifyToken(token); // Using the utility function
-        console.log("Token verification successful:", decoded);
         return res.status(200).json({ success: true, user: decoded });
     } catch (error) {
         console.error("Token verification failed:", error.message);
