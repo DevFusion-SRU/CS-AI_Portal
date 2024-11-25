@@ -10,7 +10,7 @@ import Layout from "./Component/Layout";
 import PrivateRoutes from "./Context/PrivateRoutes";
 import Private from "./Context/Private";
 import Addjobs from "./Pages/addjobs";
-import { useAuth } from "./Context/AuthContect";
+import { useAuth } from "./Context/AuthContext";
 import AdminRoute from './Context/AdminRoute';
 import UserManagement from './Pages/usermanagement';
 import AddUsers from './Pages/AddUsers';

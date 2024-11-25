@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from "./AuthContect"; 
+import { useAuth } from "./AuthContext"; 
 
 const AdminRoute = () => {
     const { currentUserRole } = useAuth();

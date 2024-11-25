@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useAuth } from "../Context/AuthContect";
+import { useAuth } from "../Context/AuthContext";
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState("applied");

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../Context/AuthContect';
+import { useAuth } from '../Context/AuthContext';
 import { FaRocket, FaChartBar, FaUser, FaSignOutAlt } from 'react-icons/fa'; 
 
 const Sidebar = ({ userData, setUserData }) => {

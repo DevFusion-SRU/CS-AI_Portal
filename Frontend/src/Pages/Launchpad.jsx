@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../Context/AuthContect"; 
+import { useAuth } from "../Context/AuthContext"; 
 import { FaSearch } from "react-icons/fa";
 
 const Launchpad = () => {
