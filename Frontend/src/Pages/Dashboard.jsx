@@ -11,7 +11,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { currentUserRole } = useAuth(); // Tracks the current user role
+  const { BASE_URL } = useAuth(); // Tracks the current user role
   const navigate = useNavigate();
   const hasFetchedData = useRef(false);
 
@@ -30,7 +30,7 @@ const Dashboard = () => {
     setLoading(true); // Start loading state
     try {
       const response = await fetch(
-        `http://localhost:5000/api/appliedJobs/allDetails`,{
+        `${BASE_URL}appliedJobs/allDetails`,{
           method:'GET',
           headers: {
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,

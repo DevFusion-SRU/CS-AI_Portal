@@ -16,7 +16,7 @@ import UserManagement from './Pages/usermanagement';
 import AddUsers from './Pages/AddUsers';
 
 const App = () => {
-  const { currentUser,currentUserRole, getAuthToken } = useAuth();
+  const { currentUser,currentUserRole, BASE_URL } = useAuth();
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,9 +27,9 @@ const App = () => {
       let endpoint;
     
       if (currentUserRole === "admin") {
-        endpoint = `http://localhost:5000/api/admins/${currentUser.username}`;
+        endpoint = `${BASE_URL}admins/${currentUser.username}`;
       } else if (currentUserRole === "student") {
-        endpoint = `http://localhost:5000/api/students/${currentUser.username}`;
+        endpoint = `${BASE_URL}students/${currentUser.username}`;
       } else {
         throw new Error("Unknown role or unauthorized access");
       }
@@ -57,7 +57,7 @@ const App = () => {
 
   useEffect(() => {
     fetchUserData();
-  }, [currentUser, getAuthToken]);
+  }, [currentUser]);
 
   if (loading) return <p className="text-center">Loading...</p>;
   if (error) return <p className="text-center text-danger">{error}</p>;

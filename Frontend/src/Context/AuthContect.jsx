@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+
+
 const AuthContext = React.createContext();
 
 export function useAuth() {
@@ -13,12 +15,14 @@ export function AuthProvider({ children }) {
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const navigate = useNavigate();
+
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
+
 
   // Signup function
   async function signup(email, password) {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
+      const response = await fetch(`${BASE_URL}auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +48,7 @@ export function AuthProvider({ children }) {
     try {
       
       const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${BASE_URL}auth/login`,
         {
           'username': email,
           'password': password,
@@ -73,7 +77,7 @@ export function AuthProvider({ children }) {
   async function fetchCurrentUser() {
    
     try {
-      const response = await fetch("http://localhost:5000/api/auth/verify", {
+      const response = await fetch(`${BASE_URL}auth/verify`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
@@ -110,7 +114,7 @@ export function AuthProvider({ children }) {
       }
 
 
-      const response = await fetch("http://localhost:5000/api/auth/logout", {
+      const response = await fetch(`${BASE_URL}auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`, // Ensure token is being sent
@@ -171,6 +175,7 @@ export function AuthProvider({ children }) {
     currentUser,
     currentUserRole,
     getAuthToken,
+    BASE_URL,
     signup,
     login,
     signout,
