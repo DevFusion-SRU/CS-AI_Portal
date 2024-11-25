@@ -55,7 +55,8 @@ export function AuthProvider({ children }) {
       console.log("Response Data:", response);
 
       if (response.data.success) {
-        console.log(document.cookie, 'hiiii')
+        console.log(response.data.token)
+        localStorage.setItem("authToken", response.data.token);
         fetchCurrentUser();
       } else {
         setError("Invalid response from server.");
@@ -75,7 +76,7 @@ export function AuthProvider({ children }) {
       const response = await fetch("http://localhost:5000/api/auth/verify", {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
 
@@ -101,22 +102,25 @@ export function AuthProvider({ children }) {
   // Signout function
   async function signout() {
     try {
-      const token = getAuthToken(); // Get token from your token management function
+      const token = localStorage.getItem("authToken");; // Get token from your token management function
       if (!token) {
         console.log("No token found, can't log out.");
         handleError("No token found. Please log in again.");
         return;
       }
 
+
       const response = await fetch("http://localhost:5000/api/auth/logout", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`, // Ensure token is being sent
+          Authorization: `Bearer ${token}`, // Ensure token is being sent
         },
         credentials: "include", // Ensure cookies are sent if needed
       });
       if (!response.ok) {
         const errorText = await response.text();
+        
+        console.log(localStorage.getItem("authToken"))
         console.error("Logout error:", errorText);
         handleError("Logout failed. Please try again.");
         return;
@@ -125,6 +129,7 @@ export function AuthProvider({ children }) {
       const result = await response.json();
       if (result.success) {
         console.log("Logged out successfully");
+        localStorage.removeItem("authToken");
         setCurrentUser(null);
         setCurrentUserRole(null);
 // Any other state clearing related to the user
@@ -143,7 +148,8 @@ export function AuthProvider({ children }) {
   
 
   function getAuthToken() {
-    const match = document.cookie.match(new RegExp('(^| )' + "token" + '=([^;]+)'));
+    const match = localStorage.getItem("authToken").match(new RegExp('(^| )' + "token" + '=([^;]+)'));
+    
     return match ? match[2] : null;
   }
 
@@ -153,7 +159,7 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    const token = getAuthToken();
+    const token = localStorage.getItem("authToken");
     if (token) {
       fetchCurrentUser();
     } else {

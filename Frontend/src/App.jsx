@@ -11,9 +11,9 @@ import PrivateRoutes from "./Context/PrivateRoutes";
 import Private from "./Context/Private";
 import Addjobs from "./Pages/addjobs";
 import { useAuth } from "./Context/AuthContect";
-import AdminRoute from "./Context/AdminRoute";
-import UserManagement from "./Pages/usermanagement";
-import AddUsers from "./Pages/AddUsers";
+import AdminRoute from './Context/AdminRoute';
+import UserManagement from './Pages/usermanagement';
+import AddUsers from './Pages/AddUsers';
 
 const App = () => {
   const { currentUser,currentUserRole, getAuthToken } = useAuth();
@@ -36,7 +36,7 @@ const App = () => {
       const response = await fetch(
         endpoint,{
           method: "GET",
-          headers: { Authorization: `Bearer ${getAuthToken()}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
           credentials: "include",
         }
       );
@@ -76,11 +76,11 @@ const App = () => {
           <Route index element={<Launchpad />} />
           <Route path="myreports" element={<Reports />} />
           <Route element={<AdminRoute />}>
-            <Route path="dashboard" element={<Dashboard />}>
-              <Route path="addjobs" element={<Addjobs />} />
-            </Route>
-            <Route path="/usermanagement" element={<UserManagement />} />
-            <Route path="/AddUsers" element={<AddUsers />} />
+            <Route path="dashboard" element={<Dashboard />}/>
+            <Route path="addjobs" element={<Addjobs />} /> 
+            
+            <Route path="usermanagement" element={<UserManagement />} />
+            <Route path="addUsers" element={<AddUsers />} />
           </Route>
           <Route
             path="myaccount"

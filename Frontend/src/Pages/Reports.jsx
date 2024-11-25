@@ -26,7 +26,7 @@ const Reports = () => {
           `http://localhost:5000/api/appliedJobs/${currentUser.username}`,
           {
             method: "GET",
-            headers: { Authorization: `Bearer ${getAuthToken()}` },
+            headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             credentials: "include",
           })
         const json = await response.json();
