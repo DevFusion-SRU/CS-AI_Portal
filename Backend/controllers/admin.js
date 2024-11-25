@@ -59,3 +59,29 @@ export const getAdminDetails = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+export const uploadAdminPhoto = async (req, res) => {
+    const { employeeId } = req.params;
+
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: "Photo file is required!" });
+    }
+
+    const { buffer, mimetype } = req.file;
+
+    try {
+        const admin = await Admin.findOne({ employeeId });
+        if (!admin) {
+            return res.status(404).json({ success: false, message: "Admin not found!" });
+        }
+
+        admin.photo = buffer;
+        admin.photoType = mimetype;
+
+        await admin.save();
+        res.status(200).json({ success: true, message: "Photo uploaded successfully!" });
+    } catch (error) {
+        console.error("Error uploading photo: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
