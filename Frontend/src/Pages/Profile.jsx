@@ -4,7 +4,7 @@ import axios from "axios";
 
 const Profile = ({ userData, setUserData }) => {
   const [error, setError] = useState("");
-  const { currentUser, getAuthToken, currentUserRole } = useAuth();
+  const { currentUser, currentUserRole, BASE_URL } = useAuth();
 
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
@@ -26,12 +26,12 @@ const Profile = ({ userData, setUserData }) => {
 
     try {
       const response = await axios.patch(
-        `http://localhost:5000/api/${currentUserRole === "student" ? "students" : "admins"}/${currentUser.username}/photo`,
+        `${BASE_URL}${currentUserRole === "student" ? "students" : "admins"}/${currentUser.username}/photo`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${getAuthToken()}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
         }
       );

@@ -11,12 +11,12 @@ import PrivateRoutes from "./Context/PrivateRoutes";
 import Private from "./Context/Private";
 import Addjobs from "./Pages/addjobs";
 import { useAuth } from "./Context/AuthContect";
-import AdminRoute from "./Context/AdminRoute";
-import UserManagement from "./Pages/usermanagement";
-import AddUsers from "./Pages/AddUsers";
+import AdminRoute from './Context/AdminRoute';
+import UserManagement from './Pages/usermanagement';
+import AddUsers from './Pages/AddUsers';
 
 const App = () => {
-  const { currentUser,currentUserRole, getAuthToken } = useAuth();
+  const { currentUser,currentUserRole, BASE_URL } = useAuth();
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,16 +27,16 @@ const App = () => {
       let endpoint;
     
       if (currentUserRole === "admin") {
-        endpoint = `http://localhost:5000/api/admins/${currentUser.username}`;
+        endpoint = `${BASE_URL}admins/${currentUser.username}`;
       } else if (currentUserRole === "student") {
-        endpoint = `http://localhost:5000/api/students/${currentUser.username}`;
+        endpoint = `${BASE_URL}students/${currentUser.username}`;
       } else {
         throw new Error("Unknown role or unauthorized access");
       }
       const response = await fetch(
         endpoint,{
           method: "GET",
-          headers: { Authorization: `Bearer ${getAuthToken()}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
           credentials: "include",
         }
       );
@@ -57,7 +57,7 @@ const App = () => {
 
   useEffect(() => {
     fetchUserData();
-  }, [currentUser, getAuthToken]);
+  }, [currentUser]);
 
   if (loading) return <p className="text-center">Loading...</p>;
   if (error) return <p className="text-center text-danger">{error}</p>;
@@ -76,11 +76,11 @@ const App = () => {
           <Route index element={<Launchpad />} />
           <Route path="myreports" element={<Reports />} />
           <Route element={<AdminRoute />}>
-            <Route path="dashboard" element={<Dashboard />}>
-              <Route path="addjobs" element={<Addjobs />} />
-            </Route>
-            <Route path="/usermanagement" element={<UserManagement />} />
-            <Route path="/AddUsers" element={<AddUsers />} />
+            <Route path="dashboard" element={<Dashboard />}/>
+            <Route path="addjobs" element={<Addjobs />} /> 
+            
+            <Route path="usermanagement" element={<UserManagement />} />
+            <Route path="addUsers" element={<AddUsers />} />
           </Route>
           <Route
             path="myaccount"

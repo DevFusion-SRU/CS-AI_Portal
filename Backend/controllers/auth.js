@@ -21,14 +21,14 @@ export const login = async (req, res) => {
 
         // Set cookie with the JWT
         res.cookie("token", token, {
-            httpOnly: false, // Prevents client-side JavaScript from accessing the cookie
+            httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
             secure: process.env.NODE_ENV === "production", // Use secure cookies in production
             sameSite: "None", // Allows cookies to be sent in cross-site requests
             partitioned: true, // Enable partitioned cookies (for better privacy on some browsers)
             maxAge: 60 * 60 * 24000, // 24 hour
         });
 
-        res.status(200).json({ success: true, message: "Login successful!" });
+        res.status(200).json({ success: true, message: "Login successful!", token });
     } catch (error) {
         console.error("Error during login: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });

@@ -28,9 +28,11 @@ const Addjobs = () => {
     e.preventDefault();
     console.log(jobData) // Prevent page refresh on form submission
     try {
-      const response = await fetch("http://localhost:5000/api/jobs", {
+      const response = await fetch(`${BASE_URL}jobs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`
+         },
         body: JSON.stringify(jobData),
       });
       if (response.ok) {
