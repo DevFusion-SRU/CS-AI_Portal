@@ -33,11 +33,17 @@ export const authenticateToken = (req, res, next) => {
     }
 };
 
-// Middleware to check user role
-export const authorizeRole = (requiredRole) => (req, res, next) => {
-    // Check if the user's role matches the required role
-    if (req.user.role !== requiredRole) {
-        return res.status(403).json({ success: false, message: "Access denied. Insufficient permissions." });
-    }
-    next();
+// Middleware to check if the user has the correct role (admin or student)
+export const authorizeRole = (allowedRoles) => {
+    return (req, res, next) => {
+        const userRole = req.user.role; // Get the user role from the decoded token
+
+        // Check if the user role is in the list of allowed roles
+        if (!allowedRoles.includes(userRole)) {
+            return res.status(403).json({ success: false, message: "Access denied. Insufficient permissions." });
+        }
+
+        // Proceed if the user has the correct role
+        next();
+    };
 };
