@@ -16,7 +16,7 @@ import UserManagement from './Pages/UserManagement';
 import AddUsers from './Pages/AddUsers';
 
 const App = () => {
-  const { currentUser,currentUserRole, BASE_URL } = useAuth();
+  const { currentUser, currentUserRole, BASE_URL } = useAuth();
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,7 +25,7 @@ const App = () => {
     try {
       if (!currentUser) return;
       let endpoint;
-    
+
       if (currentUserRole === "admin") {
         endpoint = `${BASE_URL}admins/${currentUser.username}`;
       } else if (currentUserRole === "student") {
@@ -34,11 +34,11 @@ const App = () => {
         throw new Error("Unknown role or unauthorized access");
       }
       const response = await fetch(
-        endpoint,{
-          method: "GET",
-          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-          credentials: "include",
-        }
+        endpoint, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        credentials: "include",
+      }
       );
 
       if (!response.ok) {
@@ -76,11 +76,11 @@ const App = () => {
           <Route index element={<Launchpad />} />
           <Route path="myreports" element={<Reports />} />
           <Route element={<AdminRoute />}>
-            <Route path="dashboard" element={<Dashboard />}/>
-            <Route path="addjobs" element={<Addjobs />} /> 
-            
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="addjobs" element={<Addjobs />} />
+
             <Route path="usermanagement" element={<UserManagement />} />
-            <Route path="addUsers" element={<AddUsers />} />
+            <Route path="addusers" element={<AddUsers />} />
           </Route>
           <Route
             path="myaccount"
@@ -88,7 +88,7 @@ const App = () => {
           />
         </Route>
       </Route>
-     
+
     </Routes>
   );
 };
