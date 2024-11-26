@@ -6,7 +6,7 @@ import Authenticate from "../models/authentication.js"; // Authenticate model us
 
 export const getStudents = async (req, res) => {
     const { rollNumber, firstName, lastName } = req.query;
-    
+
     // Ensure only one filter is applied at a time
     if ((rollNumber && firstName) || (rollNumber && lastName) || (firstName && lastName)) {
         return res.status(400).json({
@@ -86,7 +86,7 @@ export const getStudentDetails = async (req, res) => {
 
 export const addStudent = async (req, res) => {
     const student = req.body;
-    if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
+    if (!student.rollNumber || !student.firstName || !student.email || !student.course || !student.graduationYear) {
         return res.status(400).json({ success: false, message: "Provide all required fields!" });
     }
 
@@ -173,6 +173,35 @@ export const addStudentBatch = async (req, res) => {
         res.status(201).json({ success: true, data: newStudents });
     } catch (error) {
         console.error("Error in entering Student details: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+export const deleteStudent = async (req, res) => {
+    const { rollNumber } = req.params;
+
+    if (!rollNumber) {
+        return res.status(400).json({ success: false, message: "Roll number is required!" });
+    }
+
+    try {
+        // Delete student from the Student collection
+        const deletedStudent = await Student.findOneAndDelete({ rollNumber });
+
+        if (!deletedStudent) {
+            return res.status(404).json({ success: false, message: "Student not found!" });
+        }
+
+        // Delete student entry from the Authentication collection
+        const deletedAuth = await Authenticate.findOneAndDelete({ username: rollNumber });
+
+        if (!deletedAuth) {
+            console.error("Authentication record not found for roll number:", rollNumber);
+        }
+
+        res.status(200).json({ success: true, message: "Student and authentication records deleted successfully!" });
+    } catch (error) {
+        console.error("Error in deleting Student details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
