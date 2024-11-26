@@ -26,7 +26,7 @@ const UserManagement = () => {
     const hasFetchedData = useRef(false);
 
     const handleAddClick = () => {
-        navigate("/AddUsers");
+        navigate("/addusers");
     };
 
     const toggleFilterMenu = () => {
@@ -108,9 +108,9 @@ const UserManagement = () => {
     const handlePageChange = (e) => {
         const value = Number(e.target.value); // Convert input to a number
         if (value >= 1 && value <= totalPages) {
-          setCurrentPage(value); // Update the current page if valid
+            setCurrentPage(value); // Update the current page if valid
         }
-      };
+    };
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
@@ -243,8 +243,8 @@ const UserManagement = () => {
                         onClick={() => setCurrentPage(1)}
                         disabled={currentPage === 1}
                         className={`px-4 py-2 rounded-md shadow text-sm font-medium transition-colors ${currentPage === 1
-                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
                             }`}
                     >
                         First
@@ -264,8 +264,8 @@ const UserManagement = () => {
                         <button
                             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                             className={`px-4 py-2 rounded-md shadow text-sm font-medium transition-colors ${currentPage === 1
-                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
                                 }`}>
                             {currentPage - 1}
                         </button>
@@ -307,8 +307,8 @@ const UserManagement = () => {
                         onClick={() => setCurrentPage(totalPages)}
                         disabled={currentPage === totalPages}
                         className={`px-4 py-2 rounded-md shadow text-sm font-medium transition-colors ${currentPage === totalPages
-                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
                             }`}
                     >
                         Last

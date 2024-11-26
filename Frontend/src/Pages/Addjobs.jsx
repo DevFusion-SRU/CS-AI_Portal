@@ -26,7 +26,6 @@ const Addjobs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(jobData) // Prevent page refresh on form submission
     try {
       const response = await fetch(`${BASE_URL}jobs`, {
         method: "POST",
