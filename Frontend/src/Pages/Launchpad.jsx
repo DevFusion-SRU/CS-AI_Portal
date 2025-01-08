@@ -16,7 +16,6 @@ const Launchpad = () => {
   const { currentUser, currentUserRole, BASE_URL } = useAuth();
   const [filters, setFilters] = useState({ company: "", role: "", jobId: "" });
   const navigate = useNavigate();
-  const hasFetchedData = useRef(false);
   const [modalMessage, setModalMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
@@ -407,7 +406,7 @@ const Launchpad = () => {
           </button>
 
           {/* Previous Page Button */}
-          {currentPage > 1 && (
+          {currentPage-2 > 1 && (
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
@@ -428,15 +427,15 @@ const Launchpad = () => {
           )}
 
           {/* Current Page Input */}
-          <input
-            type="number"
-            min="1"
-            max={totalPages}
-            value={currentPage}
-            onChange={handlePageChange} // Fix added here
+          <button
             className="w-16 text-center py-2 border border-gray-300 rounded-md shadow focus:ring-blue-500 focus:border-blue-500 text-sm"
-            placeholder="Page"
-          />
+          >
+            
+            {currentPage}
+           
+            
+            
+          </button>
 
           {/* Next Page Button */}
           {currentPage < totalPages && (
@@ -449,7 +448,7 @@ const Launchpad = () => {
           )}
 
 
-          {currentPage < totalPages && (
+          {currentPage < totalPages-1 && (
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 2, totalPages))}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
