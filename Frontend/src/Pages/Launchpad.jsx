@@ -79,13 +79,6 @@ const Launchpad = () => {
     setCurrentPage(1); // Reset to page 1 on search change
   };
 
-  // Handle page change
-  const handlePageChange = (e) => {
-    const value = Number(e.target.value); // Convert input to a number
-    if (value >= 1 && value <= totalPages) {
-      setCurrentPage(value); // Update the current page if valid
-    }
-  };
 
   // Debounced fetching logic
   useEffect(() => {
@@ -406,7 +399,7 @@ const Launchpad = () => {
           </button>
 
           {/* Previous Page Button */}
-          {currentPage-2 > 1 && (
+          {currentPage-1 > 1 && (
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
@@ -469,11 +462,6 @@ const Launchpad = () => {
             Last
           </button>
         </div>
-
-        {/* Current Page Info */}
-        <p className="mt-4 text-sm text-gray-500 text-center">
-          Page {currentPage} of {totalPages}
-        </p>
 
       </section>
       {isModalOpen && (
