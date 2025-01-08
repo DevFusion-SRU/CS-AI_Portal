@@ -9,7 +9,7 @@ const AddUsers = () => {
     lastName: "",
     email: "",
     rollNumber: "",
-    phone: "",
+    mobile: "",
     course: "",
   });
 
@@ -68,7 +68,7 @@ const AddUsers = () => {
           lastName: "",
           email: "",
           rollNumber: "",
-          phone: "",
+          mobile: "",
           course: "",
         });
       } else {
