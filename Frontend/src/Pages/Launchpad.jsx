@@ -21,11 +21,12 @@ const Launchpad = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
 
-  // Open specific tab
   const openTab = (tab) => {
     if (activeTab !== tab) {
       setActiveTab(tab);
+      setLoading(true)
       setCurrentPage(1);
+
     }
   };
 
@@ -54,9 +55,12 @@ const Launchpad = () => {
         );
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
+          
           setOpportunities(json.data);
+          
           setTotalPages(json.totalPages);
           setCurrentPage(json.currentPage);
+          setLoading(false)
         } else {
           setOpportunities([]);
         }
@@ -92,7 +96,7 @@ const Launchpad = () => {
 
     // Cleanup function to cancel the previous timeout if the user types again
     return () => clearTimeout(delayDebounce);
-  }, [searchQuery, currentPage]); // Debounce only on search query and currentPage
+  }, [searchQuery, currentPage,activeTab]); // Debounce only on search query and currentPage
 
 
 
@@ -273,8 +277,9 @@ const Launchpad = () => {
                 <div className="flex justify-end mt-4">
                   <button
                     onClick={async () => {
-                      await fetchAPI(); // Wait for the API to finish
-                      toggleFilterMenu(); // Toggle the filter menu
+                       // Wait for the API to finish
+                      toggleFilterMenu();
+                      await fetchAPI(); // Toggle the filter menu
                       // Send the filter data to the backend
                     }}
                     className="bg-blue-500 text-white py-2 px-4 rounded-md"
