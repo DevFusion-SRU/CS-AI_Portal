@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 
 import Job from "../models/job.js";
 import AppliedJobs from "../models/appliedJobs.js";
+
+import Student from "../models/student.js";
 import AppliedStudents from "../models/appliedStudents.js";
 
 export const addApplication = async (req, res) => {
@@ -144,6 +146,38 @@ export const getApplications = async (req, res) => {
         console.error("Error fetching applied jobs: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
+};
+
+export const getAppliedPeers = async (req, res) => {
+    const { jobId } = req.params;
+
+    try {
+        const appliedPeers = await AppliedStudents.findOne({ jobId });
+        if (!appliedPeers) {
+            return res.status(404).json({ success: false, message: "Nobody has applied for this Job!" });
+        }
+
+        const { applications } = appliedPeers;
+        
+        const students = await Student.find({
+            rollNumber: { $in: applications }  // Find students whose rollNumbers are in the applications array
+        });
+
+        // Map the results to return a list of objects with rollNumber, firstName, and lastName
+        const studentDetails = students.map(student => ({
+            rollNumber: student.rollNumber,
+            firstName: student.firstName,
+            lastName: student.lastName
+        }));
+
+        // Send the response with student details
+        return res.status(200).json({ success: true, studentDetails });
+
+    } catch (error) {
+        console.error("Error fetching applied peers: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+
 };
 
 export const getAppliedStudents = async (req, res) => {
