@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
+import dotenv from "dotenv";
+dotenv.config();
 
 import Student from "../models/student.js"; // Student model using studentConn
 import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateConn
@@ -97,7 +99,7 @@ export const addStudent = async (req, res) => {
         await newStudent.save();
 
         // Add student entry to Authentication collection
-        const hashedPassword = await bcrypt.hash("Student@2025", 10); // Hash the default password
+        const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10); // Hash the default password
         const newAuthentication = new Authenticate({
             username: student.rollNumber,
             password: hashedPassword,
@@ -107,6 +109,10 @@ export const addStudent = async (req, res) => {
 
         res.status(201).json({ success: true, data: newStudent });
     } catch (error) {
+        // Check if it's a duplicate key error (unique constraint violation)
+        if (error.code === 11000) {
+            return res.status(400).json({ success: false, message: "Student with this Roll Number already exists!" });
+        }
         console.error("Error in adding Student details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
@@ -160,7 +166,7 @@ export const addStudentBatch = async (req, res) => {
         // Add each student to Authentication collection
         const authenticationEntries = await Promise.all(
             students.map(async (student) => {
-                const hashedPassword = await bcrypt.hash("Student@2025", 10); // Hash the default password
+                const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10); // Hash the default password
                 return {
                     username: student.rollNumber,
                     password: hashedPassword,

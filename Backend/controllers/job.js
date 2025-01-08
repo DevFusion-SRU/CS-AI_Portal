@@ -64,6 +64,10 @@ export const addJob = async (req, res) => {
         await newJob.save();
         res.status(201).json({ success: true, data: newJob });
     } catch (error) {
+        // Check if it's a duplicate key error (unique constraint violation)
+        if (error.code === 11000) {
+            return res.status(400).json({ success: false, message: "Job with this id already exists!" });
+        }
         console.error("Error in entering Job details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
