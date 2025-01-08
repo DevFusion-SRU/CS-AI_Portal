@@ -5,12 +5,12 @@ import Job from "../models/job.js"; // Job model using jobConn
 export const getJobs = async (req, res) => {
     const filters = {};
     
-    // Type filter passed in query param
+
     const type = req.query.type;
     if (type && type !== "all") {
         filters.type = type;
     }
-    // Normalize and handle case-insensitive search for company, id, and name
+   
     if (req.query.company) {
         const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
         filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search

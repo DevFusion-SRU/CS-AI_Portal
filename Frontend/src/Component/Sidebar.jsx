@@ -51,7 +51,7 @@ const Sidebar = ({ userData, setUserData }) => {
       </div>
       </div>
       <aside
-        className={`w-48 h-screen bg-white shadow-md p-6 fixed z-40 border-r-2 border-gray-200 transition-transform transform ${
+        className={`w-48 h-full bg-white shadow-md p-6 fixed z-40 border-r-2 border-gray-200 transition-transform transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
