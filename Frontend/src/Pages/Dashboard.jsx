@@ -13,7 +13,6 @@ const Dashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const { BASE_URL } = useAuth(); // Tracks the current user role
   const navigate = useNavigate();
-  const hasFetchedData = useRef(false);
 
   const handleAddClick = () => {
     navigate("Addjobs"); // Redirect to AddJobs page
@@ -62,11 +61,9 @@ const Dashboard = () => {
 }, []);
 
   useEffect(() => {
-    if (hasFetchedData.current) {
+    
       fetchAPI(currentPage);
-    } else {
-      hasFetchedData.current = true;
-    }
+   
   }, [fetchAPI, currentPage]);
 
 
