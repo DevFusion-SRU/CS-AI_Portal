@@ -18,7 +18,7 @@ const Dashboard = () => {
   const hasFetchedData = useRef(false);
 
   const handleAddClick = () => {
-    navigate("Addjobs"); // Redirect to AddJobs page
+    navigate("/addjobs"); // Redirect to AddJobs page
   };
  
   const openTab = (tab) => {
