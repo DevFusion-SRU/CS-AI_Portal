@@ -214,7 +214,7 @@ const Dashboard = () => {
           </button>
 
           {/* Previous Page Button */}
-          {currentPage -2 > 1 && (
+          {currentPage -1 > 1 && (
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"

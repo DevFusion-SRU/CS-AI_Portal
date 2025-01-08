@@ -22,7 +22,7 @@ const Reports = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `${BASE_URL}appliedJobs/${currentUser.username}?page=${page}&limit=10`,
+          `${BASE_URL}appliedJobs/student/${currentUser.username}?page=${page}&limit=10`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
@@ -39,7 +39,7 @@ const Reports = () => {
       }
       setLoading(false);
     },
-    [activeTab, currentUser]
+    [activeTab, currentUser, currentPage]
   );
 
   useEffect(() => {
@@ -148,23 +148,81 @@ const Reports = () => {
           </div>
         )}
 
-        <div className="flex justify-between mt-4">
+<div className="flex justify-center items-center space-x-2 mt-6">
+          {/* First Page Button */}
           <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50"
+            className={`px-4 py-2 rounded-md shadow text-sm font-medium transition-colors ${currentPage === 1
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+              }`}
           >
-            Previous
+            First
           </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
+
+          {/* Previous Page Button */}
+          {currentPage-1 > 1 && (
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
+            >
+              {currentPage - 2}
+            </button>
+          )}
+
+          {currentPage > 1 && (
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className={`px-4 py-2 rounded-md shadow text-sm font-medium transition-colors ${currentPage === 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                }`}>
+              {currentPage - 1}
+            </button>
+          )}
+
+          {/* Current Page Input */}
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-300 rounded-lg disabled:opacity-50"
+            className="w-16 text-center py-2 border border-gray-300 rounded-md shadow focus:ring-blue-500 focus:border-blue-500 text-sm"
           >
-            Next
+            
+            {currentPage}
+           
+            
+            
+          </button>
+
+          {/* Next Page Button */}
+          {currentPage < totalPages && (
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
+            >
+              {currentPage + 1}
+            </button>
+          )}
+
+
+          {currentPage < totalPages-1 && (
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 2, totalPages))}
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
+            >
+              {currentPage + 2}
+            </button>
+          )}
+
+          {/* Last Page Button */}
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-md shadow text-sm font-medium transition-colors ${currentPage === totalPages
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+              }`}
+          >
+            Last
           </button>
         </div>
       </section>
