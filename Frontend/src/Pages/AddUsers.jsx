@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 
 const AddUsers = () => {
-  const { BASE_URL } = useAuth(); // Assumes BASE_URL is provided by your AuthContext
+  const { BASE_URL } = useAuth(); 
 
   const [userData, setUserData] = useState({
     firstName: "",
@@ -16,7 +16,7 @@ const AddUsers = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [modalType, setModalType] = useState(""); // "success" or "error"
+  const [modalType, setModalType] = useState(""); 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleChange = (e) => {
@@ -25,7 +25,7 @@ const AddUsers = () => {
       ...prevData,
       [name]: value,
     }));
-    // Clear error for the field being edited
+    
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: "",
