@@ -9,7 +9,6 @@ const Reports = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { currentUser, BASE_URL } = useAuth();
-  const hasFetchedData = useRef(false);
 
   const openTab = (tab) => {
     if (activeTab !== tab) {
@@ -23,7 +22,7 @@ const Reports = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `${BASE_URL}appliedJobs/${currentUser.username}`,
+          `${BASE_URL}appliedJobs/${currentUser.username}?page=${page}&limit=10`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
@@ -44,11 +43,9 @@ const Reports = () => {
   );
 
   useEffect(() => {
-    if (hasFetchedData.current) {
+    
       fetchAPI(currentPage);
-    } else {
-      hasFetchedData.current = true;
-    }
+    
   }, [fetchAPI, currentPage]);
 
   const handleSearchChange = (e) => {
