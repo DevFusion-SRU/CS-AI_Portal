@@ -11,6 +11,7 @@ const AddUsers = () => {
     rollNumber: "",
     mobile: "",
     course: "",
+    graduationYear: ""
   });
 
   const [errors, setErrors] = useState({});
@@ -70,6 +71,8 @@ const AddUsers = () => {
           rollNumber: "",
           mobile: "",
           course: "",
+          graduationYear:""
+          
         });
       } else {
         setModalMessage(result.message || "An error occurred.");
