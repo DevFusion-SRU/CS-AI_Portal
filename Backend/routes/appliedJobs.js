@@ -4,7 +4,8 @@ import {
     addApplication,
     addView,
     getApplications,
-    getAppliedStudents
+    getAppliedStudents,
+    getAppliedPeers
 } from "../controllers/jobApplications.js";
 
 const router = express.Router();
@@ -13,6 +14,8 @@ const router = express.Router();
 router.post("/", authenticateToken, authorizeRole("student"), addApplication);
 router.post("/view", authenticateToken, authorizeRole("student"), addView);
 router.get("/allDetails", authenticateToken, authorizeRole("admin"), getAppliedStudents); // Admin-only access
-router.get("/:rollNumber", authenticateToken, authorizeRole("student"), getApplications);
+router.get("/student/:rollNumber", authenticateToken, authorizeRole("student"), getApplications);
+router.get("/job/:jobId", authenticateToken, authorizeRole("student"),  getAppliedPeers);
+
 
 export default router;

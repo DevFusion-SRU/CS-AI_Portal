@@ -57,11 +57,9 @@ const UserManagement = () => {
     }, [activeTab, filters]);
 
     useEffect(() => {
-        if (hasFetchedData.current) {
+        
             fetchAPI(currentPage);
-        } else {
-            hasFetchedData.current = true;
-        }
+        
     }, [fetchAPI, currentPage, filters]);
 
     const handleSearchChange = async (e) => {
