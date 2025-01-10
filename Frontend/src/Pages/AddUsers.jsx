@@ -33,6 +33,19 @@ const AddUsers = () => {
     }));
   };
 
+  const handleYearChange = (e) => {
+    const { value } = e.target;
+    setUserData((prevData) => ({
+      ...prevData,
+      graduationYear: value,
+    }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      graduationYear: "",
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -72,7 +85,6 @@ const AddUsers = () => {
           mobile: "",
           course: "",
           graduationYear:""
-          
         });
       } else {
         setModalMessage(result.message || "An error occurred.");
@@ -92,6 +104,9 @@ const AddUsers = () => {
     setIsModalOpen(false);
   };
 
+  const currentYear = new Date().getFullYear();
+  const years = Array.from(new Array(6), (val, index) => currentYear + index);
+
   return (
     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-50">
       <div className="w-full max-w-4xl p-6 bg-white shadow-md rounded-lg">
@@ -108,18 +123,58 @@ const AddUsers = () => {
               >
                 {key.replace(/([A-Z])/g, " $1")}
               </label>
-              <input
-                type="text"
-                id={key}
-                name={key}
-                value={userData[key]}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded-md ${
-                  errors[key]
-                    ? "border-red-500 bg-red-100"
-                    : "border-gray-300"
-                }`}
-              />
+              {key === "course" ? (
+                <select
+                  id={key}
+                  name={key}
+                  value={userData[key]}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${
+                    errors[key]
+                      ? "border-red-500 bg-red-100"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Select Course</option>
+                  <option value="PHD">PHD</option>
+                  <option value="MBA">MBA</option>
+                  <option value="Btech">Btech</option>
+                  <option value="Degree">Degree</option>
+                  <option value="Mtech">Mtech</option>
+                </select>
+              ) : key === "graduationYear" ? (
+                <select
+                  id={key}
+                  name={key}
+                  value={userData[key]}
+                  onChange={handleYearChange}
+                  className={`w-full p-2 border rounded-md ${
+                    errors[key]
+                      ? "border-red-500 bg-red-100"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Select Year</option>
+                  {years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  id={key}
+                  name={key}
+                  value={userData[key]}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${
+                    errors[key]
+                      ? "border-red-500 bg-red-100"
+                      : "border-gray-300"
+                  }`}
+                />
+              )}
               {errors[key] && (
                 <p className="text-red-500 text-sm mt-1">{errors[key]}</p>
               )}
