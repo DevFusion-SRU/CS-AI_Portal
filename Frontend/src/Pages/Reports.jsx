@@ -22,7 +22,7 @@ const Reports = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `${BASE_URL}appliedJobs/${currentUser.username}?page=${page}&limit=10`,
+          `${BASE_URL}appliedJobs/student/${currentUser.username}?page=${page}&limit=10`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
