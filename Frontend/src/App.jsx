@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-axios.defaults.withCredentials=true
+axios.defaults.withCredentials = true
 import { Routes, Route } from "react-router-dom";
 import Launchpad from "./Pages/Launchpad";
 import Reports from "./Pages/Reports";
@@ -31,7 +31,6 @@ const App = () => {
 
       if (currentUserRole === "admin") {
         endpoint = `${BASE_URL}admins/${currentUser.username}`;
-        console.log(endpoint)
       } else if (currentUserRole === "student") {
         endpoint = `${BASE_URL}students/${currentUser.username}`;
       } else {
@@ -40,7 +39,6 @@ const App = () => {
       const response = await axios.get(endpoint, {
         withCredentials: true, // Ensure cookies are sent with the request
       });
-      console.log(response)
       if (!response.statusText) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -67,7 +65,7 @@ const App = () => {
       <Route element={<Private />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/forgotpassword" element={<Forgotpassword/>}/>
+        <Route path="/forgotpassword" element={<Forgotpassword />} />
       </Route>
       <Route element={<PrivateRoutes />}>
         <Route

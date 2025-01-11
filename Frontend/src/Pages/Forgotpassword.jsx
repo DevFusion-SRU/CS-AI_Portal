@@ -225,7 +225,7 @@ const Forgotpassword = () => {
         )}
         {ischanged && (
           <div className="flex flex-col items-center justify-center mt-8 mb-4">
-            <p className="text-center text-gray-600">Password Changed Successfully ✔️</p>
+            <p className="text-center text-gray-600">Password Reset Successfully ✔️</p>
             <button
               onClick={() => navigate("/login")}
               className="w-2/3 bg-blue-500 text-white p-3 rounded-lg mt-4 hover:bg-blue-600"
