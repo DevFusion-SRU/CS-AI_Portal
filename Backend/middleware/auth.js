@@ -4,21 +4,20 @@ const SECRET_KEY = process.env.JWT_SECRET;
 
 // Middleware to check if the user is authenticated
 export const authenticateToken = (req, res, next) => {
-    let token;
+    const authHeader = req.headers.cookie;
 
-    // Check for token in Authorization header (Bearer token)
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
-        token = req.headers.authorization.split(" ")[1];
-    } 
-    // Check for token in cookies
-    else if (req.cookies && req.cookies.token) {
-        token = req.cookies.token;
+    if (!authHeader) {
+        return res.status(401).json({ success: false, message: 'Authorization header missing or invalid' });
     }
 
-    // If no token found, return an error
-    if (!token) {
-        return res.status(401).json({ success: false, message: "Access denied. No token provided." });
+    // Assuming the token is stored as 'token=<value>'
+    const tokenMatch = authHeader.match(/token=([^;]+)/); // Extract token value from cookie string
+
+    if (!tokenMatch) {
+        return res.status(401).json({ success: false, message: 'Token missing in cookies' });
     }
+
+    const token = tokenMatch[1]; // The token is now in tokenMatch[1]
 
     try {
         // Verify the token using the secret key
