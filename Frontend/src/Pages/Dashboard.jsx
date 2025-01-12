@@ -45,7 +45,7 @@ const Dashboard = () => {
           const queryParams = new URLSearchParams(
             Object.fromEntries(Object.entries(data).filter(([_, v]) => v)) // Remove empty values
           ).toString();
-          console.log(`${BASE_URL}appliedJobs/allDetails?page=${page}&limit=10&type=${activeTab}&${queryParams}`)
+          
           const response = await axios.get(
             `${BASE_URL}appliedJobs/allDetails?page=${page}&limit=10&type=${activeTab}&${queryParams}`,{
               withCredentials:true

@@ -1,4 +1,6 @@
 import { React, useRef, useState } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 
@@ -28,16 +30,15 @@ const Forgotpassword = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}auth/reset-password`, {
-        method: "POST",
+      const response = await axios.post(`${BASE_URL}auth/reset-password`,{ "username": email }, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "username": email }),
+        withCredentials:true
       });
+      
 
-      const data = await response.json();
-      if (response.ok) {
+      const data = await response.data;
+      if (response.status===200) {
         setOtpSent(true);
-        console.log(data)
         setUsername(email)
         setAlertMessage(data.message || "OTP sent successfully!");
       } else {
@@ -61,14 +62,16 @@ const Forgotpassword = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}auth/reset-password`, {
-        method: "POST",
+      const response = await axios.post(`${BASE_URL}auth/reset-password`,{
+        username: username,
+        otp: enteredOtp,
+      },{
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "username": username, "otp": enteredOtp }),
-      });
+        withCredentials:true
+        });
 
-      const data = await response.json();
-      if (response.ok) {
+        const data = await response.data;
+        if (response.status===200) {
         setOtpVerified(true);
         setAlertMessage(data.message || "OTP verified successfully!");
       } else {
@@ -95,14 +98,13 @@ const Forgotpassword = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}auth/reset-password`, {
-        method: "POST",
+      const response = await axios.post(`${BASE_URL}auth/reset-password`, { "username": username, "newPassword": newPassword }, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "username": username, "newPassword": newPassword }),
+        withCredentials:true
       });
-
-      const data = await response.json();
-      if (response.ok) {
+      
+      const data = await response.data;
+      if (response.status===200) {
         setAlertMessage(data.message || "Password reset successfully!");
         setIschanged(true)
       } else {
