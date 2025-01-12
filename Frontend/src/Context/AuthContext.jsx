@@ -93,6 +93,7 @@ export const AuthProvider = ({ children }) => {
           const user = response.data.user;
           console.log(response.data.user,"if")
           const role = user.role;
+          console.log(user,role)
           setCurrentUser(user);
           setCurrentUserRole(role);
         } else {
