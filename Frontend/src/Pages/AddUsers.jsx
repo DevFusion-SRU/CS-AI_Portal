@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useAuth } from "../Context/AuthContext";
 
 const AddUsers = () => {
@@ -64,17 +66,15 @@ const AddUsers = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${BASE_URL}students`, {
-        method: "POST",
+      const response = await axios.post(`${BASE_URL}students`, userData, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify(userData),
+        withCredentials:true
       });
-
-      const result = await response.json();
-      if (response.ok) {
+      console.log(response)
+      const result = await response.data;
+      if (response.status===201) {
         setModalMessage("User added successfully!");
         setModalType("success");
         setUserData({

@@ -58,12 +58,12 @@ export const login = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
             secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-            sameSite: "None", // Allows cookies to be sent in cross-site requests
-            partitioned: true, // Enable partitioned cookies (for better privacy on some browsers)
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Use "Lax" for localhost
+            partitioned: false, // Enable partitioned cookies (for better privacy on some browsers)
             maxAge: 60 * 60 * 24000, // 24 hour
         });
 
-        res.status(200).json({ success: true, message: "Login successful!", token });
+        res.status(200).json({ success: true, message: "Login successful!" });
     } catch (error) {
         console.error("Error during login: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
@@ -192,13 +192,21 @@ export const changePassword = async (req, res) => {
 };
 
 export const verifyTokenController = (req, res) => {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.cookie;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader) {
         return res.status(401).json({ success: false, message: 'Authorization header missing or invalid' });
     }
 
-    const token = authHeader.split(' ')[1];
+    // Assuming the token is stored as 'token=<value>'
+    const tokenMatch = authHeader.match(/token=([^;]+)/); // Extract token value from cookie string
+
+    if (!tokenMatch) {
+        return res.status(401).json({ success: false, message: 'Token missing in cookies' });
+    }
+
+    const token = tokenMatch[1]; // The token is now in tokenMatch[1]
+
     try {
         const decoded = verifyToken(token); // Using the utility function
         return res.status(200).json({ success: true, user: decoded });

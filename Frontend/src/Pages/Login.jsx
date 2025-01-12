@@ -18,7 +18,6 @@ const Login = () => {
     setLoading(true);
     try {
       await login(emailRef.current.value, passwordRef.current.value);
-      console.log("Navigation triggered"); // Check if this logs
       navigate('/');
     } catch {
       setError("Failed to login");

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 
@@ -39,14 +41,16 @@ const Addjobs = () => {
     e.preventDefault();
     setState((prev) => ({ ...prev, isSubmitting: true }));
     try {
-      const response = await fetch(`${BASE_URL}jobs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify(state.jobData),
-      });
+      const response = await axios.post(
+        `${BASE_URL}jobs`,
+        state.jobData,  // data to be sent in the body
+        {
+          headers: {
+            "Content-Type": "application/json",  
+          },
+          withCredentials: true,  // enables cookies (including HTTP-only cookies)
+        }
+      );
 
       if (response.ok) {
         setState((prev) => ({

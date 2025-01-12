@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+axios.defaults.withCredentials = true
 import { Routes, Route } from "react-router-dom";
 import Launchpad from "./Pages/Launchpad";
 import Reports from "./Pages/Reports";
@@ -14,6 +16,7 @@ import { useAuth } from "./Context/AuthContext";
 import AdminRoute from './Context/AdminRoute';
 import UserManagement from './Pages/UserManagement';
 import AddUsers from './Pages/AddUsers';
+import Forgotpassword from "./Pages/Forgotpassword";
 
 const App = () => {
   const { currentUser, currentUserRole, BASE_URL } = useAuth();
@@ -33,19 +36,14 @@ const App = () => {
       } else {
         throw new Error("Unknown role or unauthorized access");
       }
-      const response = await fetch(
-        endpoint, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-        credentials: "include",
-      }
-      );
-
-      if (!response.ok) {
+      const response = await axios.get(endpoint, {
+        withCredentials: true, // Ensure cookies are sent with the request
+      });
+      if (!response.statusText) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.data;
       setUserData(data.data);
     } catch (err) {
       console.error("Failed to fetch user data:", err);
@@ -67,6 +65,7 @@ const App = () => {
       <Route element={<Private />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgotpassword" element={<Forgotpassword />} />
       </Route>
       <Route element={<PrivateRoutes />}>
         <Route
