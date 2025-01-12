@@ -39,9 +39,6 @@ const App = () => {
       const response = await axios.get(endpoint, {
         withCredentials: true, // Ensure cookies are sent with the request
       });
-      if (!response.statusText) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.data;
       setUserData(data.data);
