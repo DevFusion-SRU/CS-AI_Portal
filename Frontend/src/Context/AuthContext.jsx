@@ -47,32 +47,17 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (response.data.success) {
-        fetchCurrentUser();
+        isMounted.current = true;
+        checkAuthState();
+        return () => {
+          isMounted.current = false;
+        };
       } else {
         handleError("Invalid login credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
       handleError(error.response?.data?.message || "Failed to login. Check your credentials.");
-    }
-  };
-
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}auth/verify`, {
-        withCredentials: true,
-      });
-
-      if (response.data.success) {
-        setCurrentUser(response.data.user);
-        setCurrentUserRole(response.data.user.role);
-      } else {
-        handleError("Failed to fetch user data.");
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -102,10 +87,12 @@ export const AuthProvider = ({ children }) => {
         withCredentials: true,
       });
       console.log(response.data)
+      console.log(isMounted.current)
       if (isMounted.current) {
         if (response?.data?.success) {
-          const user = response.data.user || {};
-          const role = user.role || "guest";
+          const user = response.data.user;
+          console.log(response.data.user,"if")
+          const role = user.role;
           setCurrentUser(user);
           setCurrentUserRole(role);
         } else {
