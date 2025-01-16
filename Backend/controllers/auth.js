@@ -180,11 +180,16 @@ export const changePassword = async (req, res) => {
 
         const token = generateToken(user);
 
-        res.status(200).json({
-            success: true,
-            message: "Password changed successfully",
-            token,
+        // Set cookie with the JWT
+        res.cookie("token", token, {
+            httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+            secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Use "Lax" for localhost
+            partitioned: false, // Enable partitioned cookies (for better privacy on some browsers)
+            maxAge: 60 * 60 * 24000, // 24 hour
         });
+
+        res.status(200).json({ success: true, message: "Password changed successfully!!" });
     } catch (error) {
         console.error("Error changing password:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
