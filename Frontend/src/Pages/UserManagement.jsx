@@ -43,7 +43,7 @@ const UserManagement = () => {
                     withCredentials:true,
             }
             );
-            const json = await response.json();
+            const json = await response.data;
             if (json.success && Array.isArray(json.data)) {
                 setStudents(json.data);
                 setTotalPages(json.totalPages);
@@ -83,7 +83,7 @@ const UserManagement = () => {
         try {
             setLoading(true);
             const response = await fetch(`${BASE_URL}students?${params.toString()}`);
-            const json = await response.json();
+            const json = await response.data;
 
             if (json.success) {
                 if (params.has("rollNumber")) {

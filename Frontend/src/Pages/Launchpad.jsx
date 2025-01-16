@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { FaSearch } from "react-icons/fa";
@@ -134,22 +136,22 @@ const Launchpad = () => {
   // Log when a job is viewed
   const handleViewClick = async (id) => {
     setViewingJobId(viewingJobId === id ? null : id);
-    if (currentUser && currentUser.email) {
+    if (currentUser ) {
       const payload = {
         'rollNumber': currentUser.username,
         'jobId': id,
       };
       try {
-        const response = await fetch(`${BASE_URL}appliedJobs/view`, {
-          method: "POST",
+        const response = await axios.post(`${BASE_URL}appliedJobs/view`, payload, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`
           },
-          body: JSON.stringify(payload),
+          withCredentials: true, // For including cookies
         });
-        if (!response.ok) {
-          console.error("Failed to log view.");
+        console.log(response)
+        
+        if (response.status===201) {
+          console.log("Success.");
         }
       } catch (error) {
         console.error("Error logging view:", error);
@@ -160,15 +162,13 @@ const Launchpad = () => {
   // Handle job application submission
   const handleConfirm = async (job) => {
     try {
-      const response = await fetch(`${BASE_URL}appliedJobs`, {
-        method: "POST",
+      const response = await axios.post(`${BASE_URL}appliedJobs`,job, {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`
+          "Content-Type": "application/json",  
         },
-        body: JSON.stringify(job),
+        withCredentials:true,
       });
-      if (response.ok) {
+      if (response.status===201) {
         setModalMessage("Job application submitted successfully!");
         setModalType("success")
       } else {
