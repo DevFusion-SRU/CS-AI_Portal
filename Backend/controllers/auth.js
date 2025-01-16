@@ -70,7 +70,13 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",  // Same as the cookie settings
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",  // Same as the cookie settings
+        partitioned: false, // Same as the cookie settings
+        maxAge: 0,  // Cookie expires immediately
+    });
     res.status(200).json({ success: true, message: "Logged out successfully!" });
 };
 
