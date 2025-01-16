@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { FaSearch } from "react-icons/fa";
@@ -79,13 +81,6 @@ const Launchpad = () => {
     setCurrentPage(1); // Reset to page 1 on search change
   };
 
-  // Handle page change
-  const handlePageChange = (e) => {
-    const value = Number(e.target.value); // Convert input to a number
-    if (value >= 1 && value <= totalPages) {
-      setCurrentPage(value); // Update the current page if valid
-    }
-  };
 
   // Debounced fetching logic
   useEffect(() => {
@@ -141,22 +136,22 @@ const Launchpad = () => {
   // Log when a job is viewed
   const handleViewClick = async (id) => {
     setViewingJobId(viewingJobId === id ? null : id);
-    if (currentUser && currentUser.email) {
+    if (currentUser ) {
       const payload = {
         'rollNumber': currentUser.username,
         'jobId': id,
       };
       try {
-        const response = await fetch(`${BASE_URL}appliedJobs/view`, {
-          method: "POST",
+        const response = await axios.post(`${BASE_URL}appliedJobs/view`, payload, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`
           },
-          body: JSON.stringify(payload),
+          withCredentials: true, // For including cookies
         });
-        if (!response.ok) {
-          console.error("Failed to log view.");
+        console.log(response)
+        
+        if (response.status===201) {
+          console.log("Success.");
         }
       } catch (error) {
         console.error("Error logging view:", error);
@@ -167,15 +162,13 @@ const Launchpad = () => {
   // Handle job application submission
   const handleConfirm = async (job) => {
     try {
-      const response = await fetch(`${BASE_URL}appliedJobs`, {
-        method: "POST",
+      const response = await axios.post(`${BASE_URL}appliedJobs`,job, {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`
+          "Content-Type": "application/json",  
         },
-        body: JSON.stringify(job),
+        withCredentials:true,
       });
-      if (response.ok) {
+      if (response.status===201) {
         setModalMessage("Job application submitted successfully!");
         setModalType("success")
       } else {
@@ -406,7 +399,7 @@ const Launchpad = () => {
           </button>
 
           {/* Previous Page Button */}
-          {currentPage-2 > 1 && (
+          {currentPage-1 > 1 && (
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
@@ -469,11 +462,6 @@ const Launchpad = () => {
             Last
           </button>
         </div>
-
-        {/* Current Page Info */}
-        <p className="mt-4 text-sm text-gray-500 text-center">
-          Page {currentPage} of {totalPages}
-        </p>
 
       </section>
       {isModalOpen && (

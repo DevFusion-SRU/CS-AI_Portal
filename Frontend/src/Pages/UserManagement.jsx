@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { FaSearch } from "react-icons/fa";
@@ -36,15 +38,12 @@ const UserManagement = () => {
     const fetchAPI = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const response = await fetch(
+            const response = await axios.get(
                 `${BASE_URL}students?page=${page}&limit=10&type=${activeTab}&year=${filters.year}&batch=${filters.batch}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("authToken")}`
-                }
+                    withCredentials:true,
             }
             );
-            const json = await response.json();
+            const json = await response.data;
             if (json.success && Array.isArray(json.data)) {
                 setStudents(json.data);
                 setTotalPages(json.totalPages);
@@ -57,9 +56,9 @@ const UserManagement = () => {
     }, [activeTab, filters]);
 
     useEffect(() => {
-        
-            fetchAPI(currentPage);
-        
+
+        fetchAPI(currentPage);
+
     }, [fetchAPI, currentPage, filters]);
 
     const handleSearchChange = async (e) => {
@@ -84,7 +83,7 @@ const UserManagement = () => {
         try {
             setLoading(true);
             const response = await fetch(`${BASE_URL}students?${params.toString()}`);
-            const json = await response.json();
+            const json = await response.data;
 
             if (json.success) {
                 if (params.has("rollNumber")) {
@@ -249,7 +248,7 @@ const UserManagement = () => {
                     </button>
 
                     {/* Previous Page Button */}
-                    {currentPage > 1 && (
+                    {currentPage - 1 > 1 && (
                         <button
                             onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
                             className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
@@ -270,15 +269,15 @@ const UserManagement = () => {
                     )}
 
                     {/* Current Page Input */}
-                    <input
-                        type="number"
-                        min="1"
-                        max={totalPages}
-                        value={currentPage}
-                        onChange={handlePageChange} // Fix added here
+                    <button
                         className="w-16 text-center py-2 border border-gray-300 rounded-md shadow focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        placeholder="Page"
-                    />
+                    >
+
+                        {currentPage}
+
+
+
+                    </button>
 
                     {/* Next Page Button */}
                     {currentPage < totalPages && (
@@ -291,7 +290,7 @@ const UserManagement = () => {
                     )}
 
 
-                    {currentPage < totalPages && (
+                    {currentPage < totalPages - 1 && (
                         <button
                             onClick={() => setCurrentPage((prev) => Math.min(prev + 2, totalPages))}
                             className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"

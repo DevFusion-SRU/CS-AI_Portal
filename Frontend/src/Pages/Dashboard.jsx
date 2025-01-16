@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { FaSearch } from "react-icons/fa";
@@ -43,16 +45,14 @@ const Dashboard = () => {
           const queryParams = new URLSearchParams(
             Object.fromEntries(Object.entries(data).filter(([_, v]) => v)) // Remove empty values
           ).toString();
-          console.log(`${BASE_URL}appliedJobs/allDetails?page=${page}&limit=10&type=${activeTab}&${queryParams}`)
-          const response = await fetch(
+          
+          const response = await axios.get(
             `${BASE_URL}appliedJobs/allDetails?page=${page}&limit=10&type=${activeTab}&${queryParams}`,{
-            method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("authToken")}`
-                }
+              withCredentials:true
             }
           );
-          const json = await response.json();
+         
+          const json = await response.data;
           if (json.success && Array.isArray(json.data)) {
             
             setOpportunities(json.data);
@@ -166,10 +166,9 @@ const Dashboard = () => {
                   </th>
                 </tr>
               </thead>
-              {console.log(opportunities)}
               <tbody className="bg-white divide-y divide-gray-200">
-                {opportunities.map((opportunity) => (
-                  <tr key={opportunity.id} className="hover:bg-gray-100 transition-all">
+                {opportunities.map((opportunity, index) => (
+                  <tr key={opportunity.id || index } className="hover:bg-gray-100 transition-all">
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {opportunity.jobDetails?.company}
                     </td>
@@ -214,7 +213,7 @@ const Dashboard = () => {
           </button>
 
           {/* Previous Page Button */}
-          {currentPage -2 > 1 && (
+          {currentPage -1 > 1 && (
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 2, 1))}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-colors"
