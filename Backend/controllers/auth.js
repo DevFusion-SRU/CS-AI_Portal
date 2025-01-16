@@ -12,7 +12,7 @@ const generateOTP = () => {
 };
 
 // Function to send OTP to user's email using Nodemailer
-const sendEmail = async (to, otp) => {
+const sendEmail = async (emailID, emailSubject, emailText) => {
     const transporter = nodemailer.createTransport({
         service: "gmail", // or use another email service provider
         auth: {
@@ -23,14 +23,13 @@ const sendEmail = async (to, otp) => {
 
     const mailOptions = {
         from: process.env.EMAIL_USER, // Your email address
-        to: to,
-        subject: "Password Reset OTP - Job Portal",
-        text: `Your OTP for resetting your password is: ${otp}. It is valid for 10 minutes.`,
+        to: emailID,
+        subject: emailSubject,
+        text: emailText,
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log("OTP sent successfully!");
     } catch (error) {
         console.error("Error sending email: ", error);
         throw new Error("Error sending email");
@@ -58,12 +57,12 @@ export const login = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
             secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-            sameSite: "None", // Allows cookies to be sent in cross-site requests
-            partitioned: true, // Enable partitioned cookies (for better privacy on some browsers)
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Use "Lax" for localhost
+            partitioned: false, // Enable partitioned cookies (for better privacy on some browsers)
             maxAge: 60 * 60 * 24000, // 24 hour
         });
 
-        res.status(200).json({ success: true, message: "Login successful!", token });
+        res.status(200).json({ success: true, message: "Login successful!" });
     } catch (error) {
         console.error("Error during login: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
@@ -71,7 +70,13 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",  // Same as the cookie settings
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",  // Same as the cookie settings
+        partitioned: false, // Same as the cookie settings
+        maxAge: 0,  // Cookie expires immediately
+    });
     res.status(200).json({ success: true, message: "Logged out successfully!" });
 };
 
@@ -104,7 +109,7 @@ export const resetPassword = async (req, res) => {
             }
 
             // Fetch the email from the user
-            const email = userDetails.email;
+            const emailID = userDetails.email;
 
             // Generate OTP and set expiration time (10 minutes)
             const otpGenerated = generateOTP();
@@ -116,7 +121,9 @@ export const resetPassword = async (req, res) => {
             await user.save();
 
             // Send OTP to user's email
-            await sendEmail(email, otpGenerated);
+            const emailSubject = "Password Reset OTP - Job Portal";
+            const emailText = `Your OTP for resetting your password is: ${otpGenerated}. It is valid for 10 minutes.`
+            await sendEmail(emailID, emailSubject, emailText);
 
             return res.status(200).json({ success: true, message: "OTP sent to your email!" });
         }
@@ -180,11 +187,16 @@ export const changePassword = async (req, res) => {
 
         const token = generateToken(user);
 
-        res.status(200).json({
-            success: true,
-            message: "Password changed successfully",
-            token,
+        // Set cookie with the JWT
+        res.cookie("token", token, {
+            httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+            secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Use "Lax" for localhost
+            partitioned: false, // Enable partitioned cookies (for better privacy on some browsers)
+            maxAge: 60 * 60 * 24000, // 24 hour
         });
+
+        res.status(200).json({ success: true, message: "Password changed successfully!!" });
     } catch (error) {
         console.error("Error changing password:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
@@ -192,13 +204,21 @@ export const changePassword = async (req, res) => {
 };
 
 export const verifyTokenController = (req, res) => {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.cookie;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader) {
         return res.status(401).json({ success: false, message: 'Authorization header missing or invalid' });
     }
 
-    const token = authHeader.split(' ')[1];
+    // Assuming the token is stored as 'token=<value>'
+    const tokenMatch = authHeader.match(/token=([^;]+)/); // Extract token value from cookie string
+
+    if (!tokenMatch) {
+        return res.status(401).json({ success: false, message: 'Token missing in cookies' });
+    }
+
+    const token = tokenMatch[1]; // The token is now in tokenMatch[1]
+
     try {
         const decoded = verifyToken(token); // Using the utility function
         return res.status(200).json({ success: true, user: decoded });

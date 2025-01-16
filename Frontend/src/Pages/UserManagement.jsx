@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import axios from "axios";
+axios.defaults.withCredentials=true
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { FaSearch } from "react-icons/fa";
@@ -36,15 +38,12 @@ const UserManagement = () => {
     const fetchAPI = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const response = await fetch(
+            const response = await axios.get(
                 `${BASE_URL}students?page=${page}&limit=10&type=${activeTab}&year=${filters.year}&batch=${filters.batch}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("authToken")}`
-                }
+                    withCredentials:true,
             }
             );
-            const json = await response.json();
+            const json = await response.data;
             if (json.success && Array.isArray(json.data)) {
                 setStudents(json.data);
                 setTotalPages(json.totalPages);
@@ -84,7 +83,7 @@ const UserManagement = () => {
         try {
             setLoading(true);
             const response = await fetch(`${BASE_URL}students?${params.toString()}`);
-            const json = await response.json();
+            const json = await response.data;
 
             if (json.success) {
                 if (params.has("rollNumber")) {
