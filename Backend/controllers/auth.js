@@ -12,7 +12,7 @@ const generateOTP = () => {
 };
 
 // Function to send OTP to user's email using Nodemailer
-const sendEmail = async (to, otp) => {
+const sendEmail = async (emailID, emailSubject, emailText) => {
     const transporter = nodemailer.createTransport({
         service: "gmail", // or use another email service provider
         auth: {
@@ -23,14 +23,13 @@ const sendEmail = async (to, otp) => {
 
     const mailOptions = {
         from: process.env.EMAIL_USER, // Your email address
-        to: to,
-        subject: "Password Reset OTP - Job Portal",
-        text: `Your OTP for resetting your password is: ${otp}. It is valid for 10 minutes.`,
+        to: emailID,
+        subject: emailSubject,
+        text: emailText,
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log("OTP sent successfully!");
     } catch (error) {
         console.error("Error sending email: ", error);
         throw new Error("Error sending email");
@@ -104,7 +103,7 @@ export const resetPassword = async (req, res) => {
             }
 
             // Fetch the email from the user
-            const email = userDetails.email;
+            const emailID = userDetails.email;
 
             // Generate OTP and set expiration time (10 minutes)
             const otpGenerated = generateOTP();
@@ -116,7 +115,9 @@ export const resetPassword = async (req, res) => {
             await user.save();
 
             // Send OTP to user's email
-            await sendEmail(email, otpGenerated);
+            const emailSubject = "Password Reset OTP - Job Portal";
+            const emailText = `Your OTP for resetting your password is: ${otpGenerated}. It is valid for 10 minutes.`
+            await sendEmail(emailID, emailSubject, emailText);
 
             return res.status(200).json({ success: true, message: "OTP sent to your email!" });
         }
