@@ -37,7 +37,7 @@ const Signup = () => {
 
         <div className="mt-8">
           <div className="mb-4">
-            <input type="email" ref={emailRef} className="w-full p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none" placeholder="Enter your email" />
+            <input type="email" ref={emailRef} className="w-full p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none" placeholder="Enter your Roll Number" />
           </div>
 
           <div className="mb-4">

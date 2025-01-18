@@ -35,7 +35,7 @@ const Login = () => {
 
         <div className="mt-8">
           <div className="mb-4">
-            <input type="email" ref={emailRef} className="w-full p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none" placeholder="Enter your email" />
+            <input type="email" ref={emailRef} className="w-full p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none" placeholder="Enter your Roll Number" />
           </div>
 
           <div className="mb-4">
@@ -43,16 +43,16 @@ const Login = () => {
           </div>
 
           <div className="text-right mb-6">
-            <a href="#" className="text-sm text-blue-500 hover:underline">Forgot Password?</a>
+            <NavLink to='/forgotpassword' className="text-sm text-blue-500 hover:underline">Forgot Password?</NavLink>
           </div>
 
           <button disabled={loading} onClick={handleSubmit} className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">{loading ? 'loging in...' : 'login'}</button>
         </div>
 
-        <div className='flex flex-row justify-end mt-2'>
+        {/* <div className='flex flex-row justify-end mt-2'>
           <span>Have an account?</span>
           <NavLink to="/signup" className="ml-2 text-blue-500">Login</NavLink>
-        </div>
+        </div> */}
       </div>
     </div>
   );
