@@ -35,7 +35,7 @@ const Login = () => {
 
         <div className="mt-8">
           <div className="mb-4">
-            <input type="email" ref={emailRef} className="w-full p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none" placeholder="Enter your Roll Number" />
+            <input type="email" ref={emailRef} className="w-full p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none" placeholder="Enter User ID" />
           </div>
 
           <div className="mb-4">
