@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { demographicDB } from "../../config/db.js";
+import { studentsDBDB } from "../../config/db.js";
 
 const studentSchema = new mongoose.Schema({
     rollNumber: { type: String, required: true, unique: true },
