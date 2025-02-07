@@ -3,16 +3,16 @@ import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
 dotenv.config();
 
-import StaffDetails from "../models/Staff/Staff.Details.js"; // Admin model using adminConn
-import StaffCredentials from "../models/authentication.js"; // Authenticate model using authenticateDB
+import StaffDetails from "../models/Staff/Staff.Details.js"; // StaffDetails model using staffDB
+import StaffCredentials from "../models/Staff/Staff.Credentials.js"; // StaffCredentials model using staffDB
 
-export const addAdmin = async (req, res) => {
+export const addStaff = async (req, res) => {
     const admin = req.body;
     if (!admin.employeeId || !admin.firstName || !admin.email || !admin.department) {
         return res.status(400).json({ success: false, message: "Provide all required fields!" });
     }
 
-    const newAdmin = new Admin(admin);
+    const newAdmin = new StaffDetails(admin);
 
     try {
         // Save admin in the Admin collection
@@ -34,10 +34,10 @@ export const addAdmin = async (req, res) => {
     }
 };
 
-export const getAdminDetails = async (req, res) => {
+export const getStaffDetails = async (req, res) => {
     const { employeeId } = req.params;
     try {
-        const adminDetails = await Admin.findOne({ employeeId });
+        const adminDetails = await StaffDetails.findOne({ employeeId });
         if (!adminDetails) {
             return res.status(404).json({ success: false, message: "No details found for this admin!" });
         }
@@ -62,7 +62,7 @@ export const getAdminDetails = async (req, res) => {
     }
 };
 
-export const uploadAdminPhoto = async (req, res) => {
+export const uploadStaffPhoto = async (req, res) => {
     const { employeeId } = req.params;
 
     if (!req.file) {
@@ -72,7 +72,7 @@ export const uploadAdminPhoto = async (req, res) => {
     const { buffer, mimetype } = req.file;
 
     try {
-        const admin = await Admin.findOne({ employeeId });
+        const admin = await StaffDetails.findOne({ employeeId });
         if (!admin) {
             return res.status(404).json({ success: false, message: "Admin not found!" });
         }

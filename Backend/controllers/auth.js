@@ -1,46 +1,23 @@
 import bcrypt from "bcrypt";
-import Authenticate from "../models/authentication.js";
-import Student from "../models/Students/student.Details.js";
-import Admin from "../models/Staff/Staff.Details.js";
-import { generateToken, verifyToken } from "../utils/jwt.js";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+
+import { generateToken, verifyToken } from "../utils/jwt.js";
+import { sendEmail } from "../utils/mailer.js";
+
+// import Authenticate from "../models/authentication.js";
+import Student from "../models/Students/Student.Credentials.js";
+import Admin from "../models/Staff/Staff.Details.js";
 
 // Function to generate OTP (6 digits)
 const generateOTP = () => {
     return crypto.randomInt(100000, 999999).toString(); // 6 digit OTP
 };
 
-// Function to send OTP to user's email using Nodemailer
-const sendEmail = async (emailID, emailSubject, emailText) => {
-    const transporter = nodemailer.createTransport({
-        service: "gmail", // or use another email service provider
-        auth: {
-            user: process.env.EMAIL_USER, // Your email address
-            pass: process.env.EMAIL_APP_PASS, // Your email password or application-specific password
-        },
-    });
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER, // Your email address
-        to: emailID,
-        subject: emailSubject,
-        text: emailText,
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-    } catch (error) {
-        console.error("Error sending email: ", error);
-        throw new Error("Error sending email");
-    }
-};
-
-export const login = async (req, res) => {
+export const login = async (req, res, UserCredentials) => {
     const { username, password } = req.body;
 
     try {
-        const user = await Authenticate.findOne({ username });
+        const user = await UserCredentials.findOne({ username });
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found!" });
         }

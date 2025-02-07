@@ -1,4 +1,8 @@
 import express from "express";
+
+import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import StudentCredentials from "../models/Students/Student.Credentials.js";
+import StaffCredentials from "../models/Staff/Staff.Credentials.js";
 import {
     login,
     logout,
@@ -6,11 +10,11 @@ import {
     changePassword,
     verifyTokenController
 } from "../controllers/auth.js";
-import { authenticateToken, authorizeRole } from "../middleware/auth.js"; // optional for logout to check if the user is logged in
 
 const router = express.Router();
 
-router.post("/login", login);
+router.post("/login", (req, res) => login(req, res, StudentCredentials));
+router.post("/slogin", (req, res) => login(req, res, StaffCredentials));
 router.post("/logout", authenticateToken, logout); // Use `authenticateToken` for logout (optional)
 
 router.post("/reset-password", resetPassword); // Reset password route (validates OTP and resets password)

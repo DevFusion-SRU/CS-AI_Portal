@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { studentDB } from "../config/db.js";
+import { studentDB } from "../../config/db.js";
 
 const studentCredentialsSchema = new mongoose.Schema(
     {

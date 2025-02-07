@@ -3,26 +3,25 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Establish a single MongoDB connection
-const mainConnection = mongoose.createConnection(process.env.MONGO_URI, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-});
+let jobDB, studentDB, staffDB;
 
-// Log connection status
-mainConnection.on("connected", () => {
-  console.log(`MongoDB Connected: ${mainConnection.host}`);
-});
+// Connect to the database
+const connectDB = async () => {
+  try {
+    // Attempt to connect to the MongoDB database
+    const dbConnection = await mongoose.connect(process.env.MONGO_URI);
 
-mainConnection.on("error", (error) => {
-  console.error(`MongoDB Connection Error: ${error.message}`);
-});
+    console.log(`MongoDB Connected: ${dbConnection.connection.host}`);
 
-// Use different databases
-// export const authenticateDB = mainConnection.useDb("authentication");
-export const jobDB = mainConnection.useDb("jobs");
-export const studentDB = mainConnection.useDb("Students");
-export const staffDB= mainConnection.useDb("Staff");
+    // Setup the additional databases and assign to the outer variables
+    jobDB = dbConnection.connection.useDb("jobs");
+    studentDB = dbConnection.connection.useDb("students");
+    staffDB = dbConnection.connection.useDb("staff");
 
-// Export the function to call it in server.js
-export default mainConnection;
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
+  }
+};
+
+export default connectDB;
+export { jobDB, studentDB, staffDB };

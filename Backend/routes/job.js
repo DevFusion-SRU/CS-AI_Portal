@@ -5,7 +5,7 @@ import {
     addJobsBatch,
     deleteJob,
     getJobs
-} from "../controllers/job.js";
+} from "../controllers/Jobs/job.js";
 
 const router = express.Router();
 

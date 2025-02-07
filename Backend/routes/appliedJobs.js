@@ -6,7 +6,7 @@ import {
     getApplications,
     getAppliedStudents,
     getAppliedPeers
-} from "../controllers/jobApplications.js";
+} from "../controllers/Jobs/jobApplications.js";
 
 const router = express.Router();
 

@@ -3,8 +3,8 @@ import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
 dotenv.config();
 
-import Student from "../models/student.js"; // Student model using studentConn
-import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateDB
+import StudentDetails from "../models/Students/Student.Details.js"; // StudentDetails model using studentDB
+import StudentCredentials from "../models/Students/Student.Credentials.js"; // StudentCredentials model using studentDB
 
 export const getStudents = async (req, res) => {
     const { rollNumber, firstName, lastName } = req.query;
@@ -38,8 +38,8 @@ export const getStudents = async (req, res) => {
 
         // Parallelize querying students and counting documents to reduce response time
         const [students, totalStudents] = await Promise.all([
-            Student.find(filters).skip(skip).limit(limit).select(fields), // Students query with pagination and fields projection
-            Student.countDocuments(filters)  // Count the filtered documents (optional but helps with pagination info)
+            StudentDetails.find(filters).skip(skip).limit(limit).select(fields), // Students query with pagination and fields projection
+            StudentDetails.countDocuments(filters)  // Count the filtered documents (optional but helps with pagination info)
         ]);
 
         if (students.length === 0) {
@@ -61,7 +61,7 @@ export const getStudents = async (req, res) => {
 export const getStudentDetails = async (req, res) => {
     const { rollNumber } = req.params;
     try {
-        const studentDetails = await Student.findOne({ rollNumber });
+        const studentDetails = await StudentDetails.findOne({ rollNumber });
         if (!studentDetails) {
             return res.status(404).json({ success: false, message: "No details found for this student!" });
         }
@@ -92,7 +92,7 @@ export const addStudent = async (req, res) => {
         return res.status(400).json({ success: false, message: "Provide all required fields!" });
     }
 
-    const newStudent = new Student(student);
+    const newStudent = new StudentDetails(student);
 
     try {
         // Save student in the Student collection
@@ -128,7 +128,7 @@ export const uploadStudentPhoto = async (req, res) => {
     const { buffer, mimetype } = req.file;
 
     try {
-        const student = await Student.findOne({ rollNumber });
+        const student = await StudentDetails.findOne({ rollNumber });
         if (!student) {
             return res.status(404).json({ success: false, message: "Student not found!" });
         }
@@ -136,7 +136,7 @@ export const uploadStudentPhoto = async (req, res) => {
         student.photo = buffer;
         student.photoType = mimetype;
 
-        await student.save();
+        await StudentDetails.save();
         res.status(200).json({ success: true, message: "Photo uploaded successfully!" });
     } catch (error) {
         console.error("Error uploading photo: ", error.message);
@@ -161,7 +161,7 @@ export const addStudentBatch = async (req, res) => {
 
     try {
         // Save all students in bulk using `insertMany`
-        const newStudents = await Student.insertMany(students);
+        const newStudents = await StudentDetails.insertMany(students);
 
         // Add each student to Authentication collection
         const authenticationEntries = await Promise.all(
@@ -192,7 +192,7 @@ export const deleteStudent = async (req, res) => {
 
     try {
         // Delete student from the Student collection
-        const deletedStudent = await Student.findOneAndDelete({ rollNumber });
+        const deletedStudent = await StudentDetails.findOneAndDelete({ rollNumber });
 
         if (!deletedStudent) {
             return res.status(404).json({ success: false, message: "Student not found!" });
