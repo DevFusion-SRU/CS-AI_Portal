@@ -21,7 +21,7 @@ mainConnection.on("error", (error) => {
 // Use different databases
 // export const authenticateDB = mainConnection.useDb("authentication");
 export const jobDB = mainConnection.useDb("jobs");
-export const studentsDB = mainConnection.useDb("Students");
+export const studentDB = mainConnection.useDb("Students");
 export const staffDB= mainConnection.useDb("Staff");
 
 // Export the function to call it in server.js

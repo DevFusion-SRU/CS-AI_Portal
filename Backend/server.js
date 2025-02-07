@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
-import mainConnection, { staffDB, jobDB, studentsDB } from "./config/db.js";
+import mainConnection, { staffDB, jobDB, studentDB } from "./config/db.js";
 
 import jobRoutes from "./routes/job.js";
 import appliedJobsRoutes from "./routes/appliedJobs.js";
@@ -43,7 +43,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server Started at Port http://localhost:${PORT}`);
   mainConnection;
-  studentsDB; // Establish Authentication DB connection
+  studentDB; // Establish Authentication DB connection
   jobDB; // Establish Job DB connection
   staffDB; // Establish Student DB connection
 });
