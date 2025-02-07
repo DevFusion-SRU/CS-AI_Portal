@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import Student from "../models/student.js"; // Student model using studentConn
-import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateConn
+import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateDB
 
 export const getStudents = async (req, res) => {
     const { rollNumber, firstName, lastName } = req.query;

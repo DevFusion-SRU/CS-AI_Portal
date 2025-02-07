@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import Authenticate from "../models/authentication.js";
-import Student from "../models/student.js";
-import Admin from "../models/admin.js";
+import Student from "../models/Students/student.Details.js";
+import Admin from "../models/Staff/Staff.Details.js";
 import { generateToken, verifyToken } from "../utils/jwt.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";

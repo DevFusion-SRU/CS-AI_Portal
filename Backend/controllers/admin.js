@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import Admin from "../models/admin.js"; // Admin model using adminConn
-import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateConn
+import Authenticate from "../models/authentication.js"; // Authenticate model using authenticateDB
 
 export const addAdmin = async (req, res) => {
     const admin = req.body;

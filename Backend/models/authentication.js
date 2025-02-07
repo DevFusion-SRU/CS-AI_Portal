@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { authenticateConn } from "../config/db.js";
+import { authenticateDB } from "../config/db.js";
 
 const AuthenticationSchema = new mongoose.Schema(
     {
@@ -12,6 +12,6 @@ const AuthenticationSchema = new mongoose.Schema(
     {timestamps: true} //createdAt, updatedAt
 );
 
-const Authenticate = authenticateConn.model("Authenticate", AuthenticationSchema);
+const Authenticate = authenticateDB.model("Authenticate", AuthenticationSchema);
 
 export default Authenticate;

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { demographicConn } from "../config/db.js";
+import { staffDB} from "../../config/db.js";
 
 const adminSchema = new mongoose.Schema({
     employeeId: { type: String, required: true, unique: true },
@@ -13,6 +13,6 @@ const adminSchema = new mongoose.Schema({
     // timestamps: true //createdAt, updatedAt
 });
 
-const Admin = demographicConn.model("Admin", adminSchema);
+const Admin = staffDB.model("Profile", adminSchema);
 
 export default Admin;

@@ -3,17 +3,26 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Connection for the Authentication Database
-export const authenticateConn = mongoose.createConnection(process.env.AUTHENTICATION_MONGO_URI);
-authenticateConn.on('connected', () => console.log(`Authentication database Connected: ${authenticateConn.host}`));
-authenticateConn.on('error', (error) => console.error(`Authentication DB Connection Error: ${error.message}`));
+// Establish a single MongoDB connection
+const mainConnection = mongoose.createConnection(process.env.MONGO_URI, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+});
 
-// Connection for the Demographics Database
-export const demographicConn = mongoose.createConnection(process.env.DEMOGRAPHIC_MONGO_URI);
-demographicConn.on('connected', () => console.log(`Demographics database Connected: ${demographicConn.host}`));
-demographicConn.on('error', (error) => console.error(`Demographics DB Connection Error: ${error.message}`));
+// Log connection status
+mainConnection.on("connected", () => {
+  console.log(`MongoDB Connected: ${mainConnection.host}`);
+});
 
-// Connection for the Job Database
-export const jobConn = mongoose.createConnection(process.env.JOB_MONGO_URI);
-jobConn.on('connected', () => console.log(`Job database Connected: ${jobConn.host}`));
-jobConn.on('error', (error) => console.error(`Job DB Connection Error: ${error.message}`));
+mainConnection.on("error", (error) => {
+  console.error(`MongoDB Connection Error: ${error.message}`);
+});
+
+// Use different databases
+export const authenticateDB = mainConnection.useDb("authentication");
+export const jobDB = mainConnection.useDb("jobs");
+export const demographicDB = mainConnection.useDb("demographics");
+export const staffDB= mainConnection.useDb("Staff");
+
+// Export the function to call it in server.js
+export default mainConnection;

@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
-import { demographicConn } from "../config/db.js";
+import { staffDB } from "../../config/db.js";
 
-const studentSchema = new mongoose.Schema({
-    rollNumber: { type: String, required: true, unique: true },
+const adminSchema = new mongoose.Schema({
+    employeeId: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: false },
-    course: { type: String, required: true },
-    graduationYear: {type: Number, required: true},
+    department: { type: String, required: true },
     email: { type: String, required: true },
     mobile: { type: Number, required: false },
     photo: { type: Buffer, required: false }, // Store photo as a binary buffer
@@ -14,6 +13,6 @@ const studentSchema = new mongoose.Schema({
     // timestamps: true //createdAt, updatedAt
 });
 
-const Student = demographicConn.model("Student", studentSchema);
+const StaffProfile = staffDB.model("Profile", adminSchema);
 
-export default Student;
+export default StaffProfile;
