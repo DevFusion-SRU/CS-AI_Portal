@@ -23,5 +23,6 @@ const connectDB = async () => {
   }
 };
 
+await connectDB();
 export default connectDB;
 export { jobDB, studentDB, staffDB };

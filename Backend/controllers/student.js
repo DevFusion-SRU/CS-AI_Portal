@@ -100,7 +100,7 @@ export const addStudent = async (req, res) => {
 
         // Add student entry to Authentication collection
         const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10); // Hash the default password
-        const newAuthentication = new Authenticate({
+        const newAuthentication = new StudentCredentials({
             username: student.rollNumber,
             password: hashedPassword,
             role: "student",

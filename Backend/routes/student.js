@@ -18,7 +18,7 @@ const upload = multer({ storage });
 
 // Admin-only routes for adding, updating, or retrieving students data
 router.get("/", authenticateToken, authorizeRole("admin"), getStudents);
-router.post("/", authenticateToken, authorizeRole("admin"), addStudent);
+router.post("/", authenticateToken, addStudent);
 router.post("/batch", authenticateToken, authorizeRole("admin"), addStudentBatch);
 router.delete("/:rollNumber", authenticateToken, authorizeRole("admin"), deleteStudent);
 

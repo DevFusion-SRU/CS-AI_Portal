@@ -11,6 +11,6 @@ const studentCredentialsSchema = new mongoose.Schema(
     {timestamps: true} //createdAt, updatedAt
 );
 
-const StudentCredentials = studentDB.model("Authenticate", studentCredentialsSchema);
+const StudentCredentials = studentDB.model("Credentials", studentCredentialsSchema);
 
 export default StudentCredentials;

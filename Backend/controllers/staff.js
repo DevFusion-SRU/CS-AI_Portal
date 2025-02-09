@@ -20,7 +20,7 @@ export const addStaff = async (req, res) => {
 
         // Add admin entry to Authentication collection
         const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10); // Hash the default password
-        const newAuthentication = new Authenticate({
+        const newAuthentication = new StaffCredentials({
             username: admin.employeeId,
             password: hashedPassword,
             role: "admin",
