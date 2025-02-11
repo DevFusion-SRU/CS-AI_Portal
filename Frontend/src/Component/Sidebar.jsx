@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu } from "iconsax-react";
+import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, User } from "iconsax-react"; 
 
 const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
   const [isOpen, setIsOpen] = useState(true);
@@ -11,13 +11,6 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
     setIsOpen(!isOpen);
     setIsSidebarOpen(!isOpen); // Update navbar padding dynamically
   };
-
-  const menuItems = [
-    { name: "Dashboard", icon: <Home2 size="24" variant="Linear" />, path: currentUserRole === "student" ? "/myreports" : "/dashboard" },
-    { name: "Launchpad", icon: <TrendUp size="24" variant="Linear" />, path: "/" },
-    { name: "My Applications", icon: <Personalcard size="24" variant="Linear" />, path: "/usermanagement" },
-    { name: "My Account", icon: <Profile size="24" variant="Linear" />, path: "/myaccount" },
-  ];
 
   return (
     <div className={`fixed top-0 left-0 z-50 h-screen p-4 bg-gray-800 text-white flex flex-col transition-all duration-500 ease-in-out ${isOpen ? "w-64" : "w-20"}`}>
@@ -34,20 +27,49 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
       </div>
 
       <nav className="flex-1">
-        {menuItems.map((item, index) => (
-          <NavLink
-            key={index}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
-            }
-          >
-            {item.icon}
-            {isOpen && <span className="ml-4 text-lg">{item.name}</span>}
-          </NavLink>
-        ))}
+        <NavLink
+          to={currentUserRole === "student" ? "/myreports" : "/dashboard"}
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <Home2 size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">Dashboard</span>}
+        </NavLink>
+
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <TrendUp size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">Launchpad</span>}
+        </NavLink>
+
+        {/* Show "My Applications" for students and "User Management" for admin */}
+        <NavLink
+          to="/usermanagement"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          {currentUserRole === "admin" ? <User size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
+          {isOpen && <span className="ml-4 text-lg">{currentUserRole === "admin" ? "User Management" : "My Applications"}</span>}
+        </NavLink>
+
+        <NavLink
+          to="/myaccount"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <Profile size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">My Account</span>}
+        </NavLink>
       </nav>
 
+      {/* Logout Button */}
       <div
         className="flex items-center p-3 mt-auto rounded-lg hover:bg-red-500 cursor-pointer"
         onClick={() => {
