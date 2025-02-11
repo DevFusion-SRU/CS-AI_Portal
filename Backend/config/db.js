@@ -17,3 +17,9 @@ demographicConn.on('error', (error) => console.error(`Demographics DB Connection
 export const jobConn = mongoose.createConnection(process.env.JOB_MONGO_URI);
 jobConn.on('connected', () => console.log(`Job database Connected: ${jobConn.host}`));
 jobConn.on('error', (error) => console.error(`Job DB Connection Error: ${error.message}`));
+
+// Connection for the Forum Database
+export const forumDB = mongoose.createConnection(process.env.FORUM_MONGO_URI);
+forumDB.on('connected', () => console.log(`forum DB database Connected: ${forumDB.host}`));
+forumDB.on('error', (error) => console.error(`forum DB Connection Error: ${error.message}`));
+
