@@ -15,9 +15,7 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
   const menuItems = [
     { name: currentUserRole === "student" ? "My Reports" : "Dashboard", icon: <Home2 size="24" variant="Linear" />, path: currentUserRole === "student" ? "/myreports" : "/dashboard" },
     { name: "Launchpad", icon: <TrendUp size="24" variant="Linear" />, path: "/" },
-    ...(currentUserRole !== "student"
-      ? [{ name: "My Applications", icon: <Personalcard size="24" variant="Linear" />, path: "/usermanagement" }]
-      : []),
+    { name: "My Applications", icon: <Personalcard size="24" variant="Linear" />, path: "/usermanagement" },
     { name: "My Account", icon: <Profile size="24" variant="Linear" />, path: "/myaccount" },
   ];
 
