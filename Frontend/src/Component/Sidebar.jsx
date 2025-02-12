@@ -16,8 +16,8 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
     <div className={`fixed top-0 left-0 z-50 h-screen p-4 bg-gray-800 text-white flex flex-col transition-all duration-500 ease-in-out ${isOpen ? "w-64" : "w-20"}`}>
       <div className="flex items-center justify-between mb-6">
         {isOpen && (
-          <div className="flex items-center justify-center cursor-pointer text-blue-400">
-            <span className="text-3xl font-bold font-Inter">SRU</span>
+          <div className="flex ml-10 items-center justify-center cursor-pointer text-blue-400">
+            <span className="text-3xl font-extrabold font-Inter">SRU</span>
             <span className="mt-2.5 ml-1 text-sm font-Inter font-normal">CS-AI</span>
           </div>
         )}
@@ -54,7 +54,7 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
             `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
-          {currentUserRole === "admin" ? <User size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
+          {currentUserRole === "admin" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
           {isOpen && <span className="ml-4 text-lg">{currentUserRole === "admin" ? "User Management" : "My Applications"}</span>}
         </NavLink>
 
