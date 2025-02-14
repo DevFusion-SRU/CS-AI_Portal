@@ -1,39 +1,48 @@
+import multer from "multer";
 import { demographicConn } from "../config/db.js";
 import Post from "../models/Posts/Post.js";
 import Student from "../models/student.js";  // Updated import
 
 
+// Multer setup (Memory Storage)
+
+
+// Middleware to parse form-data
 export const createPost = async (req, res) => {
-	try {
-		console.log("Request Body:", req.body);  // Debugging output
+    try {
+       
 
-		const { text, rollNumber } = req.body;  // Replace `username` with `rollNumber`
+            console.log("Request Body:", req.body); // Debugging output
 
-		if (!rollNumber) {
-			return res.status(400).json({ error: "Roll Number is required" });
-		}
+            const { text, rollNumber } = req.body;
 
-		// Find student by rollNumber
-		const student = await Student.findOne({ rollNumber });
+            if (!rollNumber) {
+                return res.status(400).json({ error: "Roll number is required" });
+            }
 
-		if (!student) return res.status(404).json({ message: "Student not found" });
+            // Find student by roll number
+            const student = await Student.findOne({ rollNumber });
 
-		if (!text) {
-			return res.status(400).json({ error: "Post must have text" });
-		}
+            if (!student) return res.status(404).json({ message: "Student not found" });
 
-		const newPost = new Post({
-			user: student._id,  // Use ObjectId of the student instead of rollNumber
-			text,
-		});
+            if (!text) {
+                return res.status(400).json({ error: "Post must have text" });
+            }
 
-		await newPost.save();
-		res.status(201).json(newPost);
-	} catch (error) {
-		console.log("Error in createPost controller: ", error);
-		res.status(500).json({ error: "Internal server error" });
-	}
+            const newPost = new Post({
+                user: student._id, // Store student ID
+                text,
+            });
+
+            await newPost.save();
+            res.status(201).json(newPost);
+       
+    } catch (error) {
+        console.log("Error in createPost controller: ", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 };
+
 
 
 export const deletePost = async (req, res) => {
@@ -136,11 +145,11 @@ export const getAllPosts = async (req, res) => {
 		const Student = demographicConn.model("Student"); 
 
     const posts = await Post.find()
-      .populate({ path: "user", model: Student })  // ✅ Use the correct model
+      .populate({ path: "user", model: Student, select: "-email -mobile -photo -photoType",  })  // ✅ Use the correct model
 	  .populate({
 		path: "comments.user",   // Populating the user who commented
 		model: Student,  // Explicitly using the Student model
-		
+		select: "-email -mobile -photo -photoType", 
 	   })
 	   .sort({ createdAt: -1 });
 
@@ -190,11 +199,11 @@ export const getUserPosts = async (req, res) => {
 
 		const posts = await Post.find({ user: user._id })
 		
-		.populate({ path: "user", model: Student })  // ✅ Use the correct model
+		.populate({ path: "user", model: Student, select: "-email -mobile -photo -photoType", })  // ✅ Use the correct model
 		.populate({
 		  path: "comments.user",   // Populating the user who commented
 		  model: Student,  // Explicitly using the Student model
-		  
+		  select: "-email -mobile -photo -photoType",
 		 })
 		 .sort({ createdAt: -1 });
 

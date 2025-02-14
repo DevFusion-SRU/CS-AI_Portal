@@ -17,6 +17,7 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions)); // Enable CORS with the specified options
 app.use(express.json()); // Parse JSON bodies
+// app.use(express.bodyParser()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 
 import { jobConn, demographicConn, authenticateConn, forumDB } from "./config/db.js";
