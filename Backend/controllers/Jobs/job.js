@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import Job from "../models/job.js"; // Job model using jobConn
+import Job from "../../models/Jobs/jobs.js"; // Job model using jobDB
 
 export const getJobs = async (req, res) => {
     const filters = {};

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { jobConn } from "../config/db.js";
+import { jobDB } from "../../config/db.js";
 
 const appliedJobsSchema = new mongoose.Schema({
     rollNumber: { type: String, required: true, unique: true, ref: "Student" },
@@ -7,6 +7,6 @@ const appliedJobsSchema = new mongoose.Schema({
     // timestamps: true //createdAt, updatedAt
 });
 
-const AppliedJobs = jobConn.model("AppliedJobs", appliedJobsSchema);
+const AppliedJobs = jobDB.model("AppliedJobs", appliedJobsSchema);
 
 export default AppliedJobs;
