@@ -1,155 +1,86 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '../Context/AuthContext';
-import { FaRocket, FaChartBar, FaUser, FaSignOutAlt } from 'react-icons/fa'; 
+import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
+import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, User } from "iconsax-react"; 
 
-const Sidebar = ({ userData, setUserData }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const {signout, currentUserRole}=useAuth()
+const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  const { signout, currentUserRole } = useAuth();
 
-  const handleMenuClick = (index) => {
-    setActiveIndex(index); 
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+    setIsSidebarOpen(!isOpen); // Update navbar padding dynamically
   };
 
   return (
-    <>
-      <div className="md:hidden flex items-center justify-between p-4 bg-white fixed top-0 left-0 w-full z-50 shadow-md space-x-4">
-        {/* Sidebar Menu Button */}
-        <button
-          className="p-4 bg-blue-600 text-white"
-          onClick={() => setIsOpen((isOpen) => !isOpen)}
-        >
-          {/* Hamburger icon */}
-          <div className="space-y-1">
-            <span className="block w-6 h-0.5 bg-white"></span>
-            <span className="block w-6 h-0.5 bg-white"></span>
-            <span className="block w-6 h-0.5 bg-white"></span>
+    <div className={`fixed top-0 left-0 z-50 h-screen p-4 bg-gray-800 text-white flex flex-col transition-all duration-500 ease-in-out ${isOpen ? "w-64" : "w-20"}`}>
+      <div className="flex items-center justify-between mb-6">
+        {isOpen && (
+          <div className="flex ml-10 items-center justify-center cursor-pointer text-blue-400">
+            <span className="text-3xl font-extrabold font-Inter">SRU</span>
+            <span className="mt-2.5 ml-1 text-sm font-Inter font-normal">CS-AI</span>
           </div>
-        </button>
+        )}
+        <div className="flex items-center p-3 rounded-lg cursor-pointer" onClick={toggleSidebar}>
+          {isOpen ? <ArrowSquareLeft size="24" variant="Linear" /> : <HambergerMenu size="24" variant="Linear" />}
+        </div>
+      </div>
 
-        {/* Title next to the menu button on small screens */}
-        <div className="text-2xl font-bold text-blue-600">
-          SRU <span className="text-lg">CS-AI</span>
-        </div>
-        <div className="flex items-center space-x-4">
-        {/* Profile Image Section */}
-        <div className="relative">
-          {userData ?.photo? (
-            <img
-              src={userData.photo}
-              alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
-              <span className="text-white">?</span>
-            </div>
-          )}
-          
-        </div>
-      </div>
-      </div>
-      <aside
-        className={`w-48 h-full bg-white shadow-md p-6 fixed z-40 border-r-2 border-gray-200 transition-transform transform ${
-          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+      <nav className="flex-1">
+        <NavLink
+          to={currentUserRole === "student" ? "/myreports" : "/dashboard"}
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <Home2 size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">Dashboard</span>}
+        </NavLink>
+
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <TrendUp size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">Launchpad</span>}
+        </NavLink>
+
+        {/* Show "My Applications" for students and "User Management" for admin */}
+        <NavLink
+          to="/usermanagement"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          {currentUserRole === "admin" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
+          {isOpen && <span className="ml-4 text-lg">{currentUserRole === "admin" ? "User Management" : "My Applications"}</span>}
+        </NavLink>
+
+        <NavLink
+          to="/myaccount"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <Profile size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">My Account</span>}
+        </NavLink>
+      </nav>
+
+      {/* Logout Button */}
+      <div
+        className="flex items-center p-3 mt-auto rounded-lg hover:bg-red-500 cursor-pointer"
+        onClick={() => {
+          setUserData({ firstName: "", lastName: "", email: "", dob: "", rollNumber: "", mobile: "", course: "", photo: "" });
+          signout();
+        }}
       >
-        <div className="text-2xl font-extrabold text-blue-600 text-center mb-10">
-          SRU <span className="text-xs md:inline hidden">CS-AI</span>
-        </div>
-
-        {/* Sliding Pointer */}
-        <div
-          className="absolute left-0 w-1 mt-9 rounded-md bg-blue-600 transition-all duration-300"
-          style={{ top: `${activeIndex * 60 + 50}px`, height: '40px' }} 
-        ></div>
-
-<nav className="space-y-8">
-          <ul className="text-center font-medium text-base space-y-8">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `flex items-center justify-center space-x-4 ${
-                  isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
-                }`
-              }
-              onClick={() => handleMenuClick(0)}
-            >
-              <FaRocket className="text-1xl" />
-              <span>Launchpad</span>
-            </NavLink>
-
-            <NavLink
-              to={currentUserRole === 'student' ? '/myreports' : '/dashboard'}
-
-              className={({ isActive }) =>
-                `flex items-center justify-center space-x-4 ${
-                  isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
-                }`
-              }
-              onClick={() => handleMenuClick(1)}
-            >
-              <FaChartBar className="text-1xl" />
-              <span>{currentUserRole === 'student' ? 'My reports' : 'Dashboard'}</span>
-            </NavLink>
-            {currentUserRole === 'admin' && (
-              <NavLink
-                to="/usermanagement"
-                className={({ isActive }) =>
-                  `flex items-center justify-center space-x-4 ${
-                    isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
-                  }`
-                }
-                onClick={() => handleMenuClick(2)}
-              >
-                <FaUser className="text-1xl" />
-                <span>User Management</span>
-              </NavLink>
-            )}
-
-            <NavLink
-              to="/myaccount"
-              className={({ isActive }) =>
-                `flex items-center justify-center space-x-4 ${
-                  isActive ? 'text-blue-600 font-bold' : 'text-gray-600'
-                }`
-              }
-              onClick={() => handleMenuClick(3)}
-            >
-              <FaUser className="text-1xl" />
-              <span>My Account</span>
-            </NavLink>
-          </ul>
-        </nav>
-        <button
-            onClick={() => 
-              {
-                setUserData({
-                  firstName: "",
-                  lastName: "",
-                  email: "",
-                  dob: "",
-                  rollNumber: "",
-                  mobile: "",
-                  course: "",
-                  photo: "",
-                })
-                signout()
-              }}
-            className="flex items-center space-x-3  mt-56 text-gray-500 hover:text-red-600"
-          >
-            <FaSignOutAlt className="text-2xl" />
-          <span className="text-lg font-semibold">Logout</span>
-        </button>
-      </aside>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black opacity-50 z-30"
-          onClick={() => setIsOpen(false)}
-        ></div>
-      )}
-    </>
+        <Logout size="24" variant="Linear" />
+        {isOpen && <span className="ml-4 text-lg">Logout</span>}
+      </div>
+    </div>
   );
 };
 

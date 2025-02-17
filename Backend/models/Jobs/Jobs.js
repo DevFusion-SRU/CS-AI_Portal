@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { jobConn } from "../config/db.js";
+import { jobDB } from "../../config/db.js";
 
 const jobSchema = new mongoose.Schema({
     jobId: { type: String, required: true, unique: true },
@@ -23,6 +23,6 @@ const jobSchema = new mongoose.Schema({
     applyLink: { type: String, required: true },
 }, { timestamps: true }); // Enables createdAt and updatedAt
 
-const Job = jobConn.model("Job", jobSchema);
+const Job = jobDB.model("Job", jobSchema);
 
 export default Job;

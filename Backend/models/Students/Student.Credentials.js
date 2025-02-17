@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { authenticateConn } from "../config/db.js";
+import { studentDB } from "../../config/db.js";
 
-const AuthenticationSchema = new mongoose.Schema(
+const studentCredentialsSchema = new mongoose.Schema(
     {
         username: { type: String, required: true, unique: true }, // Add Reference to Student, Admin
         password: { type: String, required: true },
@@ -12,6 +12,6 @@ const AuthenticationSchema = new mongoose.Schema(
     {timestamps: true} //createdAt, updatedAt
 );
 
-const Authenticate = authenticateConn.model("Authenticate", AuthenticationSchema);
+const StudentCredentials = studentDB.model("Credentials", studentCredentialsSchema);
 
-export default Authenticate;
+export default StudentCredentials;

@@ -3,6 +3,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
+import connectDB from "./config/db.js";
+
+import jobRoutes from "./routes/job.js";
+import appliedJobsRoutes from "./routes/appliedJobs.js";
+import authRoutes from "./routes/auth.js";
+import studentRoutes from "./routes/student.js";
+import staffRoutes from "./routes/staff.js";
 
 const app = express();
 
@@ -33,7 +40,7 @@ import postRoutes from "./routes/Post.js";
 
 // Test Route
 app.get("/", (req, res) => {
-  res.send("Server is ready!");
+  res.send("Server is running!");
 });
 
 // Routes
@@ -42,14 +49,23 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/appliedJobs", appliedJobsRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/admins", adminRoutes);
-app.use("/api/posts", postRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  authenticateConn; // Establish Authentication DB connection
-  jobConn; // Establish Job DB connection
-  demographicConn; // Establish Student DB connection
-  forumDB; // Establish Forum DB connection
-  console.log(`Server Started at Port http://localhost:${PORT}`);
-});
+
+const startServer = async () => {
+  try {
+    // Wait for the DB connection to be established
+    await connectDB();
+
+    // Once DB is connected, the server starts
+    app.listen(PORT, () => {
+      console.log(`Server Started on Port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Error establishing database connection:", error);
+    process.exit(1); // Exit the server if the DB connection fails
+  }
+};
+
+startServer();

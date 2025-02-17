@@ -163,7 +163,7 @@ const Forgotpassword = () => {
               ref={emailRef}
               required
               className="w-2/3 p-3 border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none"
-              placeholder="Enter your email"
+              placeholder="Enter User ID"
             />
             <button
               disabled={loading}

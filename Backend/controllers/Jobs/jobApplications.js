@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-import Job from "../models/job.js";
-import AppliedJobs from "../models/appliedJobs.js";
+import Job from "../../models/Jobs/Jobs.js";
+import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
-import Student from "../models/student.js";
-import AppliedStudents from "../models/appliedStudents.js";
+import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
+import AppliedStudents from "../../models/Jobs/appliedStudents.js"; // AppliedStudents model using jobDB
 
 export const addApplication = async (req, res) => {
     const { rollNumber, jobId } = req.body;
