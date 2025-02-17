@@ -13,7 +13,7 @@ const router = express.Router();
 // Only authenticated users can access these routes
 router.post("/", authenticateToken, authorizeRole("student"), addApplication);
 router.post("/view", authenticateToken, authorizeRole("student"), addView);
-router.get("/allDetails", authenticateToken, authorizeRole("admin"), getAppliedStudents); // Admin-only access
+router.get("/allDetails", authenticateToken, authorizeRole("staff"), getAppliedStudents); // Admin-only access
 router.get("/student/:rollNumber", authenticateToken, authorizeRole("student"), getApplications);
 router.get("/job/:jobId", authenticateToken, authorizeRole("student"),  getAppliedPeers);
 

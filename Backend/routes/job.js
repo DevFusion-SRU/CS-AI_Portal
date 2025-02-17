@@ -13,8 +13,8 @@ const router = express.Router();
 router.get("/", getJobs);
 
 // Protected routes for admin
-router.post("/", authenticateToken, authorizeRole("admin"), addJob);
-router.post("/batch", authenticateToken, authorizeRole("admin"), addJobsBatch);
-router.delete("/:id", authenticateToken, authorizeRole("admin"), deleteJob);
+router.post("/", authenticateToken, authorizeRole("staff"), addJob);
+router.post("/batch", authenticateToken, authorizeRole("staff"), addJobsBatch);
+router.delete("/:id", authenticateToken, authorizeRole("staff"), deleteJob);
 
 export default router;

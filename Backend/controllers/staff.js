@@ -23,7 +23,7 @@ export const addStaff = async (req, res) => {
         const newAuthentication = new StaffCredentials({
             username: admin.employeeId,
             password: hashedPassword,
-            role: "admin",
+            role: "staff",
         });
         await newAuthentication.save();
 
