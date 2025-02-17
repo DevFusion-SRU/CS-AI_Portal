@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import Job from "../../models/Jobs/jobs.js";
+import Job from "../../models/Jobs/Jobs.js";
 import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
 import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
