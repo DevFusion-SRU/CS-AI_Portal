@@ -24,19 +24,7 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions)); // Enable CORS with the specified options
 app.use(express.json()); // Parse JSON bodies
-// app.use(express.bodyParser()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
-
-import { jobConn, demographicConn, authenticateConn, forumDB } from "./config/db.js";
-
-import jobRoutes from "./routes/job.js";
-import appliedJobsRoutes from "./routes/appliedJobs.js";
-import authRoutes from "./routes/auth.js";
-import studentRoutes from "./routes/student.js";
-import adminRoutes from "./routes/admin.js";
-import postRoutes from "./routes/Post.js";
-
-
 
 // Test Route
 app.get("/", (req, res) => {
@@ -48,7 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/appliedJobs", appliedJobsRoutes);
 app.use("/api/students", studentRoutes);
-app.use("/api/admins", adminRoutes);
+app.use("/api/staff", staffRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
