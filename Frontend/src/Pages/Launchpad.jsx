@@ -58,7 +58,7 @@ const Launchpad = () => {
         if (json.success && Array.isArray(json.data)) {
           
           setOpportunities(json.data);
-          
+          console.log(json.data)
           setTotalPages(json.totalPages);
           setCurrentPage(json.currentPage);
           setLoading(false)
@@ -195,7 +195,7 @@ const Launchpad = () => {
         <div className="flex justify-start space-x-8 mb-4 border-b border-gray-200">
           {[
             { id: "all", label: "All Opportunities" },
-            { id: "Fulltime", label: "Jobs" },
+            { id: "Full-time", label: "Jobs" },
             { id: "Internship", label: "Internships" },
             { id: "Hackathon", label: "Hackathons" },
           ].map((tab) => (
@@ -328,11 +328,11 @@ const Launchpad = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredOpportunities.map((opportunity) => (
-                      <React.Fragment key={opportunity.id}>
+                      <React.Fragment key={opportunity.jobId}>
                         <tr className="hover:bg-gray-50 transition-all">
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">{opportunity.company}</td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{opportunity.name}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.id}</td>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{opportunity.title}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{opportunity.jobId}</td>
                           <td className="px-6 py-4 text-sm text-gray-500">{opportunity.type}</td>
                           <td className="px-6 py-4">
                             <a
@@ -340,13 +340,13 @@ const Launchpad = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full hover:bg-blue-100"
-                              onClick={() => handleViewClick(opportunity.id)}
+                              onClick={() => handleViewClick(opportunity.jobId)}
                             >
                               View
                             </a>
                           </td>
                         </tr>
-                        {viewingJobId === opportunity.id && currentUserRole === "student" && (
+                        {viewingJobId === opportunity.jobId && currentUserRole === "student" && (
                           <tr>
                             <td colSpan={5} className="px-6 py-4 bg-gray-50">
                               <div className="flex items-center justify-between">
@@ -357,7 +357,7 @@ const Launchpad = () => {
                                     onClick={() => {
                                       handleConfirm({
                                         rollNumber: currentUser.username,
-                                        jobId: opportunity.id,
+                                        jobId: opportunity.jobId,
                                       });
                                       setViewingJobId(null);
                                     }}

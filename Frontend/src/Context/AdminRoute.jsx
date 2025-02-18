@@ -13,7 +13,7 @@ const AdminRoute = () => {
             alert('Authorized users only')
         }
     }, [currentUserRole]); 
-    return currentUserRole==='admin' ? <Outlet/> : null;
+    return currentUserRole==='staff' ? <Outlet/> : null;
 }
 
 export default AdminRoute
