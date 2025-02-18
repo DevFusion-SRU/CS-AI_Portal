@@ -45,7 +45,6 @@ export const AuthProvider = ({ children }) => {
         { username: email, password: password },
         { withCredentials: true }
       );
-
       if (response.data.success) {
         isMounted.current = true;
         checkAuthState();
