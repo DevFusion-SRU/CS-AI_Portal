@@ -3,17 +3,26 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Connection for the Authentication Database
-export const authenticateConn = mongoose.createConnection(process.env.AUTHENTICATION_MONGO_URI);
-authenticateConn.on('connected', () => console.log(`Authentication database Connected: ${authenticateConn.host}`));
-authenticateConn.on('error', (error) => console.error(`Authentication DB Connection Error: ${error.message}`));
+let jobDB, studentDB, staffDB;
 
-// Connection for the Demographics Database
-export const demographicConn = mongoose.createConnection(process.env.DEMOGRAPHIC_MONGO_URI);
-demographicConn.on('connected', () => console.log(`Demographics database Connected: ${demographicConn.host}`));
-demographicConn.on('error', (error) => console.error(`Demographics DB Connection Error: ${error.message}`));
+// Connect to the database
+const connectDB = async () => {
+  try {
+    // Attempt to connect to the MongoDB database
+    const dbConnection = await mongoose.connect(process.env.MONGO_URI);
 
-// Connection for the Job Database
-export const jobConn = mongoose.createConnection(process.env.JOB_MONGO_URI);
-jobConn.on('connected', () => console.log(`Job database Connected: ${jobConn.host}`));
-jobConn.on('error', (error) => console.error(`Job DB Connection Error: ${error.message}`));
+    console.log(`MongoDB Connected: ${dbConnection.connection.host}`);
+
+    // Setup the additional databases and assign to the outer variables
+    jobDB = dbConnection.connection.useDb("jobs");
+    studentDB = dbConnection.connection.useDb("students");
+    staffDB = dbConnection.connection.useDb("staff");
+
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
+  }
+};
+
+await connectDB();
+export default connectDB;
+export { jobDB, studentDB, staffDB };
