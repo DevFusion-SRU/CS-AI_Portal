@@ -6,8 +6,8 @@ const appliedStudentsSchema = new mongoose.Schema({
     views: [ { type: String, ref: "Student" } ],
     applications: [ { type: String, ref: "Student" } ],
 
-    // timestamps: true //createdAt, updatedAt
-});
+}, { timestamps: true } // Enables createdAt and updatedAt
+);
 
 const AppliedStudents = jobDB.model("AppliedStudents", appliedStudentsSchema);
 

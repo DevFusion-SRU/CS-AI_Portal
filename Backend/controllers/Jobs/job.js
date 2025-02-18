@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import Job from "../../models/Jobs/Jobs.js"; // Job model using jobDB
+import Job from "../../models/Jobs/Job.js"; // Job model using jobDB
 
 export const getJobs = async (req, res) => {
     const filters = {};
@@ -15,13 +15,13 @@ export const getJobs = async (req, res) => {
         const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
         filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search
     }
-    if (req.query.name) {
-        const nameQuery = req.query.name.trim().replace(/\s+/g, " ");
-        filters.name = { $regex: new RegExp(nameQuery, "i") };
+    if (req.query.title) {
+        const nameQuery = req.query.title.trim().replace(/\s+/g, " ");
+        filters.title = { $regex: new RegExp(nameQuery, "i") };
     }
-    if (req.query.id) {
-        const idQuery = req.query.id.trim().replace(/\s+/g, " ");
-        filters.id = { $regex: new RegExp(idQuery, "i") };
+    if (req.query.jobId) {
+        const jobIdQuery = req.query.jobId.trim().replace(/\s+/g, " ");
+        filters.jobId = { $regex: new RegExp(jobIdQuery, "i") };
     }
     
     try {
@@ -55,7 +55,7 @@ export const getJobs = async (req, res) => {
 
 export const addJob = async (req, res) => {
     const job = req.body;
-    if (!job.id || !job.name || !job.company || !job.applyLink) {
+    if (!job.jobId || !job.title || !job.type || !job.company || !job.location || !job.description.text || !job.applyLink) {
         return res.status(400).json({ success: false, message: "Provide all required fields!!" });
     }
 
@@ -83,8 +83,8 @@ export const addJobsBatch = async (req, res) => {
 
     // Validate each job in the array
     for (const job of jobs) {
-        if (!job.id || !job.name || !job.company || !job.applyLink) {
-            return res.status(400).json({ success: false, message: "Each job must include id, name, company, and applyLink!" });
+        if (!job.jobId || !job.title || !job.type || !job.company || !job.location || !job.description.text || !job.applyLink) {
+            return res.status(400).json({ success: false, message: "Each job must include all required details!" });
         }
     }
 
@@ -99,10 +99,11 @@ export const addJobsBatch = async (req, res) => {
 };
 
 export const deleteJob = async (req, res) => {
-    const { id } = req.params;
+    const { jobId } = req.params;
 
     try {
-        const job = await Job.findOneAndDelete({ id: id });
+        const job = await Job.findOneAndDelete({ jobId: jobId });
+
         if (!job) {
             return res.status(404).json({ success: false, message: "Job not found!" });
         }
