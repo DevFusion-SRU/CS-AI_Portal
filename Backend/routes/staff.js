@@ -9,7 +9,7 @@ const router = express.Router();
 const storage = multer.memoryStorage(); // Store file in memory as a Buffer
 const upload = multer({ storage });
 
-router.post("/", authenticateToken, authorizeRole("admin"), addStaff);
+router.post("/", authenticateToken, addStaff);
 router.get("/:employeeId", authenticateToken, authorizeRole("staff"), getStaffDetails);
 router.patch("/:employeeId/photo", authenticateToken, authorizeRole("staff"), upload.single("photo"), uploadStaffPhoto);
 
