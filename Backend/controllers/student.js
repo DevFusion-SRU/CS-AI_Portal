@@ -136,7 +136,7 @@ export const uploadStudentPhoto = async (req, res) => {
         student.photo = buffer;
         student.photoType = mimetype;
 
-        await StudentDetails.save();
+        await student.save();
         res.status(200).json({ success: true, message: "Photo uploaded successfully!" });
     } catch (error) {
         console.error("Error uploading photo: ", error.message);
@@ -174,9 +174,9 @@ export const addStudentBatch = async (req, res) => {
                 };
             })
         );
-        await Authenticate.insertMany(authenticationEntries); // Bulk insert into Authentication collection
+        await StudentCredentials.insertMany(authenticationEntries); // Bulk insert into Credentials collection
 
-        res.status(201).json({ success: true, data: newStudents });
+        res.status(201).json({ success: true, message: "Students batch insertion completed!" });
     } catch (error) {
         console.error("Error in entering Student details: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
@@ -199,7 +199,7 @@ export const deleteStudent = async (req, res) => {
         }
 
         // Delete student entry from the Authentication collection
-        const deletedAuth = await Authenticate.findOneAndDelete({ username: rollNumber });
+        const deletedAuth = await StudentCredentials.findOneAndDelete({ username: rollNumber });
 
         if (!deletedAuth) {
             console.error("Authentication record not found for roll number:", rollNumber);
