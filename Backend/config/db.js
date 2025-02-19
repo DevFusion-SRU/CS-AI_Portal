@@ -17,6 +17,7 @@ const connectDB = async () => {
     jobDB = dbConnection.connection.useDb("jobs");
     studentDB = dbConnection.connection.useDb("students");
     staffDB = dbConnection.connection.useDb("staff");
+    forumDB = dbConnection.connection.useDb("forums");
 
   } catch (error) {
     console.error(`MongoDB Connection Error: ${error.message}`);
