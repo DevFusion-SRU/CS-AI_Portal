@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-let jobDB, studentDB, staffDB;
+let jobDB, studentDB, staffDB, forumDB;
 
 // Connect to the database
 const connectDB = async () => {
@@ -26,4 +26,4 @@ const connectDB = async () => {
 
 await connectDB();
 export default connectDB;
-export { jobDB, studentDB, staffDB };
+export { jobDB, studentDB, staffDB, forumDB };
