@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import Job from "../../models/Jobs/Jobs.js";
+import Job from "../../models/Jobs/Job.js";
 import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
 import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
@@ -103,15 +103,14 @@ export const getApplications = async (req, res) => {
         const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
         filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search
     }
-    if (req.query.name) {
-        const nameQuery = req.query.name.trim().replace(/\s+/g, " ");
-        filters.name = { $regex: new RegExp(nameQuery, "i") };
+    if (req.query.title) {
+        const nameQuery = req.query.title.trim().replace(/\s+/g, " ");
+        filters.title = { $regex: new RegExp(nameQuery, "i") };
     }
-    if (req.query.id) {
-        const idQuery = req.query.id.trim().replace(/\s+/g, " ");
-        filters.id = { $regex: new RegExp(idQuery, "i") };
+    if (req.query.jobId) {
+        const jobIdQuery = req.query.jobId.trim().replace(/\s+/g, " ");
+        filters.jobId = { $regex: new RegExp(jobIdQuery, "i") };
     }
-
     try {
         const appliedJobsEntry = await AppliedJobs.findOne({ rollNumber });
         if (!appliedJobsEntry) {
@@ -125,10 +124,10 @@ export const getApplications = async (req, res) => {
 
         // Parallelize querying applied jobs details to reduce response time
         const [jobDetails, totalJobs] = await Promise.all([
-            Job.find({ id: { $in: appliedJobsEntry.jobIds }, ...filters })  // Fetch jobs with applied filters
+            Job.find({ jobId: { $in: appliedJobsEntry.jobIds }, ...filters })  // Fetch jobs with applied filters
                 .skip(skip)
                 .limit(limit),
-            Job.countDocuments({ id: { $in: appliedJobsEntry.jobIds }, ...filters })  // Count the filtered documents
+            Job.countDocuments({ jobId: { $in: appliedJobsEntry.jobIds }, ...filters })  // Count the filtered documents
         ]);
 
         if (jobDetails.length === 0) {
@@ -159,19 +158,19 @@ export const getAppliedPeers = async (req, res) => {
 
         const { applications } = appliedPeers;
         
-        const students = await Student.find({
+        const peers = await StudentDetails.find({
             rollNumber: { $in: applications }  // Find students whose rollNumbers are in the applications array
         });
 
         // Map the results to return a list of objects with rollNumber, firstName, and lastName
-        const studentDetails = students.map(student => ({
-            rollNumber: student.rollNumber,
-            firstName: student.firstName,
-            lastName: student.lastName
+        const peersDetails = peers.map(peer => ({
+            rollNumber: peer.rollNumber,
+            firstName: peer.firstName,
+            lastName: peer.lastName
         }));
 
         // Send the response with student details
-        return res.status(200).json({ success: true, studentDetails });
+        return res.status(200).json({ success: true, peersDetails });
 
     } catch (error) {
         console.error("Error fetching applied peers: ", error.message);
@@ -193,13 +192,13 @@ export const getAppliedStudents = async (req, res) => {
         const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
         filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search
     }
-    if (req.query.name) {
-        const nameQuery = req.query.name.trim().replace(/\s+/g, " ");
-        filters.name = { $regex: new RegExp(nameQuery, "i") };
+    if (req.query.title) {
+        const nameQuery = req.query.title.trim().replace(/\s+/g, " ");
+        filters.title = { $regex: new RegExp(nameQuery, "i") };
     }
-    if (req.query.id) {
-        const idQuery = req.query.id.trim().replace(/\s+/g, " ");
-        filters.id = { $regex: new RegExp(idQuery, "i") };
+    if (req.query.jobId) {
+        const jobIdQuery = req.query.jobId.trim().replace(/\s+/g, " ");
+        filters.jobId = { $regex: new RegExp(jobIdQuery, "i") };
     }
 
     try {
@@ -227,7 +226,7 @@ export const getAppliedStudents = async (req, res) => {
         // Loop over each job and check its related students in AppliedStudents collection
         for (const job of jobs) {
             // Find the AppliedStudents entry for this job by comparing jobId to job.id
-            const appliedStudentsEntry = appliedStudentsEntries.find(entry => entry.jobId.toString() === job.id.toString());
+            const appliedStudentsEntry = appliedStudentsEntries.find(entry => entry.jobId.toString() === job.jobId.toString());
 
             // Initialize variables for counts and student arrays
             let appliedStudents = [];

@@ -32,8 +32,8 @@ const App = () => {
       if (!currentUser) return;
       let endpoint;
 
-      if (currentUserRole === "admin") {
-        endpoint = `${BASE_URL}admins/${currentUser.username}`;
+      if (currentUserRole === "staff") {
+        endpoint = `${BASE_URL}staff/${currentUser.username}`;
       } else if (currentUserRole === "student") {
         endpoint = `${BASE_URL}students/${currentUser.username}`;
       } else {

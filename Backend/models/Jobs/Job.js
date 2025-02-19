@@ -21,8 +21,8 @@ const jobSchema = new mongoose.Schema({
     },
 
     applyLink: { type: String, required: true },
-}, { timestamps: true }); // Enables createdAt and updatedAt
-
+}, { timestamps: true } // Enables createdAt and updatedAt
+);
 const Job = jobDB.model("Job", jobSchema);
 
 export default Job;
