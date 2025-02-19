@@ -4,7 +4,7 @@ import { useAuth } from "../Context/AuthContext";
 import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, User } from "iconsax-react"; 
 
 const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const { signout, currentUserRole } = useAuth();
 
   const toggleSidebar = () => {
@@ -34,7 +34,7 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
           }
         >
           <Home2 size="24" variant="Linear" />
-          {isOpen && <span className="ml-4 text-lg">{currentUserRole === 'student' ? 'My reports' : 'Dashboard'}</span>}
+          {isOpen && <span className="ml-4 text-lg">Dashboard</span>}
         </NavLink>
 
         <NavLink
@@ -48,17 +48,15 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
         </NavLink>
 
         {/* Show "My Applications" for students and "User Management" for admin */}
-        {currentUserRole === 'staff' && (
         <NavLink
           to="/usermanagement"
           className={({ isActive }) =>
             `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
-          {currentUserRole === "staff" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
-          {isOpen && <span className="ml-4 text-lg">{currentUserRole === "staff" ? "User Management" : "My Applications"}</span>}
+          {currentUserRole === "admin" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
+          {isOpen && <span className="ml-4 text-lg">{currentUserRole === "admin" ? "User Management" : "My Applications"}</span>}
         </NavLink>
-        )}
 
         <NavLink
           to="/myaccount"
