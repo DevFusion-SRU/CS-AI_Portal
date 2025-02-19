@@ -20,6 +20,7 @@ const Reports = () => {
   const fetchAPI = useCallback(
     async (page = 1) => {
       setLoading(true);
+      console.log(`${BASE_URL}appliedJobs/student/${currentUser.username}?page=${page}&limit=10`)
       try {
         const response = await fetch(
           `${BASE_URL}appliedJobs/student/${currentUser.username}?page=${page}&limit=10`,
@@ -31,6 +32,7 @@ const Reports = () => {
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
           setOpportunities(json.data);
+          console.log(json.data)
           setTotalPages(json.totalPages);
           setCurrentPage(json.currentPage);
         }
@@ -59,7 +61,7 @@ const Reports = () => {
     )
     .filter((opportunity) => {
       const description = opportunity.description
-        ? opportunity.description.toLowerCase()
+        ? opportunity.description.text.toLowerCase()
         : "";
       return description.includes(searchQuery.toLowerCase());
     });
@@ -121,16 +123,16 @@ const Reports = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOpportunities.map((opportunity) => (
-                  <React.Fragment key={opportunity.id}>
+                  <React.Fragment key={opportunity.jobId}>
                     <tr className="hover:bg-gray-50 transition-all">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         {opportunity.company}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {opportunity.id}
+                        {opportunity.jobId}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {opportunity.status}
+                        {opportunity.title}
                       </td>
                       <td className="px-6 py-4">
                         <button
