@@ -2,6 +2,37 @@ import mongoose from "mongoose";
 
 import Job from "../../models/Jobs/Job.js"; // Job model using jobDB
 
+export const getJobById = async (req, res) => {
+    const { jobId } = req.params;  // Assuming jobId is passed as a route parameter
+
+    if (!jobId) {
+        return res.status(400).json({ success: false, message: "Job ID is required." });
+    }
+
+    try {
+        const job = await Job.findOne({ jobId: jobId.trim() })
+            .select('-_id -__v')  // Excluding _id and __v from the main document
+            .lean();  // Converting the Mongoose document to a plain JavaScript object
+
+        if (job) {
+            // Removing _id from the description field if present
+            if (job.description && job.description._id) {
+                delete job.description._id;
+            }
+
+            return res.status(200).json({
+                success: true,
+                data: job,
+            });
+        } else {
+            return res.status(404).json({ success: false, message: "Job not found." });
+        }
+    } catch (error) {
+        console.error("Error in fetching Job:", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 export const getJobs = async (req, res) => {
     const filters = {};
     
