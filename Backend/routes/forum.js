@@ -4,6 +4,7 @@ import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 
 import { createPost, getAllPosts, getPostById, editPost, deletePost, toggleLikePost, reportPost } from "../controllers/Forums/posts.js";
 import { addComment, getComments, editComment, deleteComment, likeUnlikeComment, reportComment } from "../controllers/Forums/comments.js";
+import { addReply, getReplies, editReply, deleteReply, likeUnlikeReply, reportReply } from "../controllers/Forums/replies.js";
 
 const router = express.Router();
 
@@ -28,9 +29,17 @@ router.post("/posts/:postId/report", authenticateToken, reportPost);
 // Comments
 router.post("/comments/:postId", authenticateToken, commentUpload, addComment);
 router.get("/comments/:postId", authenticateToken, getComments);
-router.patch("/comments/:commentId", authenticateToken, authorizeRole(["student", "staff"]), commentUpload, editComment);
+router.put("/comments/:commentId", authenticateToken, authorizeRole(["student", "staff"]), commentUpload, editComment);
 router.delete("/comments/:commentId", authenticateToken, authorizeRole(["student", "staff"]), deleteComment);
 router.post("/comments/:commentId/like", authenticateToken, authorizeRole(["student", "staff"]), likeUnlikeComment);
-router.post("/comments/:commentId/report", authenticateToken, authorizeRole(["student", "staff"]), reportComment);
+router.post("/comments/:commentId/report", authenticateToken, authorizeRole(["student", "staff"]), commentUpload, reportComment);
+
+// Replies
+router.post("/replies/:commentId", authenticateToken, replyUpload, addReply);
+router.get("/replies/:commentId", authenticateToken, getReplies);
+router.put("/replies/:replyId", authenticateToken, authorizeRole(["student", "staff"]), replyUpload, editReply);
+router.delete("/replies/:replyId", authenticateToken, authorizeRole(["student", "staff"]), deleteReply);
+router.post("/replies/:replyId/like", authenticateToken, authorizeRole(["student", "staff"]), likeUnlikeReply);
+router.post("/replies/:replyId/report", authenticateToken, authorizeRole(["student", "staff"]), replyUpload, reportReply);
 
 export default router;

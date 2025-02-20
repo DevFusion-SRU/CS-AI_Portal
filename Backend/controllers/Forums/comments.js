@@ -149,6 +149,10 @@ export const reportComment = async (req, res) => {
         const { reason } = req.body;
         const { username, role } = req.user;
 
+        if (!reason || reason.trim() === '') {
+            return res.status(400).json({ success: false, message: "Reason is required" });
+        }
+
         // Check if the comment exists
         const commentExists = await Comment.exists({ commentId });
         if (!commentExists) {

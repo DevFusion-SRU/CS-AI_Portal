@@ -216,6 +216,10 @@ export const reportPost = async (req, res) => {
         const { postId } = req.params;
         const { reason } = req.body;
         const { username, role } = req.user;
+        
+        if (!reason || reason.trim() === '') {
+            return res.status(400).json({ success: false, message: "Reason is required" });
+        }
 
         // Checks if the post exists
         const postExists = await Post.exists({ postId });
