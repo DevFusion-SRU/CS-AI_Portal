@@ -10,11 +10,14 @@ const JobCard = ({ job }) => {
   console.log(job)
   const navigate = useNavigate();
 
+  const handleViewClick = () => {
+  console.log("Navigating with job:", job); // Debugging log
+  navigate(`/jobview/${job.jobId}`);
+};
 
 
-  const handleAddClick = () => {
-    navigate("jobview"); 
-  };
+
+  
 
 
 
@@ -86,8 +89,8 @@ const JobCard = ({ job }) => {
         {/* View Details Button */}
         <div className="mt-4 md:mt-0">
           <a
-            href={job.applyLink}
-            onClick={handleAddClick}
+            
+            onClick={handleViewClick}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-gradient-to-r from-blue-600 to-blue-400 text-white font-lato font-medium px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"

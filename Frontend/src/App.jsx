@@ -74,7 +74,7 @@ const App = () => {
         >
           <Route index element={<Launchpad />} />
           <Route path="myreports" element={<Reports />} />
-          <Route path="jobview" element={<JobView />} />
+          <Route path="jobview/:jobId" element={<JobView />} />
 
           <Route element={<AdminRoute />}>
             <Route path="dashboard" element={<Dashboard />} />

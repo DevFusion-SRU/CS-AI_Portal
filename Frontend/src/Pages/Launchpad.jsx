@@ -5,6 +5,7 @@ import { FaSearch } from "react-icons/fa";
 import JobCard from "../Component/Jobcard";
 import images from "../utils/importImages"
 import { SearchNormal,Filter } from "iconsax-react"
+import axios from "axios";
 
 const Launchpad = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -28,47 +29,42 @@ const Launchpad = () => {
 
 
 
-  // Fetch data from the API
   const fetchAPI = useCallback(
     async (page = 1) => {
       setLoading(true);
       try {
-
-        const response = await fetch(
-          `${BASE_URL}jobs`
-        );
-        const json = await response.json();
-        console.log(json.data)
-        if (json.success && Array.isArray(json.data)) {
-
-          setOpportunities(json.data);
-
-          setTotalPages(json.totalPages);
-          setCurrentPage(json.currentPage);
-          setLoading(false)
+        const response = await axios.get(`${BASE_URL}jobs`);
+        
+        
+        
+        if (response.data.success && Array.isArray(response.data.data)) {
+          setOpportunities(response.data.data);
+          
+          
         } else {
           setOpportunities([]);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error(
+          "Error fetching data:",
+          error.response?.data || error.message
+        );
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     },
     [activeTab]
   );
-  // console.log(activeTab,filters)
-
-
-
+  
   // Debounced fetching logic
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchAPI(currentPage); // Fetch API after debounce delay
     }, 500); // Adjust debounce delay (500ms is a common value)
-
+  
     // Cleanup function to cancel the previous timeout if the user types again
     return () => clearTimeout(delayDebounce);
-  }, [currentPage, activeTab]); // Debounce only on search query and currentPage
+  }, [currentPage, activeTab]);
 
 
 
