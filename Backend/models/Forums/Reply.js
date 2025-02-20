@@ -4,11 +4,11 @@ import { forumDB } from "../../config/db.js";
 
 const replySchema = new mongoose.Schema(
     {
-        unqId: { type: String, default: uuidv4, unique: true }, // Unique Reply ID
+        replyId: { type: String, default: uuidv4, unique: true }, // Unique Reply ID
         commentId: { type: String, required: true, ref: "Comment" }, // Comment unqId
         repliedBy: { type: String, required: true, refPath: "userType" }, // rollNumber or employeeId
         userType: { type: String, required: true, enum: ["Student", "Staff"] },
-        content: { type: String, required: true },
+        text: { type: String, required: true },
         likes: [{ type: String, refPath: "likedUserType" }],
         likedUserType: [{ type: String, enum: ["Student", "Staff"] }],
     },

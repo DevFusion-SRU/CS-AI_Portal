@@ -38,7 +38,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/appliedJobs", appliedJobsRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/staff", staffRoutes);
-app.use("/api/forums/", forumRoutes);
+app.use("/api/forums", forumRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;

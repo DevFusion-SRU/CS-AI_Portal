@@ -5,9 +5,9 @@ import { forumDB } from "../../config/db.js";
 
 const reportSchema = new mongoose.Schema(
     {
-        unqId: { type: String, default: uuidv4, unique: true }, // Unique Report ID
+        reportId: { type: String, default: uuidv4, unique: true }, // Unique Report ID
         type: { type: String, required: true, enum: ["Post", "Comment", "Reply"] }, // Type of reported content
-        unqId: { type: String, required: true, unique: true }, // Post, Comment, or Reply unqId (Now unique)
+        typeId: { type: String, required: true, unique: true }, // (Post, Comment, or Reply)'s Id
         reports: [
             {
                 reportedBy: { type: String, required: true, refPath: "reports.userType" }, // rollNumber or employeeId

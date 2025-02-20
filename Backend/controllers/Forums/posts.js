@@ -71,15 +71,15 @@ export const getAllPosts = async (req, res) => {
  */
 export const getPostById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { postId } = req.params;
         const { page = 1, limit = 5 } = req.query; // Default: Page 1, 5 comments per page
 
         // Fetch post details
-        const post = await Post.findOne({ unqId: id }).lean();
+        const post = await Post.findOne({ postId }).lean();
         if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
         // Fetch paginated comments
-        const comments = await Comment.find({ postId: id })
+        const comments = await Comment.find({ postId })
             .sort({ createdAt: -1 }) // Latest first
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
@@ -88,7 +88,7 @@ export const getPostById = async (req, res) => {
         // Fetch replies for each comment (Paginated: 3 replies per comment)
         const commentsWithReplies = await Promise.all(
             comments.map(async (comment) => {
-                const replies = await Reply.find({ commentId: comment.unqId })
+                const replies = await Reply.find({ commentId: comment.commentId })
                     .sort({ createdAt: -1 })
                     .limit(3) // Fetch only latest 3 replies
                     .lean();
@@ -120,10 +120,11 @@ export const getPostById = async (req, res) => {
  */
 export const editPost = async (req, res) => {
     try {
+        const { postId } = req.params;
         const { username } = req.user;
         const { title, description } = req.body;
 
-        const post = await Post.findOne({ unqId: req.params.id });
+        const post = await Post.findOne({ postId });
         if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
         if (post.postedBy !== username) {
@@ -157,16 +158,17 @@ export const editPost = async (req, res) => {
  */
 export const deletePost = async (req, res) => {
     try {
+        const { postId } = req.params;
         const { username, role } = req.user;
 
-        const post = await Post.findOne({ unqId: req.params.id });
+        const post = await Post.findOne({ postId });
         if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
         if (post.postedBy !== username && role !== "staff") {
             return res.status(403).json({ success: false, message: "Not authorized" });
         }
 
-        await Post.deleteOne({ unqId: req.params.id });
+        await Post.deleteOne({ postId });
         res.status(200).json({ success: true, message: "Post deleted successfully" });
     } catch (error) {
         console.error("Error deleting post:", error.message);
@@ -181,9 +183,10 @@ export const deletePost = async (req, res) => {
  */
 export const toggleLikePost = async (req, res) => {
     try {
+        const { postId } = req.params;
         const { username, role } = req.user;
 
-        const post = await Post.findOne({ unqId: req.params.id });
+        const post = await Post.findOne({ postId });
         if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
         const index = post.likes.indexOf(username);
@@ -210,18 +213,18 @@ export const toggleLikePost = async (req, res) => {
  */
 export const reportPost = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { postId } = req.params;
         const { reason } = req.body;
         const { username, role } = req.user;
 
         // Checks if the post exists
-        const postExists = await Post.exists({ unqId: id });
+        const postExists = await Post.exists({ postId });
         if (!postExists) {
             return res.status(404).json({ success: false, message: "Post not found" });
         }
 
         // Checks if a report already exists for this post
-        let report = await Report.findOne({ type: "Post", unqId: id });
+        let report = await Report.findOne({ type: "Post", typeId: postId });
 
         if (report) {
 
@@ -232,13 +235,21 @@ export const reportPost = async (req, res) => {
             }
 
             // Add new report entry
-            report.reports.push({ reportedBy: username, userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined, reason });
+            report.reports.push({
+                reason,
+                reportedBy: username,
+                userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined
+            });
         } else {
             // Create a new report if it doesn't exist
             report = new Report({
                 type: "Post",
-                unqId: id,
-                reports: [{ reportedBy: username, userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined, reason }],
+                typeId: postId,
+                reports: [{
+                    reason,
+                    reportedBy: username,
+                    userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined
+                }],
                 status: "Pending",
             });
         }
