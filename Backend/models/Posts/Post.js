@@ -38,3 +38,4 @@ const postSchema = new mongoose.Schema(
 const Post = forumDB.model("Post", postSchema);
 console.log(`Post model created`);
 export default Post;
+

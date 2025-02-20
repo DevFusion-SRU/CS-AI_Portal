@@ -8,8 +8,11 @@ const studentSchema = new mongoose.Schema({
     course: { type: String, required: true },
     graduationYear: {type: Number, required: true},
     email: { type: String, required: true },
+    gender:{type: String, required: false},
+    Address:{type: String, required: false},
     personalMail: { type: String, required: false },
     mobile: { type: Number, required: false },
+    website: { type: String, required: false },
     about: { type: String, required: false },
     // Experiences stored as an array of objects
     experiences: [{
@@ -35,10 +38,26 @@ const studentSchema = new mongoose.Schema({
         certificateId: { type: String, required: false }
     }],
     
-    photo: { type: Buffer, required: false }, // Store photo as a binary buffer
-    photoType: { type: String, required: false }, // Store the photo MIME type (e.g., 'image/png', 'image/jpeg')
-    // timestamps: true //createdAt, updatedAt
+    // Skills stored as an array of objects
+    skills: [{
+        name: { type: String, required: true },
+        level: { type: String, required: false }
+    }],
+    
+
+
+
+    photoUrl: { type: String, required: false }, // URL of uploaded image in Cloudinary
+    // photoPublicId: { type: String, required: false } // To track & delete images in Cloudinary
+    
+
+    // Resumes stored as an array of objects
+    resumes: [{
+        resumeUrl: { type: String, required: true }, // Cloudinary URL
+        uploadedAt: { type: Date, default: Date.now }
+    }]
 });
+
 
 const StudentDetails = studentDB.model("Profile", studentSchema);
 
