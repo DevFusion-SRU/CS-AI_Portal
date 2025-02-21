@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import axios from "axios";
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
 dotenv.config();
@@ -66,9 +67,6 @@ export const getStudents = async (req, res) => {
   }
 };
 
-
-
-
 export const getStudentDetails = async (req, res) => {
   const { rollNumber } = req.params;
   try {
@@ -101,9 +99,6 @@ export const getStudentDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-
-
 
 export const addStudent = async (req, res) => {
   const student = req.body;
@@ -147,9 +142,6 @@ export const addStudent = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-
-
 
 export const uploadStudentPhoto = async (req, res) => {
   // const { rollNumber } = req.params;
@@ -201,10 +193,28 @@ export const uploadStudentPhoto = async (req, res) => {
 
     await student.save(); // Save the updated student record
 
+    // Resize Image URL (Cloudinary transformation)
+    const resizedImageUrl = fileUrl.replace(
+      "/upload/",
+      "/upload/w_400,h_400,c_fill/"
+    );
+
+    const response = await axios.get(resizedImageUrl, {
+      responseType: "arraybuffer",
+    });
+
+    // Extract MIME type dynamically
+    const contentType = response.headers["content-type"]; // e.g., "image/png" or "image/jpeg"
+
+    // Convert to Base64
+    const base64Image = `data:${contentType};base64,${Buffer.from(
+      response.data
+    ).toString("base64")}`;
+
     res.status(200).json({
       success: true,
       message: "Photo uploaded successfully!",
-      fileUrl,
+      image: base64Image, // 🔹 Sending Base64 instead of URL
     });
   } catch (error) {
     if (error.code === "LIMIT_FILE_SIZE") {
@@ -214,13 +224,26 @@ export const uploadStudentPhoto = async (req, res) => {
       });
     }
 
+    // Handle invalid file types for profile images
+    if (error.message.includes("Invalid image type")) {
+      return res.status(400).json({
+        success: false,
+        message: "Only JPG, JPEG, and PNG files are allowed for images!",
+      });
+    }
+
+    // Handle invalid file types for resumes
+    if (error.message.includes("Invalid resume type")) {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF and DOCX files are allowed for resumes!",
+      });
+    }
+
     console.error("Upload Error:", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-
-
 
 export const uploadStudentResume = async (req, res) => {
   try {
@@ -243,10 +266,10 @@ export const uploadStudentResume = async (req, res) => {
         .json({ success: false, message: "Student not found!" });
     }
     if (student.resumes.length >= 3) {
-        return res.status(400).json({
-            success: false,
-            message: "You can upload a maximum of 3 resumes.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "You can upload a maximum of 3 resumes.",
+      });
     }
 
     // Add the new resume to the array
@@ -271,9 +294,6 @@ export const uploadStudentResume = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-
-
 
 export const addStudentBatch = async (req, res) => {
   const students = req.body;
@@ -328,9 +348,6 @@ export const addStudentBatch = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-
-
 
 export const deleteStudent = async (req, res) => {
   const { rollNumber } = req.params;

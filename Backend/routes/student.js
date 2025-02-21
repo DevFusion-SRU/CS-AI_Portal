@@ -1,6 +1,6 @@
 import express from "express";
 // import multer from "multer";
-import upload from "../middleware/multer.js";
+import {uploadImage, uploadResume} from "../middleware/multer.js";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
     addStudent,
@@ -28,9 +28,9 @@ router.delete("/:rollNumber", authenticateToken, authorizeRole("staff"), deleteS
 router.get("/:rollNumber", authenticateToken, authorizeRole(["staff", "student"]), getStudentDetails);
 
 // Student-only route for uploading student photo
-router.patch("/:rollNumber/photo", authenticateToken, authorizeRole("student"), upload.single("photo"), uploadStudentPhoto);
+router.patch("/:rollNumber/photo", authenticateToken, authorizeRole("student"), uploadImage.single("photo"), uploadStudentPhoto);
 
-router.post("/:rollNumber/resume", authenticateToken, authorizeRole("student"), upload.single("resume"), uploadStudentResume);
+router.post("/:rollNumber/resume", authenticateToken, authorizeRole("student"), uploadResume.single("resume"), uploadStudentResume);
 
 
 export default router;
