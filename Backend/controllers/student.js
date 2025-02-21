@@ -87,10 +87,32 @@ export const getStudentDetails = async (req, res) => {
       mobile: studentDetails.mobile,
     };
 
-    if (studentDetails.photo && studentDetails.photoType) {
-      response.photo = `data:${
-        studentDetails.photoType
-      };base64,${studentDetails.photo.toString("base64")}`;
+    // 🔹 Check if photo URL exists
+    if (studentDetails.photoUrl) {
+      try {
+        // ✅ Resize image dynamically using Cloudinary URL transformation
+        const resizedImageUrl = studentDetails.photoUrl.replace(
+          "/upload/",
+          "/upload/w_400,h_400,c_fill,q_auto/"
+        );
+
+        // ✅ Fetch the resized image from Cloudinary
+        const imgResponse = await axios.get(resizedImageUrl, {
+          responseType: "arraybuffer",
+        });
+
+        // ✅ Extract MIME type dynamically
+        const contentType = imgResponse.headers["content-type"];
+
+        // ✅ Convert image to Base64 format
+        response.photo = `data:${contentType};base64,${Buffer.from(imgResponse.data).toString("base64")}`;
+        
+      } catch (error) {
+        console.error("Error fetching or converting image:", error.message);
+        response.photo = null; // If image fetch fails, return null
+      }
+    } else {
+      response.photo = null; // If no photo exists, return null
     }
 
     res.status(200).json({ success: true, data: response });
