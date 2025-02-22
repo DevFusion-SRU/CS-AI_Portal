@@ -1,5 +1,6 @@
 import express from "express";
-import multer from "multer";
+// import multer from "multer";
+import {uploadImage, uploadResume} from "../middleware/multer.js";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
     addStudent,
@@ -7,14 +8,15 @@ import {
     deleteStudent,
     getStudentDetails,
     getStudents,
-    uploadStudentPhoto
+    uploadStudentPhoto,
+    uploadStudentResume
 } from "../controllers/student.js";
 
 const router = express.Router();
 
 // Multer configuration
-const storage = multer.memoryStorage(); // Store file in memory as a Buffer
-const upload = multer({ storage });
+// const storage = multer.memoryStorage(); // Store file in memory as a Buffer
+// const upload = multer({ storage });
 
 // Admin-only routes for adding, updating, or retrieving students data
 router.get("/", authenticateToken, authorizeRole("staff"), getStudents);
@@ -26,6 +28,9 @@ router.delete("/:rollNumber", authenticateToken, authorizeRole("staff"), deleteS
 router.get("/:rollNumber", authenticateToken, authorizeRole(["staff", "student"]), getStudentDetails);
 
 // Student-only route for uploading student photo
-router.patch("/:rollNumber/photo", authenticateToken, authorizeRole("student"), upload.single("photo"), uploadStudentPhoto);
+router.patch("/:rollNumber/photo", authenticateToken, authorizeRole("student"), uploadImage.single("photo"), uploadStudentPhoto);
+
+router.post("/:rollNumber/resume", authenticateToken, authorizeRole("student"), uploadResume.single("resume"), uploadStudentResume);
+
 
 export default router;

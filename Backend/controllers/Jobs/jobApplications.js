@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import axios from "axios";
 import Job from "../../models/Jobs/Job.js";
 import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
@@ -162,12 +162,42 @@ export const getAppliedPeers = async (req, res) => {
             rollNumber: { $in: applications }  // Find students whose rollNumbers are in the applications array
         });
 
-        // Map the results to return a list of objects with rollNumber, firstName, and lastName
-        const peersDetails = peers.map(peer => ({
-            rollNumber: peer.rollNumber,
-            firstName: peer.firstName,
-            lastName: peer.lastName
-        }));
+         // 🔹 Process each student to fetch their Base64 image
+         const peersDetails = await Promise.all(
+            peers.map(async (peer) => {
+                let base64Image = null;
+
+                if (peer.photoUrl) {
+                    try {
+                        //  Resize image dynamically using Cloudinary URL transformation (50x50)
+                        const resizedImageUrl = peer.photoUrl.replace(
+                            "/upload/",
+                            "/upload/w_50,h_50,c_fill,q_auto/"
+                        );
+
+                        //  Fetch the resized image from Cloudinary
+                        const imgResponse = await axios.get(resizedImageUrl, {
+                            responseType: "arraybuffer",
+                        });
+
+                        //  Extract MIME type dynamically
+                        const contentType = imgResponse.headers["content-type"];
+
+                        //  Convert image to Base64 format
+                        base64Image = `data:${contentType};base64,${Buffer.from(imgResponse.data).toString("base64")}`;
+                    } catch (error) {
+                        console.error(`Error fetching image for ${peer.rollNumber}:`, error.message);
+                    }
+                }
+
+                return {
+                    rollNumber: peer.rollNumber,
+                    firstName: peer.firstName,
+                    lastName: peer.lastName,
+                    photo: base64Image, // 🔹 Base64 image (null if no image)
+                };
+            })
+        );
 
         // Send the response with student details
         return res.status(200).json({ success: true, peersDetails });
