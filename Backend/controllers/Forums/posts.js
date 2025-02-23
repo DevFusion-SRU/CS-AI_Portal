@@ -162,17 +162,32 @@ export const deletePost = async (req, res) => {
         const { username, role } = req.user;
 
         const post = await Post.findOne({ postId });
-        if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+        if (!post) return { success: false, status: 404, message: "Post not found" };
 
         if (post.postedBy !== username && role !== "staff") {
-            return res.status(403).json({ success: false, message: "Not authorized" });
+            return { success: false, status: 403, message: "Not authorized" };
         }
 
+        // Find and delete all comments associated with the post
+        const comments = await Comment.find({ postId });
+
+        if (comments.length > 0) {
+            const commentIds = comments.map(comment => comment.commentId);
+
+            // Delete all replies associated with these comments
+            await Reply.deleteMany({ commentId: { $in: commentIds } });
+
+            // Delete all comments of this post
+            await Comment.deleteMany({ postId });
+        }
+
+        // Delete the post
         await Post.deleteOne({ postId });
-        res.status(200).json({ success: true, message: "Post deleted successfully" });
+
+        return { success: true, status: 200, message: "Post and all associated comments & replies deleted" };
     } catch (error) {
         console.error("Error deleting post:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+        return { success: false, status: 500, message: "Server error" };
     }
 };
 
@@ -202,68 +217,6 @@ export const toggleLikePost = async (req, res) => {
         res.status(200).json({ success: true, message: index === -1 ? "Liked post" : "Unliked post" });
     } catch (error) {
         console.error("Error liking post:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
-
-/**
- * @desc Report a post
- * @route POST /api/forums/posts/:id/report
- * @access Students & Staff
- */
-export const reportPost = async (req, res) => {
-    try {
-        const { postId } = req.params;
-        const { reason } = req.body;
-        const { username, role } = req.user;
-        
-        if (!reason || reason.trim() === '') {
-            return res.status(400).json({ success: false, message: "Reason is required" });
-        }
-
-        // Checks if the post exists
-        const postExists = await Post.exists({ postId });
-        if (!postExists) {
-            return res.status(404).json({ success: false, message: "Post not found" });
-        }
-
-        // Checks if a report already exists for this post
-        let report = await Report.findOne({ type: "Post", typeId: postId });
-
-        if (report) {
-
-            // Checks if the user has already reported this post
-            const alreadyReported = report.reports.some(r => r.reportedBy === username);
-            if (alreadyReported) {
-                return res.status(400).json({ success: false, message: "You have already reported this post." });
-            }
-
-            // Add new report entry
-            report.reports.push({
-                reason,
-                reportedBy: username,
-                userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined
-            });
-        } else {
-            // Create a new report if it doesn't exist
-            report = new Report({
-                type: "Post",
-                typeId: postId,
-                reports: [{
-                    reason,
-                    reportedBy: username,
-                    userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined
-                }],
-                status: "Pending",
-            });
-        }
-
-        await report.save();
-
-        res.status(201).json({ success: true, message: "Post reported successfully" });
-
-    } catch (error) {
-        console.error("Error reporting post:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };

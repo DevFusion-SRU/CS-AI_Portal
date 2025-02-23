@@ -2,9 +2,10 @@ import express from "express";
 import multer from "multer";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 
-import { createPost, getAllPosts, getPostById, editPost, deletePost, toggleLikePost, reportPost } from "../controllers/Forums/posts.js";
-import { addComment, getComments, editComment, deleteComment, likeUnlikeComment, reportComment } from "../controllers/Forums/comments.js";
-import { addReply, getReplies, editReply, deleteReply, likeUnlikeReply, reportReply } from "../controllers/Forums/replies.js";
+import { createPost, getAllPosts, getPostById, editPost, deletePost, toggleLikePost } from "../controllers/Forums/posts.js";
+import { addComment, getComments, editComment, deleteComment, likeUnlikeComment } from "../controllers/Forums/comments.js";
+import { addReply, getReplies, editReply, deleteReply, likeUnlikeReply } from "../controllers/Forums/replies.js";
+import { reportPost, reportComment, reportReply, fetchReportedItems, deleteReportedItem } from "../controllers/Forums/report.js";
 
 const router = express.Router();
 
@@ -24,7 +25,6 @@ router.post("/posts/:postId/like", authenticateToken, authorizeRole(["student", 
 // -- Author-protected routes (Only author can edit/delete, staff can delete)
 router.put("/posts/:postId", authenticateToken, postUpload.single("photo"), editPost);
 router.delete("/posts/:postId", authenticateToken, deletePost);
-router.post("/posts/:postId/report", authenticateToken, reportPost);
 
 // Comments
 router.post("/comments/:postId", authenticateToken, commentUpload, addComment);
@@ -32,7 +32,6 @@ router.get("/comments/:postId", authenticateToken, getComments);
 router.put("/comments/:commentId", authenticateToken, authorizeRole(["student", "staff"]), commentUpload, editComment);
 router.delete("/comments/:commentId", authenticateToken, authorizeRole(["student", "staff"]), deleteComment);
 router.post("/comments/:commentId/like", authenticateToken, authorizeRole(["student", "staff"]), likeUnlikeComment);
-router.post("/comments/:commentId/report", authenticateToken, authorizeRole(["student", "staff"]), commentUpload, reportComment);
 
 // Replies
 router.post("/replies/:commentId", authenticateToken, replyUpload, addReply);
@@ -40,6 +39,14 @@ router.get("/replies/:commentId", authenticateToken, getReplies);
 router.put("/replies/:replyId", authenticateToken, authorizeRole(["student", "staff"]), replyUpload, editReply);
 router.delete("/replies/:replyId", authenticateToken, authorizeRole(["student", "staff"]), deleteReply);
 router.post("/replies/:replyId/like", authenticateToken, authorizeRole(["student", "staff"]), likeUnlikeReply);
-router.post("/replies/:replyId/report", authenticateToken, authorizeRole(["student", "staff"]), replyUpload, reportReply);
+
+// Report Routes
+router.post("/report/post/:postId", authenticateToken, authorizeRole(["student", "staff"]), reportPost);
+router.post("/report/comment/:commentId", authenticateToken, authorizeRole(["student", "staff"]), reportComment);
+router.post("/report/reply/:replyId", authenticateToken, authorizeRole(["student", "staff"]), reportReply);
+
+// Moderation Routes (Admins/Staff only)
+router.get("/moderation/reports", authenticateToken, authorizeRole(["admin", "staff"]), fetchReportedItems);
+router.delete("/moderation/reports/:reportId/:type/:typeId", authenticateToken, authorizeRole(["admin", "staff"]), deleteReportedItem);
 
 export default router;

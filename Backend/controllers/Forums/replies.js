@@ -93,12 +93,12 @@ export const deleteReply = async (req, res) => {
 
         const reply = await Reply.findOne({ replyId });
         if (!reply) {
-            return res.status(404).json({ success: false, message: "Reply not found" });
+            return { success: false, status: 404, message: "Reply not found" };
         }
 
         // Ensures only the author or a moderator can delete
         if (reply.repliedBy !== username && role !== "staff") {
-            return res.status(403).json({ success: false, message: "Unauthorized to delete this reply" });
+            return { success: false, status: 403, message: "Unauthorized to delete this reply" };
         }
 
         await Reply.deleteOne({ replyId });
@@ -106,11 +106,11 @@ export const deleteReply = async (req, res) => {
         // Removes from comment's replies array
         await Comment.findOneAndUpdate({ commentId: reply.commentId }, { $pull: { replies: replyId } });
 
-        res.status(200).json({ success: true, message: "Reply deleted successfully" });
+        return { success: true, status: 200, message: "Reply deleted successfully" };
 
     } catch (error) {
         console.error("Error deleting reply:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+        return { success: false, status: 500, message: "Server error" };
     }
 };
 
@@ -139,58 +139,6 @@ export const likeUnlikeReply = async (req, res) => {
 
     } catch (error) {
         console.error("Error liking/unliking reply:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
-
-export const reportReply = async (req, res) => {
-    try {
-        const { replyId } = req.params;
-        const { reason } = req.body;
-        const { username, role } = req.user;
-
-        if (!reason || reason.trim() === '') {
-            return res.status(400).json({ success: false, message: "Reason is required" });
-        }
-
-        const replyExists = await Reply.exists({ replyId });
-        if (!replyExists) {
-            return res.status(404).json({ success: false, message: "Reply not found" });
-        }
-
-        let report = await Report.findOne({ type: "Reply", typeId: replyId });
-
-        if (report) {
-            // Check if the user has already reported this reply
-            const alreadyReported = report.reports.some(r => r.reportedBy === username);
-            if (alreadyReported) {
-                return res.status(400).json({ success: false, message: "You have already reported this reply." });
-            }
-
-            report.reports.push({
-                reportedBy: username,
-                userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined,
-                reason
-            });
-        } else {
-            report = new Report({
-                type: "Reply",
-                typeId: replyId,
-                reports: [{
-                    reportedBy: username,
-                    userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined,
-                    reason
-                }],
-                status: "Pending",
-            });
-        }
-
-
-        await report.save();
-
-        res.status(201).json({ success: true, message: "Reply reported successfully" });
-    } catch (error) {
-        console.error("Error reporting reply:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };

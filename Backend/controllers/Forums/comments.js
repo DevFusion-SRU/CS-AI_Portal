@@ -89,15 +89,17 @@ export const deleteComment = async (req, res) => {
 
         // Find the comment
         const comment = await Comment.findOne({ commentId });
-
         if (!comment) {
-            return res.status(404).json({ success: false, message: "Comment not found" });
+            return { success: false, status: 404, message: "Comment not found" };
         }
 
         // Allow deletion if the user is the author or a staff moderator
         if (comment.commentedBy !== username && role !== "staff") {
-            return res.status(403).json({ success: false, message: "Unauthorized to delete this comment" });
+            return { success: false, status: 403, message: "Unauthorized to delete this comment" };
         }
+
+        // Delete all replies associated with this comment
+        await Reply.deleteMany({ commentId });
 
         // Delete the comment
         await Comment.deleteOne({ commentId });
@@ -105,10 +107,10 @@ export const deleteComment = async (req, res) => {
         // Remove the comment ID from the associated post
         await Post.updateOne({ postId: comment.postId }, { $pull: { comments: comment.commentId } });
 
-        res.json({ success: true, message: "Comment deleted successfully" });
+        return { success: true, status: 200, message: "Comment and all associated replies deleted" };
     } catch (error) {
         console.error("Error deleting comment:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+        return { success: false, status: 500, message: "Server error" };
     }
 };
 
@@ -139,61 +141,6 @@ export const likeUnlikeComment = async (req, res) => {
         res.json({ success: true, message: "Like status updated", likes: comment.likes.length });
     } catch (error) {
         console.error("Error liking comment:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
-
-export const reportComment = async (req, res) => {
-    try {
-        const { commentId } = req.params;
-        const { reason } = req.body;
-        const { username, role } = req.user;
-
-        if (!reason || reason.trim() === '') {
-            return res.status(400).json({ success: false, message: "Reason is required" });
-        }
-
-        // Check if the comment exists
-        const commentExists = await Comment.exists({ commentId });
-        if (!commentExists) {
-            return res.status(404).json({ success: false, message: "Comment not found" });
-        }
-
-        // Check if a report already exists for this comment
-        let report = await Report.findOne({ type: "Comment", typeId: commentId });
-
-        if (report) {
-            // Check if the user has already reported this comment
-            const alreadyReported = report.reports.some(r => r.reportedBy === username);
-            if (alreadyReported) {
-                return res.status(400).json({ success: false, message: "You have already reported this comment." });
-            }
-
-            // Add new report entry
-            report.reports.push({
-                reportedBy: username,
-                userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined,
-                reason
-            });
-        } else {
-            // Create a new report if it doesn't exist
-            report = new Report({
-                type: "Comment",
-                typeId: commentId,
-                reports: [{
-                    reportedBy: username,
-                    userType: role === "student" ? "Student" : role === "staff" ? "Staff" : undefined,
-                    reason
-                }],
-                status: "Pending",
-            });
-        }
-
-        await report.save();
-        res.status(201).json({ success: true, message: "Comment reported successfully" });
-
-    } catch (error) {
-        console.error("Error reporting comment:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
