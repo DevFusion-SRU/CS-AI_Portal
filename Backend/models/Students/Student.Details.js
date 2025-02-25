@@ -16,18 +16,26 @@ const studentSchema = new mongoose.Schema({
     about: { type: String, required: false },
     // Experiences stored as an array of objects
     experiences: [{
-        title: { type: String, required: true },
-        company: { type: String, required: true },
-        duration: { type: String, required: true },
+        title: { type: String, required: false },
+        company: { type: String, required: false },
+        duration: {
+            startDate: { type: Date, required: false },
+            endDate: { type: Date, required: false }
+        },
         location: { type: String, required: false },
-        description: { type: String, required: false }
+        description: { type: String, required: false },
+        certificate:{type: String, required: false}
     }],
 
     // Education stored as an array of objects
     education: [{
-        institution: { type: String, required: true },
-        degree: { type: String, required: true },
-        duration: { type: String, required: true },
+        institution: { type: String, required: false },
+        degree: { type: String, required:false  },
+        specialization: { type: String, required: true },
+        duration: {
+            startDate: { type: Date, required: false },
+            endDate: { type: Date, required: false }
+        },
         cgpa: { type: String, required: false }
     }],
 
@@ -35,6 +43,11 @@ const studentSchema = new mongoose.Schema({
     certifications: [{
         title: { type: String, required: true },
         issuer: { type: String, required: true },
+        courseName: { type: String, required: false },
+        validTime: {
+            startDate: { type: Date, required: false },
+            endDate: { type: Date, required: false }
+        },
         certificateId: { type: String, required: false }
     }],
     
@@ -53,7 +66,8 @@ const studentSchema = new mongoose.Schema({
 
     // Resumes stored as an array of objects
     resumes: [{
-        resumeUrl: { type: String, required: true }, // Cloudinary URL
+        title: { type: String, required: false },
+        resumeUrl: { type: String, required: false }, // Cloudinary URL
         uploadedAt: { type: Date, default: Date.now }
     }]
 },{timestamps:true});

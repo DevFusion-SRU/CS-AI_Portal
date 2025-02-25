@@ -1,6 +1,6 @@
 import express from "express";
-// import multer from "multer";
-import {uploadImage, uploadResume} from "../middleware/multer.js";
+import multer from "multer";
+import {uploadImage, uploadResume, uploadCertificate} from "../middleware/multer.js";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
     addStudent,
@@ -9,14 +9,17 @@ import {
     getStudentDetails,
     getStudents,
     uploadStudentPhoto,
-    uploadStudentResume
+    uploadStudentResume,
+    deleteStudentResume,
+    uploadCertificateFile,
+    editStudent
 } from "../controllers/student.js";
 
 const router = express.Router();
 
 // Multer configuration
-// const storage = multer.memoryStorage(); // Store file in memory as a Buffer
-// const upload = multer({ storage });
+const storage = multer.memoryStorage(); // Store file in memory as a Buffer
+const upload = multer({ storage });
 
 // Admin-only routes for adding, updating, or retrieving students data
 router.get("/", authenticateToken, authorizeRole("staff"), getStudents);
@@ -32,5 +35,10 @@ router.patch("/:rollNumber/photo", authenticateToken, authorizeRole("student"), 
 
 router.post("/:rollNumber/resume", authenticateToken, authorizeRole("student"), uploadResume.single("resume"), uploadStudentResume);
 
+router.delete("/resume/:rollNumber/:resumeId", authenticateToken, deleteStudentResume);
+
+router.patch("/profile/:rollNumber/:section/:id/certificate", uploadCertificate.single("certificate"), uploadCertificateFile);
+
+router.patch("/edit/:rollNumber", authenticateToken, authorizeRole("student"), editStudent);
 
 export default router;

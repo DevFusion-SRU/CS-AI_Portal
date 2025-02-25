@@ -88,76 +88,108 @@ export const getJobById = async (req, res) => {
 export const getJobs = async (req, res) => {
     const filters = {};
 
-    // 🔹 Filtering by Job Type (Full-time, Internship, Hackathon, Part-time)
-    if (req.query.type && req.query.type !== "all") {
-        filters.type = req.query.type;
+      // ✅ Type filter (supports multiple values)
+      if (req.query.type) {
+        filters.type = { $in: req.query.type.split(",") };
     }
 
-    // 🔹 Filtering by Industry / Category
-    if (req.query.category && req.query.category !== "all") {
-        filters.category = req.query.category;
-    }
-
-    // 🔹 Filtering by Mode of Work (In-office, Remote, Hybrid)
-    if (req.query.modeOfWork && req.query.modeOfWork !== "all") {
-        filters.modeOfWork = req.query.modeOfWork;
-    }
-
-    // 🔹 Filtering by Compensation Type (Paid, Unpaid, Stipend-based)
-    if (req.query.compensationType && req.query.compensationType !== "all") {
-        filters.compensationType = req.query.compensationType;
-    }
-
-    // 🔹 Filtering by Skills (from `description.skills` array)
-    if (req.query.skills) {
-        const skillsArray = req.query.skills.split(",").map(skill => skill.trim());
-        filters["description.skills"] = { $in: skillsArray };  // Matches jobs with at least one of the selected skills
-    }
-
-    // 🔹 Search by Company Name (Case-insensitive)
+    // ✅ Company filter (case-insensitive search)
     if (req.query.company) {
         const companyQuery = req.query.company.trim().replace(/\s+/g, " ");
-        filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive search
+        filters.company = { $regex: new RegExp(companyQuery, "i") };  // Case-insensitive regex search
     }
 
-    // 🔹 Search by Job Title (Case-insensitive)
+    // ✅ Title filter (case-insensitive search)
     if (req.query.title) {
-        const titleQuery = req.query.title.trim().replace(/\s+/g, " ");
-        filters.title = { $regex: new RegExp(titleQuery, "i") };
+        filters.title = { $regex: new RegExp(req.query.title.trim(), "i") };
     }
 
-    // 🔹 Search by Job ID (Exact Match)
+    // ✅ Job ID filter (only **one** value, exact match)
     if (req.query.jobId) {
         filters.jobId = req.query.jobId.trim();
     }
 
-    try {
-        // Pagination setup
-        const page = parseInt(req.query.page) || 1; // Default to page 1
-        const limit = parseInt(req.query.limit) || 25; // Default to 25 jobs per page
-        const skip = (page - 1) * limit;
+    // ✅ Category filter (supports multiple values)
+    if (req.query.category) {
+        filters.category = { $in: req.query.category.split(",") };
+    }
 
-        // Parallelize querying jobs and counting documents
-        const [jobs, totalJobs] = await Promise.all([
-            Job.find(filters).skip(skip).limit(limit),  // Jobs query with pagination
-            Job.countDocuments(filters)  // Count filtered jobs (for pagination info)
+    // ✅ Mode of Work filter (supports multiple values)
+    if (req.query.modeOfWork) {
+        filters.modeOfWork = { $in: req.query.modeOfWork.split(",") };
+    }
+
+    // ✅ Compensation Type filter (supports multiple values)
+    if (req.query.compensationType) {
+        filters.compensationType = { $in: req.query.compensationType.split(",") };
+    }
+
+    // ✅ Skills filter (checks if ANY skill in the query exists in the job's `description.skills` array)
+    if (req.query.skills) {
+        filters["description.skills"] = { $in: req.query.skills.split(",") };
+    }
+    // try {
+    //     // Pagination setup
+    //     const page = parseInt(req.query.page) || 1; // Default to page 1
+    //     const limit = parseInt(req.query.limit) || 25; // Default to 25 jobs per page
+    //     const skip = (page - 1) * limit;
+
+    //     // Parallelize querying jobs and counting documents
+    //     const [jobs, totalJobs] = await Promise.all([
+    //         Job.find(filters).skip(skip).limit(limit),  // Jobs query with pagination
+    //         Job.countDocuments(filters)  // Count filtered jobs (for pagination info)
+    //     ]);
+
+    //     if (jobs.length === 0) {
+    //         return res.status(404).json({ success: false, message: "No jobs found matching the search criteria." });
+    //     }
+
+    //     // Sending paginated response
+    //     res.status(200).json({
+    //         success: true,
+    //         data: jobs,
+    //         totalPages: Math.ceil(totalJobs / limit),  // Calculate total pages
+    //         currentPage: page,
+    //     });
+    // } catch (error) {
+    //     console.error("Error in fetching Jobs:", error.message);
+    //     res.status(500).json({ success: false, message: "Server Error" });
+    // }
+
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const skip = (page - 1) * limit;
+
+    try {
+        const result = await Job.aggregate([
+            { $match: filters },  // 🔹 Apply Filters First
+            {
+                $facet: {
+                    metadata: [{ $count: "total" }],  // 🔹 Get total count
+                    data: [{ $skip: skip }, { $limit: limit }]  // 🔹 Apply Pagination
+                }
+            }
         ]);
 
-        if (jobs.length === 0) {
-            return res.status(404).json({ success: false, message: "No jobs found matching the search criteria." });
-        }
+        // Extract jobs and total count
+        const jobs = result[0].data;
+        const totalJobs = result[0].metadata[0]?.total || 0;
 
-        // Sending paginated response
         res.status(200).json({
             success: true,
             data: jobs,
-            totalPages: Math.ceil(totalJobs / limit),  // Calculate total pages
-            currentPage: page,
+            totalPages: Math.ceil(totalJobs / limit),  // 🔹 Calculate total pages
+            currentPage: page
         });
     } catch (error) {
-        console.error("Error in fetching Jobs:", error.message);
+        console.error("Error fetching jobs: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
+
+
+
+
 };
 
 
