@@ -81,10 +81,22 @@ export const getStudentDetails = async (req, res) => {
     const response = {
       rollNumber: studentDetails.rollNumber,
       firstName: studentDetails.firstName,
-      lastName: studentDetails.lastName,
+      lastName: studentDetails.lastName || "",
       course: studentDetails.course,
+      graduationYear: studentDetails.graduationYear,
       email: studentDetails.email,
-      mobile: studentDetails.mobile,
+      mobile: studentDetails.mobile || "",
+      gender: studentDetails.gender || "",
+      address: studentDetails.Address || "",
+      personalMail: studentDetails.personalMail || "",
+      website: studentDetails.website || "",
+      about: studentDetails.about || "",
+      skills: studentDetails.skills || [],
+      experiences: studentDetails.experiences || [],
+      education: studentDetails.education || [],
+      certifications: studentDetails.certifications || [],
+      resumes: studentDetails.resumes?.map(resume => resume.title) || [],
+
     };
 
     // 🔹 Check if photo URL exists
@@ -278,6 +290,7 @@ export const uploadStudentResume = async (req, res) => {
     }
 
     const fileUrl = req.file.path; // Cloudinary file URL
+    const originalFileName = req.file.originalname;
 
     // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
@@ -295,7 +308,7 @@ export const uploadStudentResume = async (req, res) => {
     }
 
     // Add the new resume to the array
-    student.resumes.push({ resumeUrl: fileUrl });
+    student.resumes.push({ resumeUrl: fileUrl ,title: originalFileName});
 
     await student.save(); // Save the updated student record
 
@@ -510,12 +523,8 @@ export const uploadCertificateFile = async (req, res) => {
 
 
 export const editStudent = async (req, res) => {
-    const { rollNumber } = req.params; // Assuming rollNumber is extracted from authentication middleware
+    const { rollNumber } = req.params;
     const { section, data } = req.body;
-
-    console.log("Received section:", section);
-    console.log("Received data:", data);
-
 
     try {
         const student = await StudentDetails.findOne({ rollNumber });
@@ -524,56 +533,48 @@ export const editStudent = async (req, res) => {
             return res.status(404).json({ success: false, message: "Student not found" });
         }
 
-        let updated = false;
+        switch (section) {
+            case "experiences":
+            case "education":
+            case "certifications":
+                if (!Array.isArray(data)) {
+                    return res.status(400).json({ success: false, message: "Data should be an array" });
+                }
+                student[section] = mergeData(student[section], data);
+                break;
 
-        // 🔹 Update Experiences
-        if (section === "experiences") {
-            student.experiences = data;
-            updated = true;
-        }
-        // 🔹 Update Education
-        else if (section === "education") {
-            student.education = data;
-            updated = true;
-        }
-        // 🔹 Update Certifications
-        else if (section === "certifications") {
-            student.certifications = data;
-            updated = true;
-        }
-        // 🔹 Update Skills
-        else if (section === "skills") {
-            student.skills = data;
-            updated = true;
-        }
-        // 🔹 Update Resume
-        else if (section === "resumes") {
-            student.resumes = data;
-            updated = true;
-        }
-        // 🔹 Update Profile Details
-        else if (section === "profile") {
-            const { gender, Address, personalMail, mobile, website, about } = data;
-            student.gender = gender || student.gender;
-            student.Address = Address || student.Address;
-            student.personalMail = personalMail || student.personalMail;
-            student.mobile = mobile || student.mobile;
-            student.website = website || student.website;
-            student.about = about || student.about;
-            updated = true;
-        } else {
-            return res.status(400).json({ success: false, message: "Invalid section" });
+            case "skills":
+            case "resumes":
+                student[section] = data;
+                break;
+
+            case "profile":
+                Object.assign(student, data);
+                break;
+
+            default:
+                return res.status(400).json({ success: false, message: "Invalid section" });
         }
 
-        if (updated) {
-            await student.save();
-            return res.status(200).json({ success: true, message: "Profile updated successfully", data: student });
-        }
-
-        res.status(400).json({ success: false, message: "No updates were made" });
+        await student.save();
+        res.status(200).json({ success: true, message: "Profile updated successfully", data: student });
 
     } catch (error) {
         console.error("Error updating student profile:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
+};
+
+const mergeData = (existingData, newData) => {
+  const dataMap = new Map(existingData.map(item => [item._id?.toString(), item]));
+
+  newData.forEach(item => {
+      if (item._id && dataMap.has(item._id.toString())) {
+          Object.assign(dataMap.get(item._id.toString()), item);
+      } else {
+          dataMap.set(item._id?.toString() || new mongoose.Types.ObjectId(), item);
+      }
+  });
+
+  return Array.from(dataMap.values());
 };

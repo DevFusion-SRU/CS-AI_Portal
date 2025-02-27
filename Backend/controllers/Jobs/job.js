@@ -194,6 +194,30 @@ export const getJobs = async (req, res) => {
 
 
 
+export const searchCompanies = async (req, res) => {
+    try {
+        const { query } = req.query;  // Get search input from query parameter
+
+        if (!query || query.trim() === "") {
+            return res.status(400).json({ success: false, message: "Query parameter is required" });
+        }
+
+        // Case-insensitive regex search for companies containing the query
+        const companies = await Job.distinct("company", { 
+            company: { $regex: new RegExp("^" + query, "i") }  // ✅ Matches "Google" but NOT "BlogXS" 
+        });
+
+        res.status(200).json({ success: true, data: companies });
+    } catch (error) {
+        console.error("Error fetching company names:", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+
+
+
+
 export const addJob = async (req, res) => {
     const job = req.body;
     if (!job.modeOfWork || !job.jobId || !job.title || !job.type || !job.company || !job.location || !job.description.text || !job.applyLink) {
