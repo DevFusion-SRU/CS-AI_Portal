@@ -203,16 +203,21 @@ export const searchCompanies = async (req, res) => {
         }
 
         // Case-insensitive regex search for companies containing the query
-        const companies = await Job.distinct("company", { 
-            company: { $regex: new RegExp("^" + query, "i") }  // ✅ Matches "Google" but NOT "BlogXS" 
+        const jobs = await Job.find({ 
+            company: { $regex: new RegExp("^" + query, "i") }  // ✅ Matches "Google" but NOT "BlogXS"
         });
 
-        res.status(200).json({ success: true, data: companies });
+        if (jobs.length === 0) {
+            return res.status(404).json({ success: false, message: "No jobs found for this company search" });
+        }
+
+        res.status(200).json({ success: true, data: jobs });
     } catch (error) {
-        console.error("Error fetching company names:", error.message);
+        console.error("Error fetching jobs by company name:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
 
 
 
