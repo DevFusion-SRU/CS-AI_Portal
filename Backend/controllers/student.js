@@ -3,7 +3,7 @@ import axios from "axios";
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
 dotenv.config();
-
+import cloudinary from "../config/cloudinary.js"; // Import Cloudinary config
 import StudentDetails from "../models/Students/Student.Details.js"; // StudentDetails model using studentDB
 import StudentCredentials from "../models/Students/Student.Credentials.js"; // StudentCredentials model using studentDB
 
@@ -81,10 +81,22 @@ export const getStudentDetails = async (req, res) => {
     const response = {
       rollNumber: studentDetails.rollNumber,
       firstName: studentDetails.firstName,
-      lastName: studentDetails.lastName,
+      lastName: studentDetails.lastName || "",
       course: studentDetails.course,
+      graduationYear: studentDetails.graduationYear,
       email: studentDetails.email,
-      mobile: studentDetails.mobile,
+      mobile: studentDetails.mobile || "",
+      gender: studentDetails.gender || "",
+      address: studentDetails.Address || "",
+      personalMail: studentDetails.personalMail || "",
+      website: studentDetails.website || "",
+      about: studentDetails.about || "",
+      skills: studentDetails.skills || [],
+      experiences: studentDetails.experiences || [],
+      education: studentDetails.education || [],
+      certifications: studentDetails.certifications || [],
+      resumes: studentDetails.resumes?.map(resume => resume.title) || [],
+
     };
 
     // 🔹 Check if photo URL exists
@@ -278,6 +290,7 @@ export const uploadStudentResume = async (req, res) => {
     }
 
     const fileUrl = req.file.path; // Cloudinary file URL
+    const originalFileName = req.file.originalname;
 
     // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
@@ -295,7 +308,7 @@ export const uploadStudentResume = async (req, res) => {
     }
 
     // Add the new resume to the array
-    student.resumes.push({ resumeUrl: fileUrl });
+    student.resumes.push({ resumeUrl: fileUrl ,title: originalFileName});
 
     await student.save(); // Save the updated student record
 
@@ -316,6 +329,49 @@ export const uploadStudentResume = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+
+export const deleteStudentResume = async (req, res) => {
+  try {
+    const { rollNumber, resumeId } = req.params;// Get rollNumber & resumeId from URL params
+
+    // Find the student by rollNumber
+    const student = await StudentDetails.findOne({ rollNumber });
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found!" });
+    }
+
+    // Find the resume to delete
+    const resume = student.resumes.find((r) => r._id.toString() === resumeId);
+
+    if (!resume) {
+      return res.status(404).json({ success: false, message: "Resume not found!" });
+    }
+
+    // Extract public ID from the Cloudinary URL
+    const publicId = resume.resumeUrl.split("/").pop().split(".")[0];
+
+    // Delete the file from Cloudinary
+    await cloudinary.uploader.destroy(`CS-AI_PORTAL/resumes/${publicId}`, { resource_type: "raw" });
+
+    // Remove the resume from the array
+    student.resumes = student.resumes.filter((r) => r._id.toString() !== resumeId);
+
+    await student.save(); // Save updated student data
+
+    res.status(200).json({
+      success: true,
+      message: "Resume deleted successfully!",
+    });
+  } catch (error) {
+    console.error("Resume Deletion Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+
 
 export const addStudentBatch = async (req, res) => {
   const students = req.body;
@@ -412,4 +468,113 @@ export const deleteStudent = async (req, res) => {
     console.error("Error in deleting Student details: ", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
   }
+};
+
+
+// Upload Certificate for Experience or Certification
+export const uploadCertificateFile = async (req, res) => {
+    try {
+        const { rollNumber, section, id } = req.params;
+
+        if (!rollNumber || !section || !id) {
+            return res.status(400).json({ message: "Missing required parameters" });
+        }
+
+        const student = await StudentDetails.findOne({ rollNumber });
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const certificateUrl = req.file.path; // Cloudinary URL
+
+        let updated = false;
+
+        if (section === "experiences") {
+            student.experiences = student.experiences.map((exp) =>
+                exp._id.toString() === id ? { ...exp, certificate: certificateUrl } : exp
+            );
+            updated = true;
+        } else if (section === "certifications") {
+            student.certifications = student.certifications.map((cert) =>
+                cert._id.toString() === id ? { ...cert, certificateId: certificateUrl } : cert
+            );
+            updated = true;
+        }
+
+        if (!updated) {
+            return res.status(400).json({ message: "Invalid section or ID" });
+        }
+
+        await student.save();
+        res.status(200).json({ message: "Certificate uploaded successfully", certificateUrl });
+
+    } catch (error) {
+        console.error("Error uploading certificate:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+
+export const editStudent = async (req, res) => {
+    const { rollNumber } = req.params;
+    const { section, data } = req.body;
+
+    try {
+        const student = await StudentDetails.findOne({ rollNumber });
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: "Student not found" });
+        }
+
+        switch (section) {
+            case "experiences":
+            case "education":
+            case "certifications":
+                if (!Array.isArray(data)) {
+                    return res.status(400).json({ success: false, message: "Data should be an array" });
+                }
+                student[section] = mergeData(student[section], data);
+                break;
+
+            case "skills":
+            case "resumes":
+                student[section] = data;
+                break;
+
+            case "profile":
+                Object.assign(student, data);
+                break;
+
+            default:
+                return res.status(400).json({ success: false, message: "Invalid section" });
+        }
+
+        await student.save();
+        res.status(200).json({ success: true, message: "Profile updated successfully", data: student });
+
+    } catch (error) {
+        console.error("Error updating student profile:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const mergeData = (existingData, newData) => {
+  const dataMap = new Map(existingData.map(item => [item._id?.toString(), item]));
+
+  newData.forEach(item => {
+      if (item._id && dataMap.has(item._id.toString())) {
+          Object.assign(dataMap.get(item._id.toString()), item);
+      } else {
+          dataMap.set(item._id?.toString() || new mongoose.Types.ObjectId(), item);
+      }
+  });
+
+  return Array.from(dataMap.values());
 };

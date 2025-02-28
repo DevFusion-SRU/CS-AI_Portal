@@ -5,14 +5,15 @@ import {
     addJobsBatch,
     deleteJob,
     getJobs,
-    getJobById
+    getJobById,
+    searchCompanies
 } from "../controllers/Jobs/job.js";
 
 const router = express.Router();
 
 // Public route
 router.get("/", getJobs);
-
+router.get("/searchCompanies", searchCompanies);
 // Protected routes
 router.get("/:jobId", authenticateToken, getJobById);
 

@@ -46,6 +46,20 @@ const resumeStorage = new CloudinaryStorage({
     },
 });
 
+
+
+// 🔹 Storage for Certificates (Supports Images & PDFs)
+const certificateStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "CS-AI_PORTAL/certificates", // Separate folder for certificates
+        resource_type: "auto", // Supports both images & PDFs
+        public_id: (req, file) => `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`, // Remove existing extension
+    },
+});
+
+
+
 // 🔹 Allowed Image Types: jpg, jpeg, png, webp
 const imageFileFilter = (req, file, cb) => {
     const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -68,6 +82,24 @@ const resumeFileFilter = (req, file, cb) => {
     cb(null, true);
 };
 
+
+// 🔹 Allowed Certificate Types: JPG, PNG, WebP, PDF
+const certificateFileFilter = (req, file, cb) => {
+    const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "application/pdf"
+    ];
+    
+    if (!allowedTypes.includes(file.mimetype)) {
+        return cb(new Error("Invalid file type. Allowed: JPG, PNG, WebP, PDF"), false);
+    }
+    cb(null, true);
+};
+
+
 // 🔹 Image Upload Middleware (Limit: 2MB)
 export const uploadImage = multer({
     storage: imageStorage,
@@ -80,4 +112,12 @@ export const uploadResume = multer({
     storage: resumeStorage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: resumeFileFilter,
+});
+
+
+// 🔹 Certificate Upload Middleware (Limit: 5MB)
+export const uploadCertificate = multer({
+    storage: certificateStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: certificateFileFilter,
 });
