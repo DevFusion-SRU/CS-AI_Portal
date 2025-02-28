@@ -7,11 +7,10 @@ import { Heart, Location, Element2,Clock, User, Timer, Wallet } from "iconsax-re
 
 
 const JobCard = ({ job }) => {
-  console.log(job)
+  
   const navigate = useNavigate();
 
   const handleViewClick = () => {
-  console.log("Navigating with job:", job); // Debugging log
   navigate(`/jobview/${job.jobId}`);
 };
 

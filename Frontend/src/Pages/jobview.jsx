@@ -108,7 +108,7 @@ const JobDetails = () => {
         </div>
 
         {/* Right Section - At a Glance */}
-        <div className="w-full lg:w-[30%] p-6 bg-white rounded-lg shadow-md flex flex-col sticky top-20 max-h-[80vh] overflow-y-auto">
+        <div className="w-[25%] lg:w-[30%] p-6 bg-white rounded-lg shadow-md flex flex-col sticky top-10 max-h-[80vh] ">
           <h2 className="text-lg font-semibold mb-4">At a Glance</h2>
           <div className="space-y-4 text-sm">
             <div className="flex items-center"><Element2 className="mr-2 text-blue-700" /><span>{job.type || "Job Type"}</span></div>

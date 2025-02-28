@@ -7,7 +7,7 @@ const Layout = ({ userData, setUserData }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full overflow-hidden">
       {/* Sidebar */}
       <Sidebar userData={userData} setUserData={setUserData} setIsSidebarOpen={setIsSidebarOpen} />
 
