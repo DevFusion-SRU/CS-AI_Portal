@@ -76,7 +76,7 @@ export const getStudentDetails = async (req, res) => {
       email: studentDetails.email,
       mobile: studentDetails.mobile || "",
       gender: studentDetails.gender || "",
-      address: studentDetails.Address || "", // Map to 'location' in frontend
+      address: studentDetails.address || "", // Map to 'location' in frontend
       personalMail: studentDetails.personalMail || "",
       website: studentDetails.website || "",
       about: studentDetails.about || "",
@@ -585,7 +585,7 @@ export const editStudent = async (req, res) => {
         student.mobile = data.phone || student.mobile;
         student.website = data.website || student.website;
         student.gender = data.gender || student.gender;
-        student.Address = data.location || student.Address; // Maps to frontend 'location'
+        student.address = data.address || student.address; // Maps to frontend 'location'
         break;
 
       default:

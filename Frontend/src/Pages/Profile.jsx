@@ -35,10 +35,10 @@ const Body = () => {
   const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Closed by default
-  const [isScrolled, setIsScrolled] = useState(false); // Track scroll state
-  const [firstName, setFirstName] = useState(""); // State for firstName
-  const [lastName, setLastName] = useState("");  // State for lastName
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
   const [editingExperienceIndex, setEditingExperienceIndex] = useState(null);
   const [showAllExperiences, setShowAllExperiences] = useState(false);
@@ -63,29 +63,78 @@ const Body = () => {
   const skillsRef = useRef(null);
   const attachmentsRef = useRef(null);
 
+  const defaultEducation = {
+    degree: "B.Tech",
+    endYear: "",
+    grade: "",
+    institution: "SR University",
+    isCurrent: true,
+    specialization: "",
+    startYear: "",
+  };
+
   const fetchProfileData = async () => {
     try {
       const response = await axios.get(`${BASE_URL}students/${currentUser.username}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
       const data = response.data.data;
-      console.log("Profile Data:", data); // Debug to see what’s returned
+      
       setProfileImage(data.photo || "https://via.placeholder.com/150");
       setAboutText(data.about || "Add something about yourself...");
-      setFirstName(data.firstName || currentUser?.firstName || "First"); // Set firstName from API or currentUser
-      setLastName(data.lastName || currentUser?.lastName || "Last");    // Set lastName from API or currentUser
+      setFirstName(data.firstName || currentUser?.firstName || "First");
+      setLastName(data.lastName || currentUser?.lastName || "Last");
       setInfo({
         email: data.email || "",
         phone: data.mobile || "",
         website: data.website || "",
         gender: data.gender || "",
-        location: data.address || "",
+        address: data.address || "",
       });
-      setExperiences(data.experiences || []);
-      setEducations(data.education || []);
-      setCertifications(data.certifications || []);
-      setSkills(data.skills || []);
-      setAttachments(data.resumes || []);
+
+      // Sort Experiences by most recent first
+      const sortedExperiences = (data.experiences || []).sort((a, b) => {
+        const dateA = new Date(a.duration?.startDate || 0);
+        const dateB = new Date(b.duration?.startDate || 0);
+        return dateB - dateA;
+      });
+      setExperiences(sortedExperiences);
+
+      // Add default education if none exists, then sort by date
+      const educationData = data.education && data.education.length > 0 
+        ? data.education 
+        : [defaultEducation];
+      const sortedEducations = educationData.sort((a, b) => {
+        const dateA = new Date(a.duration?.startDate || 0);
+        const dateB = new Date(b.duration?.startDate || 0);
+        return dateB - dateA;
+      });
+      setEducations(sortedEducations);
+
+      // Sort Certifications by most recent first
+      const sortedCertifications = (data.certifications || []).sort((a, b) => {
+        const dateA = new Date(a.validTime?.startDate || 0);
+        const dateB = new Date(b.validTime?.startDate || 0);
+        return dateB - dateA;
+      });
+      setCertifications(sortedCertifications);
+
+      // Sort Skills by most recently added (assuming _id timestamp)
+      const sortedSkills = (data.skills || []).sort((a, b) => {
+        const dateA = a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
+        const dateB = b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
+        return dateB - dateA;
+      });
+      setSkills(sortedSkills);
+
+      // Sort Attachments by most recently added
+      const sortedAttachments = (data.resumes || []).sort((a, b) => {
+        const dateA = a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
+        const dateB = b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
+        return dateB - dateA;
+      });
+      setAttachments(sortedAttachments);
+
       setLoading(false);
     } catch (err) {
       setError("Failed to load profile data");
@@ -95,10 +144,9 @@ const Body = () => {
   };
 
   useEffect(() => {
-    console.log("Current User:", currentUser); // Debug to check currentUser
     fetchProfileData();
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50); // Shrink photo after scrolling 50px
+      setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -150,7 +198,7 @@ const Body = () => {
       mobile: info.phone,
       website: info.website,
       gender: info.gender,
-      Address: info.location,
+      address: info.address,
     };
     try {
       await axios.patch(
@@ -439,7 +487,6 @@ const Body = () => {
   };
 
   const handleEditSkill = (index) => {
-    console.log("Editing skill at index:", index, "data:", skills[index]);
     setEditingSkillIndex(index);
     setIsSkillsModalOpen(true);
   };
@@ -451,7 +498,6 @@ const Body = () => {
 
   const scrollToSection = (ref) => {
     ref.current.scrollIntoView({ behavior: "smooth" });
-    setIsSidebarOpen(false); // Close sidebar on mobile after selection
   };
 
   const formatDateRange = (startDate, endDate) => {
@@ -467,51 +513,46 @@ const Body = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Profile Header */}
-      <div className="fixed top-15 left-0 sm-left-10 right-0 bg-white shadow-md z-20 transition-all duration-300">
-        <div className="max-w-7xl mx-auto p-4 flex flex-col sm:flex-row items-center sm:justify-center gap-4">
+      <div className="fixed flex flex-col lg:-mt-2 lg:top-20 sm:-mt-6 sm:top-15 -mt-4 top-15 left-0 right-0 bg-white h-auto shadow-md z-30 transition-all duration-300">
+        <div className="max-w-7xl mx-auto p-4 flex flex-row justify-center sm:flex-row items-center sm:items-start gap-4">
           <div className="relative">
             <img
               src={profileImage}
               alt="Profile"
               className={`rounded-full border-2 border-blue-600 object-cover transition-all duration-300 ${
-                isScrolled ? "w-16 h-16" : "w-20 h-20 sm:w-20 sm:h-20"
+                isScrolled ? "w-16 h-16" : "w-20 h-20 lg:w-20 lg:h-20"
               }`}
             />
             <label className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1 cursor-pointer">
-              <Edit size={15} className={`text-white ${
-                isScrolled ? " sm:size-10 lg:size-3": "sm:size-20 lg:size-5"
-              }`}
-              />
+              <Edit size={15} className="text-white" />
               <input type="file" accept="image/*" className="hidden" onChange={handleProfileImageChange} />
             </label>
           </div>
-          <div className="flex flex-col items-center sm:items-start" >
+          <div className="flex flex-col items-center sm:items-start">
             <h1 className="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">
               {firstName} {lastName}
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base lg:text-x">{currentUser?.username || "N/A"}</p>
-            {/* <p className="text-blue-500 text-xs sm:text-hidden lg:text-xs ">
-              Mentor: Dr. Indrajeet | PHNO: 9876543210 | indrajeet@sru.edu.in
-            </p> */}
+            <p className="text-gray-600 text-sm lg:text-base">{currentUser?.username || "N/A"}</p>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-1 pt-30 md:pt-32 sm:pt-30">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed transition-all mt-3 ml-6 text-blue-600 focus:outline-none"
-        >
-          {isSidebarOpen ? <CloseCircle size={24} /> : <Menu size={24} />}
-        </button>
+      {/* Main Layout */}
+      <div className="flex gap-4 md:pt-24 pt-20 relative max-w-7xl mx-auto w-full">
+        {/* Sidebar */}
         <div
-          className={`fixed mt-10 top-65 left-30 h-[calc(100vh-auto)] rounded-md bg-white shadow-md transition-all duration-300 z-30 ${
-            isSidebarOpen ? "w-40 sm:w-48" : "w-0 sm:w-16"
-          } overflow-hidden`}
+          className={`fixed md:top-[15rem] top-[15rem] left-[rem] md:h-[calc(100vh-auto)] h-[calc(100vh-auto)] bg-white rounded-lg 
+            md:p-2 p-1 shadow-md transition-all duration-300 ease-in-out z-30 ${
+            isSidebarMinimized ? "md:w-16 w-12" : "md:w-48 w-40"
+          }`}
         >
-          {/* Sidebar */}
-          <div className="flex flex-col gap-2 p-2">
+          <div className="flex flex-col md:gap-2 gap-1">
+            <button
+              onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
+              className="flex items-center justify-center md:p-2 p-1 text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              {isSidebarMinimized ? <Menu size={20} /> : <CloseCircle size={20} />}
+            </button>
             {[
               { icon: User, label: "Information", ref: infoRef },
               { icon: Briefcase, label: "Experiences", ref: experiencesRef },
@@ -522,13 +563,14 @@ const Body = () => {
             ].map((item, index) => (
               <button
                 key={index}
-                onClick={() => scrollToSection(item.ref)}
-                className={`flex items-center gap-2 p-2 text-gray-600 hover:bg-blue-100 rounded-lg transition-colors duration-200 ${
-                  isSidebarOpen ? "justify-start" : "justify-center"
-                }`}
+                onClick={() => item.ref && scrollToSection(item.ref)}
+                className={`flex items-center md:gap-2 gap-1 md:p-2 p-1 w-full text-left rounded-lg transition-colors duration-200 
+                  ${index === 0 ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-blue-50"}`}
               >
                 <item.icon size={20} />
-                {isSidebarOpen && <span className="text-sm font-semibold">{item.label}</span>}
+                {!isSidebarMinimized && (
+                  <span className="font-semibold md:text-sm text-xs">{item.label}</span>
+                )}
               </button>
             ))}
           </div>
@@ -536,8 +578,8 @@ const Body = () => {
 
         {/* Main Content Area */}
         <div
-          className={`flex-1 p-4 md:p-6 transition-all duration-300 mt-0 ${
-            isSidebarOpen ? "ml-0 sm:ml-48 lg:mt-0 sm:mt-60" : "ml-0 sm:ml-16 lg:mt-0 sm:mt-60"
+          className={`flex-1 p-4 md:p-6 transition-all duration-300 ${
+            isSidebarMinimized ? "md:ml-20 ml-16" : "md:ml-52 ml-44"
           }`}
         >
           {/* About Section */}
@@ -567,7 +609,7 @@ const Body = () => {
                 </button>
               </div>
             ) : (
-              <p className="text-gray-600 text-sm">{aboutText}</p>
+              <p className="text-gray-600 text-sm md:text-base">{aboutText}</p>
             )}
           </div>
 
@@ -585,75 +627,91 @@ const Body = () => {
               </button>
             </div>
             {isEditingInfo ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-gray-600 text-sm">Email Address</label>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">Email Address</label>
                   <input
                     value={info.email}
                     disabled
                     className="w-full p-2 bg-gray-100 rounded-md border border-gray-300 text-sm cursor-not-allowed"
                   />
                 </div>
-                <div>
-                  <label className="text-gray-600 text-sm">Phone Number</label>
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">Phone Number</label>
                   <input
                     value={info.phone}
                     onChange={(e) => setInfo({ ...info, phone: e.target.value })}
                     className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
-                <div>
-                  <label className="text-gray-600 text-sm">Website</label>
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">Website</label>
                   <input
                     value={info.website}
                     onChange={(e) => setInfo({ ...info, website: e.target.value })}
                     className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
-                <div>
-                  <label className="text-gray-600 text-sm">Gender</label>
-                  <input
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">Gender</label>
+                  <select
                     value={info.gender}
                     onChange={(e) => setInfo({ ...info, gender: e.target.value })}
                     className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
-                <div>
-                  <label className="text-gray-600 text-sm">Location</label>
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">Address</label>
                   <input
-                    value={info.location}
-                    onChange={(e) => setInfo({ ...info, location: e.target.value })}
+                    value={info.address}
+                    onChange={(e) => setInfo({ ...info, address: e.target.value })}
                     className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
                 <button
                   onClick={handleSaveInfo}
-                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm col-span-2"
+                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm sm:col-span-2"
                 >
                   Save
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm md:text-base">
                 <div>
                   <p className="text-gray-600">Email Address</p>
                   <p className="text-gray-800">{info.email}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Phone Number</p>
-                  <p className="text-gray-800">{info.phone}</p>
+                  <p className="text-gray-800">{info.phone || '-'}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Website</p>
-                  <p className="text-gray-800">{info.website}</p>
+                  {info.website ? (
+                    <a
+                      href={info.website.startsWith('http') ? info.website : `https://${info.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {info.website}
+                    </a>
+                  ) : (
+                    <p className="text-gray-800">-</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-gray-600">Gender</p>
-                  <p className="text-gray-800">{info.gender}</p>
+                  <p className="text-gray-800">{info.gender || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-gray-600">Location</p>
-                  <p className="text-gray-800">{info.location}</p>
+                  <p className="text-gray-600">Address</p>
+                  <p className="text-gray-800">{info.address || '-'}</p>
                 </div>
               </div>
             )}
@@ -678,18 +736,18 @@ const Body = () => {
                   <Briefcase size={20} className="text-blue-600" />
                   <div className="flex-1">
                     <h3 className="text-base font-medium text-gray-900">{exp.title || "Untitled"}</h3>
-                    <p className="text-gray-800 text-sm">{exp.company || "Unknown Company"}</p>
-                    <p className="text-gray-600 text-sm">{exp.location || "Unknown Location"}</p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-800 text-sm md:text-base">{exp.company || "Unknown Company"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">{exp.location || "Unknown Location"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">
                       {exp.duration ? formatDateRange(exp.duration.startDate, exp.duration.endDate) : "N/A"}
                     </p>
-                    <p className="text-gray-600 text-sm mt-1">{exp.description || "No description"}</p>
+                    <p className="text-gray-600 text-sm md:text-base mt-1">{exp.description || "No description"}</p>
                     {exp.certificate && (
                       <a
                         href={exp.certificate}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 text-sm mt-1 flex items-center gap-1 hover:underline"
+                        className="text-blue-600 text-sm md:text-base mt-1 flex items-center gap-1 hover:underline"
                       >
                         <Link size={14} /> View Certificate
                       </a>
@@ -709,7 +767,7 @@ const Body = () => {
             {experiences.length > 2 && !showAllExperiences && (
               <button
                 onClick={() => setShowAllExperiences(true)}
-                className="mt-4 text-blue-600 text-sm text-center w-full hover:underline"
+                className="mt-4 text-blue-600 text-sm md:text-base text-center w-full hover:underline"
               >
                 Show More
               </button>
@@ -744,9 +802,9 @@ const Body = () => {
                   <Building size={20} className="text-blue-600" />
                   <div className="flex-1">
                     <h3 className="text-base font-medium text-gray-900">{edu.institution || "Unknown Institution"}</h3>
-                    <p className="text-gray-800 text-sm">{edu.degree || "Unknown Degree"}</p>
-                    <p className="text-gray-600 text-sm">{edu.specialization || "Unknown Specialization"}</p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-800 text-sm md:text-base">{edu.degree || "Unknown Degree"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">{edu.specialization || "Unknown Specialization"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">
                       CGPA: {edu.cgpa || "N/A"} |{" "}
                       {edu.duration ? formatDateRange(edu.duration.startDate, edu.duration.endDate) : "N/A"}
                     </p>
@@ -765,7 +823,7 @@ const Body = () => {
             {educations.length > 2 && !showAllEducations && (
               <button
                 onClick={() => setShowAllEducations(true)}
-                className="mt-4 text-blue-600 text-sm text-center w-full hover:underline"
+                className="mt-4 text-blue-600 text-sm md:text-base text-center w-full hover:underline"
               >
                 Show More
               </button>
@@ -800,9 +858,9 @@ const Body = () => {
                   <MedalStar size={20} className="text-blue-600" />
                   <div className="flex-1">
                     <h3 className="text-base font-medium text-gray-900">{cert.title || "Unknown Provider"}</h3>
-                    <p className="text-gray-800 text-sm">{cert.issuer || "Unknown Issuer"}</p>
-                    <p className="text-gray-800 text-sm">{cert.courseName || "Unknown Course"}</p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-800 text-sm md:text-base">{cert.issuer || "Unknown Issuer"}</p>
+                    <p className="text-gray-800 text-sm md:text-base">{cert.courseName || "Unknown Course"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">
                       {cert.validTime ? formatDateRange(cert.validTime.startDate, cert.validTime.endDate) : "N/A"}
                     </p>
                     {cert.certificateId && (
@@ -810,7 +868,7 @@ const Body = () => {
                         href={cert.certificateId}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 text-sm mt-1 flex items-center gap-1 hover:underline"
+                        className="text-blue-600 text-sm md:text-base mt-1 flex items-center gap-1 hover:underline"
                       >
                         <Link size={14} /> View Certificate
                       </a>
@@ -830,7 +888,7 @@ const Body = () => {
             {certifications.length > 2 && !showAllCertifications && (
               <button
                 onClick={() => setShowAllCertifications(true)}
-                className="mt-4 text-blue-600 text-sm text-center w-full hover:underline"
+                className="mt-4 text-blue-600 text-sm md:text-base text-center w-full hover:underline"
               >
                 Show More
               </button>
@@ -866,8 +924,8 @@ const Body = () => {
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                 >
                   <div>
-                    <p className="text-gray-900 font-medium text-sm">{item.name || "Unknown Skill"}</p>
-                    <p className="text-gray-600 text-xs">{item.level || "N/A"}</p>
+                    <p className="text-gray-900 font-medium text-sm md:text-base">{item.name || "Unknown Skill"}</p>
+                    <p className="text-gray-600 text-xs md:text-sm">{item.level || "N/A"}</p>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => handleEditSkill(index)} className="text-blue-600 hover:text-blue-800">
@@ -883,7 +941,7 @@ const Body = () => {
             {skills.length > 4 && !showAllSkills && (
               <button
                 onClick={() => setShowAllSkills(true)}
-                className="mt-4 text-blue-600 text-sm text-center w-full hover:underline"
+                className="mt-4 text-blue-600 text-sm md:text-base text-center w-full hover:underline"
               >
                 Show More
               </button>
@@ -917,8 +975,8 @@ const Body = () => {
                 <div key={index} className="flex items-start gap-4 border-b pb-4">
                   <DocumentDownload size={20} className="text-blue-600" />
                   <div className="flex-1">
-                    <p className="text-gray-900 font-medium text-sm">{item.title || "Unnamed File"}</p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-900 font-medium text-sm md:text-base">{item.title || "Unnamed File"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">
                       {item.type || "Unknown Type"} | {item.size || "Unknown Size"}
                     </p>
                     {item.resumeUrl && (
@@ -926,7 +984,7 @@ const Body = () => {
                         href={item.resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 text-sm mt-1 flex items-center gap-1 hover:underline"
+                        className="text-blue-600 text-sm md:text-base mt-1 flex items-center gap-1 hover:underline"
                       >
                         <Link size={14} /> View Attachment
                       </a>
@@ -946,7 +1004,7 @@ const Body = () => {
             {attachments.length > 2 && !showAllAttachments && (
               <button
                 onClick={() => setShowAllAttachments(true)}
-                className="mt-4 text-blue-600 text-sm text-center w-full hover:underline"
+                className="mt-4 text-blue-600 text-sm md:text-base text-center w-full hover:underline"
               >
                 Show More
               </button>
@@ -968,4 +1026,3 @@ const Body = () => {
 };
 
 export default Body;
-//wait 
