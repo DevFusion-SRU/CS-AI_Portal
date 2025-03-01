@@ -40,11 +40,11 @@ const imageStorage = new CloudinaryStorage({
 const resumeStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: "CS-AI_PORTAL/resumes", // Separate folder for resumes
-        resource_type: "auto", // Allow PDF, DOC, DOCX
-        public_id: (req, file) => `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`, // Remove existing extension
+      folder: "CS-AI_PORTAL/resumes",
+      resource_type: "auto", // Supports images, PDFs, docs
+      public_id: (req, file) => `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`,
     },
-});
+  });
 
 
 
@@ -69,18 +69,21 @@ const imageFileFilter = (req, file, cb) => {
     cb(null, true);
 };
 
-// 🔹 Allowed Resume Types: PDF, DOC, DOCX
+// Allowed Resume Types: JPG, PNG, WebP, PDF, DOC, DOCX
 const resumeFileFilter = (req, file, cb) => {
     const allowedResumeTypes = [
-        "application/pdf",
-        "application/msword", // DOC
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "application/msword", // DOC
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
     ];
     if (!allowedResumeTypes.includes(file.mimetype)) {
-        return cb(new Error("Invalid resume type"), false);
+      return cb(new Error("Invalid file type. Allowed: JPG, PNG, WebP, PDF, DOC, DOCX"), false);
     }
     cb(null, true);
-};
+  };
 
 
 // 🔹 Allowed Certificate Types: JPG, PNG, WebP, PDF
@@ -112,7 +115,7 @@ export const uploadResume = multer({
     storage: resumeStorage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: resumeFileFilter,
-});
+  });
 
 
 // 🔹 Certificate Upload Middleware (Limit: 5MB)
