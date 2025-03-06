@@ -330,8 +330,6 @@ export const uploadStudentResume = async (req, res) => {
   }
 };
 
-
-
 export const deleteStudentResume = async (req, res) => {
   try {
     const { rollNumber, resumeId } = req.params;// Get rollNumber & resumeId from URL params
@@ -370,8 +368,6 @@ export const deleteStudentResume = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-
 
 export const addStudentBatch = async (req, res) => {
   const students = req.body;
@@ -470,7 +466,6 @@ export const deleteStudent = async (req, res) => {
   }
 };
 
-
 // Upload Certificate for Experience or Certification
 export const uploadCertificateFile = async (req, res) => {
     try {
@@ -517,10 +512,6 @@ export const uploadCertificateFile = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
-
-
-
-
 
 export const editStudent = async (req, res) => {
     const { rollNumber } = req.params;
