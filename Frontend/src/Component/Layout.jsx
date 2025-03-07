@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 const Layout = ({ userData, setUserData }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen">

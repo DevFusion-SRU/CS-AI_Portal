@@ -4,13 +4,19 @@ import {
     addJob,
     addJobsBatch,
     deleteJob,
-    getJobs
+    getJobs,
+    getJobById,
+    searchCompanies
 } from "../controllers/Jobs/job.js";
 
 const router = express.Router();
 
 // Public route
 router.get("/", getJobs);
+router.get("/searchCompanies", searchCompanies);
+
+// Protected routes
+router.get("/:jobId", authenticateToken, getJobById);
 
 // Protected routes for admin
 router.post("/", authenticateToken, authorizeRole("staff"), addJob);

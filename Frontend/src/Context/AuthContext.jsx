@@ -90,9 +90,7 @@ export const AuthProvider = ({ children }) => {
       if (isMounted.current) {
         if (response?.data?.success) {
           const user = response.data.user;
-          console.log(response.data.user,"if")
           const role = user.role;
-          console.log(user,role)
           setCurrentUser(user);
           setCurrentUserRole(role);
         } else {
