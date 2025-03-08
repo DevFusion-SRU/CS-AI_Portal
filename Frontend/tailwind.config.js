@@ -8,7 +8,7 @@ export default {
     extend: {
       fontFamily: {
         pt: ['"Pt Sans"', 'serif'],
-        quickstand: ['"Quickstand"', 'sans-serif'],
+        quicksand: ['"Quicksand"', 'sans-serif'],
         lato: ['"Lato"', 'sans-serif'],
       },
       fontSize: {
