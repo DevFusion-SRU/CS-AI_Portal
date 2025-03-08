@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, User } from "iconsax-react"; 
+import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, User, Messages3 } from "iconsax-react"; 
 
 const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -68,6 +68,15 @@ const Sidebar = ({ setUserData, setIsSidebarOpen }) => {
         >
           <Profile size="24" variant="Linear" />
           {isOpen && <span className="ml-4 text-lg">My Account</span>}
+        </NavLink>
+        <NavLink
+          to="/discussions"
+          className={({ isActive }) =>
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+          }
+        >
+          <Messages3 size="24" variant="Linear" />
+          {isOpen && <span className="ml-4 text-lg">Discussions</span>}
         </NavLink>
       </nav>
 

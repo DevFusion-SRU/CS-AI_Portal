@@ -69,7 +69,7 @@ const Launchpad = () => {
 
 
   return (
-    <main className="w-auto  flex flex-col items-center px-4 py-8">
+    <main className="w-auto  flex flex-col items-center  pb-8">
       <section className="w-full flex-1 p-10 max-w-8xl">
         <div className="flex justify-between items-center border-b pb-4">
           <h1 className="font-quickstand text-h6 text-[#0A3D91] font-bold leading-[72px] flex items-center">

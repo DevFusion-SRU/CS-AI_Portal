@@ -17,6 +17,7 @@ import AdminRoute from './Context/AdminRoute';
 import UserManagement from './Pages/UserManagement';
 import AddUsers from './Pages/AddUsers';
 import Forgotpassword from "./Pages/Forgotpassword";
+import Discussions from "./Pages/Discussions";
 import JobView from './Pages/jobview';
 
 
@@ -87,6 +88,7 @@ const App = () => {
             path="myaccount"
             element={<Profile userData={userData} setUserData={setUserData} />}
           />
+          <Route path="discussions" element={<Discussions/>}/>
         </Route>
       </Route>
 
