@@ -2,10 +2,11 @@ import express from "express";
 import multer from "multer";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 
-import { createPost, getAllPosts, getPostById, editPost, deletePost, toggleLikePost } from "../controllers/Forums/posts.js";
+import { createPost, getAllPosts, getPostById, editPost, deletePost, toggleLikePost,summarizePost } from "../controllers/Forums/posts.js";
 import { addComment, getComments, editComment, deleteComment, likeUnlikeComment } from "../controllers/Forums/comments.js";
 import { addReply, getReplies, editReply, deleteReply, likeUnlikeReply } from "../controllers/Forums/replies.js";
 import { reportPost, reportComment, reportReply, fetchReportedItems, deleteReportedItem } from "../controllers/Forums/report.js";
+import { createJobForum, createJobPost, addMember, getJobPosts, deleteJobForum } from "../controllers/Forums/jobForum.js";
 
 const router = express.Router();
 
@@ -19,6 +20,8 @@ const replyUpload = multer().none();
 // -- Protected routes (Accessible by all authenticated users)
 router.get("/posts", authenticateToken, getAllPosts);
 router.get("/posts/:postId", authenticateToken, getPostById);
+router.get("/posts/:postId/summarize",authenticateToken, summarizePost);
+
 // -- Protected routes (Only Students & Staff can create/like posts)
 router.post("/posts", authenticateToken, authorizeRole(["student", "staff"]), postUpload.single("photo"), createPost);
 router.post("/posts/:postId/like", authenticateToken, authorizeRole(["student", "staff"]), toggleLikePost);
@@ -49,4 +52,16 @@ router.post("/report/reply/:replyId", authenticateToken, authorizeRole(["student
 router.get("/moderation/reports", authenticateToken, authorizeRole(["admin", "staff"]), fetchReportedItems);
 router.delete("/moderation/reports/:reportId/:type/:typeId", authenticateToken, authorizeRole(["admin", "staff"]), deleteReportedItem);
 
+
+//Job Specific Disscussions
+// -- Protected routes (Accessible by all authenticated users)
+router.post("/jobforum/create", authenticateToken, authorizeRole(["admin", "staff"]),  createJobForum);
+router.post("/jobforum/posts", authenticateToken, authorizeRole(["student", "staff"]), postUpload.single("photo"), createJobPost);
+router.post("/jobforum/addmember", authenticateToken, authorizeRole(["admin", "staff"]), addMember);
+
+
+router.get("/jobforum/posts/:jobId", authenticateToken, getJobPosts);
+router.delete("/jobforum/delete/:jobId", authenticateToken, authorizeRole(["admin", "staff"]), deleteJobForum);
+
 export default router;
+
