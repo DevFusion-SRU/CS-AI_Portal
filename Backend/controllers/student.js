@@ -295,6 +295,7 @@ export const uploadStudentResume = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
+
 export const deleteStudentResume = async (req, res) => {
   try {
     const { rollNumber, resumeId } = req.params;
@@ -321,43 +322,6 @@ export const deleteStudentResume = async (req, res) => {
     });
   } catch (error) {
     console.error("Resume Deletion Error:", error.message);
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
-  }
-};
-
-export const deleteStudentSectionItem = async (req, res) => {
-  try {
-    const { rollNumber, section, id } = req.params;
-    const student = await StudentDetails.findOne({ rollNumber });
-
-    if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
-
-    const validSections = ["experiences", "education", "certifications", "skills"];
-    if (!validSections.includes(section)) {
-      return res.status(400).json({ success: false, message: "Invalid section" });
-    }
-
-    const item = student[section].find((item) => item._id.toString() === id);
-    if (!item) {
-      return res.status(404).json({ success: false, message: `${section} item not found` });
-    }
-
-    if (section === "experiences" && item.certificate) {
-      const publicId = item.certificate.split("/").pop().split(".")[0];
-      await cloudinary.uploader.destroy(`CS-AI_PORTAL/certificates/${publicId}`, { resource_type: "raw" });
-    } else if (section === "certifications" && item.certificateId) {
-      const publicId = item.certificateId.split("/").pop().split(".")[0];
-      await cloudinary.uploader.destroy(`CS-AI_PORTAL/certificates/${publicId}`, { resource_type: "raw" });
-    }
-
-    student[section] = student[section].filter((item) => item._id.toString() !== id);
-    await student.save();
-
-    res.status(200).json({ success: true, message: `${section} item deleted successfully` });
-  } catch (error) {
-    console.error(`Error deleting ${req.params.section} item:`, error.message);
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
@@ -435,6 +399,7 @@ export const deleteStudent = async (req, res) => {
   }
 };
 
+// Upload Certificate for Experience or Certification
 export const uploadCertificateFile = async (req, res) => {
   try {
     const { rollNumber, section, id } = req.params;

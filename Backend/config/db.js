@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-let jobDB, studentDB, staffDB;
+let jobDB, studentDB, staffDB, forumDB;
 
 // Connect to the database
 const connectDB = async () => {
@@ -17,6 +17,7 @@ const connectDB = async () => {
     jobDB = dbConnection.connection.useDb("jobs");
     studentDB = dbConnection.connection.useDb("students");
     staffDB = dbConnection.connection.useDb("staff");
+    forumDB = dbConnection.connection.useDb("forums");
 
   } catch (error) {
     console.error(`MongoDB Connection Error: ${error.message}`);
@@ -25,4 +26,4 @@ const connectDB = async () => {
 
 await connectDB();
 export default connectDB;
-export { jobDB, studentDB, staffDB };
+export { jobDB, studentDB, staffDB, forumDB };

@@ -14,6 +14,7 @@ const router = express.Router();
 // Public route
 router.get("/", getJobs);
 router.get("/searchCompanies", searchCompanies);
+
 // Protected routes
 router.get("/:jobId", authenticateToken, getJobById);
 
