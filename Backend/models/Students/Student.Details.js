@@ -24,7 +24,9 @@ const studentSchema = new mongoose.Schema({
         },
         location: { type: String, required: false },
         description: { type: String, required: false },
-        certificate:{type: String, required: false}
+        certificateId: { type: String, required: false },
+        certificate: { type: Buffer, required: false }, 
+        certificateType: { type: String, required: false },
     }],
 
     // Education stored as an array of objects
@@ -48,7 +50,9 @@ const studentSchema = new mongoose.Schema({
             startDate: { type: Date, required: false },
             endDate: { type: Date, required: false }
         },
-        certificateId: { type: String, required: false }
+        certificateId: { type: String, required: false },
+        certificate: { type: Buffer, required: false }, 
+        certificateType: { type: String, required: false },
     }],
     
     // Skills stored as an array of objects
@@ -57,7 +61,8 @@ const studentSchema = new mongoose.Schema({
         level: { type: String, required: false }
     }],
     
-
+    photo: { type: Buffer }, // 🔹 Binary image data if stored locally
+    photoType: { type: String }, // 🔹 MIME type (e.g., image/png, image/jpeg)   
 
 
     photoUrl: { type: String, required: false }, // URL of uploaded image in Cloudinary
@@ -67,7 +72,8 @@ const studentSchema = new mongoose.Schema({
     // Resumes stored as an array of objects
     resumes: [{
         title: { type: String, required: false },
-        resumeUrl: { type: String, required: false }, // Cloudinary URL
+        resume: { type: Buffer, required: false }, // Cloudinary URL
+        resumeType: { type: String, required: false },
         uploadedAt: { type: Date, default: Date.now }
     }]
 },{timestamps:true});

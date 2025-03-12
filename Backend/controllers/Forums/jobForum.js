@@ -209,3 +209,35 @@ export const deleteJobForum = async (req, res) => {
 };
 
 
+
+export const searchByTitle = async (req, res) => {
+    try {
+        const { title } = req.query;
+        const { page = 1, limit = 10 } = req.query; // Default: Page 1, 10 posts per page
+
+        if (!title) {
+            return res.status(400).json({ success: false, message: "Title is required for search" });
+        }
+
+        // Case-insensitive title search using regex
+        const posts = await Post.find({
+            title: { $regex: new RegExp(title, "i") } // "i" flag makes it case-insensitive
+        })
+        .sort({ createdAt: -1 }) // Sort by latest posts
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit))
+        .lean();
+
+        if (posts.length === 0) {
+            return res.status(404).json({ success: false, message: "No posts found with the given title" });
+        }
+
+        res.status(200).json({ success: true, data: posts });
+
+    } catch (error) {
+        console.error("Error searching posts:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+

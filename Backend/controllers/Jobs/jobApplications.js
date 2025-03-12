@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import axios from "axios";
+import sharp from "sharp";
 import Job from "../../models/Jobs/Job.js";
+import JobForum from "../../models/Forums/jobForum.js"; // Import JobForum model
+
 // import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
 import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
@@ -14,24 +17,7 @@ export const addApplication = async (req, res) => {
     }
 
     try {
-        // Step 1: Updating the student's applied jobs in AppliedJobs collection
-        // let appliedJobsEntry = await AppliedJobs.findOne({ rollNumber });
-
-        // if (!appliedJobsEntry) {
-        //     // Create a new entry if it doesn't exist
-        //     appliedJobsEntry = new AppliedJobs({ rollNumber, jobIds: [jobId] });
-        // } else {
-        //     // Add the jobId to the array if it doesn't already exist
-        //     if (!appliedJobsEntry.jobIds.includes(jobId)) {
-        //         appliedJobsEntry.jobIds.push(jobId);
-        //     } else {
-        //         return res.status(400).json({ success: false, message: "Job ID already exists for this student!" });
-        //     }
-        // }
-
-        // await appliedJobsEntry.save();
-
-        // Step 2: Updating the job's applied students in AppliedStudents collection
+        // Updating the job's applied students in AppliedStudents collection
         let appliedStudentsEntry = await AppliedStudents.findOne({ jobId });
 
         if (!appliedStudentsEntry) {
@@ -49,12 +35,29 @@ export const addApplication = async (req, res) => {
         // Save the appliedStudentsEntry to the database
         await appliedStudentsEntry.save();
 
-        res.status(201).json({ success: true, AppliedJobs: appliedJobsEntry, AppliedStudents: appliedStudentsEntry });
+        // 🔹 Check if a JobForum exists for this jobId
+        let jobForum = await JobForum.findOne({ jobId });
+
+        if (jobForum) {
+            // Add student to the forum if not already a member
+            if (!jobForum.members.includes(rollNumber)) {
+                jobForum.members.push(rollNumber);
+                await jobForum.save();
+            }
+        }
+
+        res.status(201).json({ 
+            success: true, 
+            message: "Application submitted successfully!", 
+            AppliedStudents: appliedStudentsEntry 
+        });
+
     } catch (error) {
         console.error("Error in adding applied job: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
 
 export const addView = async (req, res) => {
     const { rollNumber, jobId } = req.body;
@@ -238,7 +241,6 @@ export const getApplications = async (req, res) => {
 
 
 
-
 export const getAppliedPeers = async (req, res) => {
     const { jobId } = req.params;
 
@@ -254,31 +256,22 @@ export const getAppliedPeers = async (req, res) => {
             rollNumber: { $in: applications }  // Find students whose rollNumbers are in the applications array
         });
 
-         // 🔹 Process each student to fetch their Base64 image
-         const peersDetails = await Promise.all(
+        // 🔹 Process each student to fetch and resize their Base64 image
+        const peersDetails = await Promise.all(
             peers.map(async (peer) => {
                 let base64Image = null;
 
-                if (peer.photoUrl) {
+                if (peer.photo && peer.photoType) {
                     try {
-                        //  Resize image dynamically using Cloudinary URL transformation (50x50)
-                        const resizedImageUrl = peer.photoUrl.replace(
-                            "/upload/",
-                            "/upload/w_50,h_50,c_fill,q_auto/"
-                        );
+                        // ✅ Resize the image to 50x50 pixels using sharp
+                        const resizedImageBuffer = await sharp(peer.photo)
+                            .resize({ width: 50, height: 50, fit: "cover" }) // Center cropping
+                            .toBuffer();
 
-                        //  Fetch the resized image from Cloudinary
-                        const imgResponse = await axios.get(resizedImageUrl, {
-                            responseType: "arraybuffer",
-                        });
-
-                        //  Extract MIME type dynamically
-                        const contentType = imgResponse.headers["content-type"];
-
-                        //  Convert image to Base64 format
-                        base64Image = `data:${contentType};base64,${Buffer.from(imgResponse.data).toString("base64")}`;
+                        // ✅ Convert resized image to Base64
+                        base64Image = `data:${peer.photoType};base64,${resizedImageBuffer.toString("base64")}`;
                     } catch (error) {
-                        console.error(`Error fetching image for ${peer.rollNumber}:`, error.message);
+                        console.error(`Error processing image for ${peer.rollNumber}:`, error.message);
                     }
                 }
 
@@ -298,8 +291,10 @@ export const getAppliedPeers = async (req, res) => {
         console.error("Error fetching applied peers: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
-
 };
+
+
+
 
 export const getAppliedStudents = async (req, res) => {
     const filters = {};

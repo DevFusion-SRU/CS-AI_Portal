@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import axios from "axios";
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
+import sharp from "sharp"; // Import Sharp for image resizing
+
 dotenv.config();
 import cloudinary from "../config/cloudinary.js"; // Import Cloudinary config
 import StudentDetails from "../models/Students/Student.Details.js"; // StudentDetails model using studentDB
@@ -67,10 +69,13 @@ export const getStudents = async (req, res) => {
   }
 };
 
+
 export const getStudentDetails = async (req, res) => {
   const { rollNumber } = req.params;
+
   try {
     const studentDetails = await StudentDetails.findOne({ rollNumber });
+
     if (!studentDetails) {
       return res.status(404).json({
         success: false,
@@ -95,33 +100,22 @@ export const getStudentDetails = async (req, res) => {
       experiences: studentDetails.experiences || [],
       education: studentDetails.education || [],
       certifications: studentDetails.certifications || [],
-      resumes: studentDetails.resumes?.map(resume => resume.title) || [],
-
+      resumes: studentDetails.resumes?.map((resume) => resume.title) || [],
     };
 
-    // 🔹 Check if photo URL exists
-    if (studentDetails.photoUrl) {
+    // 🔹 Check if the student has a stored photo buffer
+    if (studentDetails.photo && studentDetails.photoType) {
       try {
-        // ✅ Resize image dynamically using Cloudinary URL transformation
-        const resizedImageUrl = studentDetails.photoUrl.replace(
-          "/upload/",
-          "/upload/w_400,h_400,c_fill,q_auto/"
-        );
+        // ✅ Resize the image while maintaining original dimensions
+        const resizedImageBuffer = await sharp(studentDetails.photo)
+          .resize({ width: 400, height: 400, fit: "cover" }) // Center cropping
+          .toBuffer();
 
-        // ✅ Fetch the resized image from Cloudinary
-        const imgResponse = await axios.get(resizedImageUrl, {
-          responseType: "arraybuffer",
-        });
-
-        // ✅ Extract MIME type dynamically
-        const contentType = imgResponse.headers["content-type"];
-
-        // ✅ Convert image to Base64 format
-        response.photo = `data:${contentType};base64,${Buffer.from(imgResponse.data).toString("base64")}`;
-        
+        // ✅ Convert to Base64
+        response.photo = `data:${studentDetails.photoType};base64,${resizedImageBuffer.toString("base64")}`;
       } catch (error) {
-        console.error("Error fetching or converting image:", error.message);
-        response.photo = null; // If image fetch fails, return null
+        console.error("Error processing image:", error.message);
+        response.photo = null;
       }
     } else {
       response.photo = null; // If no photo exists, return null
@@ -133,6 +127,7 @@ export const getStudentDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
 
 export const addStudent = async (req, res) => {
   const student = req.body;
@@ -178,161 +173,78 @@ export const addStudent = async (req, res) => {
 };
 
 export const uploadStudentPhoto = async (req, res) => {
-  // const { rollNumber } = req.params;
-
-  // if (!req.file) {
-  //     return res.status(400).json({ success: false, message: "Photo file is required!" });
-  // }
-
-  // const { buffer, mimetype } = req.file;
-
-  // try {
-  //     const student = await StudentDetails.findOne({ rollNumber });
-  //     if (!student) {
-  //         return res.status(404).json({ success: false, message: "Student not found!" });
-  //     }
-
-  //     student.photo = buffer;
-  //     student.photoType = mimetype;
-
-  //     await StudentDetails.save();
-  //     res.status(200).json({ success: true, message: "Photo uploaded successfully!" });
-  // } catch (error) {
-  //     console.error("Error uploading photo: ", error.message);
-  //     res.status(500).json({ success: false, message: "Server Error" });
-  // }
-
   try {
     const { rollNumber } = req.params; // Get rollNumber from URL params
-
+    const {username} = req.user;
     if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No file uploaded!" });
+        return res.status(400).json({ success: false, message: "No file uploaded!" });
+    }
+    console.log("File received:", req.file);
+    const { buffer, mimetype } = req.file; // Get original image buffer & MIME type
+
+
+    // Validate File Type
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(mimetype)) {
+      return res.status(400).json({ success: false, message: "Only JPG and PNG files are allowed!" });
     }
 
-    const fileUrl = req.file.path; // Cloudinary file URL
-
+    
     // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
-
     if (!student) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Student not found!" });
+        return res.status(404).json({ success: false, message: "Student not found!" });
+    }
+    if(student.rollNumber !== username){
+      return res.status(403).json({ success: false, message: "You are not authorized to upload photo for this student!" });
     }
 
-    // Update the student document with the Cloudinary URL
-    student.photoUrl = fileUrl;
+    // Store original image in the database
+    student.photo = buffer;
+    student.photoType = mimetype;
+    await student.save(); // Save the original image in MongoDB
 
-    await student.save(); // Save the updated student record
+    // Generate a resized, center-cropped version (400x400)
+    const resizedImageBuffer = await sharp(buffer)
+        .resize(400, 400, { fit: "cover", position: "center" }) // Center crop
+        .toBuffer();
 
-    // Resize Image URL (Cloudinary transformation)
-    const resizedImageUrl = fileUrl.replace(
-      "/upload/",
-      "/upload/w_400,h_400,c_fill/"
-    );
-
-    const response = await axios.get(resizedImageUrl, {
-      responseType: "arraybuffer",
-    });
-
-    // Extract MIME type dynamically
-    const contentType = response.headers["content-type"]; // e.g., "image/png" or "image/jpeg"
-
-    // Convert to Base64
-    const base64Image = `data:${contentType};base64,${Buffer.from(
-      response.data
-    ).toString("base64")}`;
+    // Convert resized image to Base64
+    const base64Image = `data:${mimetype};base64,${resizedImageBuffer.toString("base64")}`;
 
     res.status(200).json({
-      success: true,
-      message: "Photo uploaded successfully!",
-      image: base64Image, // 🔹 Sending Base64 instead of URL
+        success: true,
+        message: "Photo uploaded successfully!",
+        image: base64Image, // 🔹 Sending resized image in response
     });
-  } catch (error) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
-        success: false,
-        message: "File size exceeds the limit of 2MB.",
-      });
+} catch (error) {
+    console.error("Upload Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+}
+
+
+};
+
+export const uploadStudentResume = async (req, res) => {
+  try {
+    const { rollNumber } = req.params;
+    const { username } = req.user;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded!" });
     }
 
-    // Handle invalid file types for profile images
-    if (error.message.includes("Invalid image type")) {
-      return res.status(400).json({
-        success: false,
-        message: "Only JPG, JPEG, and PNG files are allowed for images!",
-      });
-    }
+    console.log("File received:", req.file);
 
-    // Handle invalid file types for resumes
-    if (error.message.includes("Invalid resume type")) {
+    const { buffer, mimetype, originalname } = req.file; // Extract file details
+
+    // Validate file type (Allow only PDFs and DOCX)
+    const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    if (!allowedTypes.includes(mimetype)) {
       return res.status(400).json({
         success: false,
         message: "Only PDF and DOCX files are allowed for resumes!",
       });
     }
-
-    console.error("Upload Error:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-};
-
-export const uploadStudentResume = async (req, res) => {
-  try {
-    const { rollNumber } = req.params; // Get rollNumber from URL params
-
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No file uploaded!" });
-    }
-
-    const fileUrl = req.file.path; // Cloudinary file URL
-    const originalFileName = req.file.originalname;
-
-    // Find the student by rollNumber
-    const student = await StudentDetails.findOne({ rollNumber });
-
-    if (!student) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Student not found!" });
-    }
-    if (student.resumes.length >= 3) {
-      return res.status(400).json({
-        success: false,
-        message: "You can upload a maximum of 3 resumes.",
-      });
-    }
-
-    // Add the new resume to the array
-    student.resumes.push({ resumeUrl: fileUrl ,title: originalFileName});
-
-    await student.save(); // Save the updated student record
-
-    res.status(200).json({
-      success: true,
-      message: "Resume uploaded successfully!",
-      fileUrl,
-    });
-  } catch (error) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
-        success: false,
-        message: "File size exceeds the limit of 2MB.",
-      });
-    }
-
-    console.error("Upload Error:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-};
-
-export const deleteStudentResume = async (req, res) => {
-  try {
-    const { rollNumber, resumeId } = req.params;// Get rollNumber & resumeId from URL params
 
     // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
@@ -341,21 +253,74 @@ export const deleteStudentResume = async (req, res) => {
       return res.status(404).json({ success: false, message: "Student not found!" });
     }
 
-    // Find the resume to delete
-    const resume = student.resumes.find((r) => r._id.toString() === resumeId);
+    if (student.rollNumber !== username) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to upload resumes for this student!",
+      });
+    }
 
-    if (!resume) {
+    if (student.resumes.length >= 3) {
+      return res.status(400).json({
+        success: false,
+        message: "You can upload a maximum of 3 resumes.",
+      });
+    }
+
+    // Store resume buffer in MongoDB
+    student.resumes.push({
+      resume: buffer,
+      title: originalname,
+      type: mimetype,
+    });
+
+    await student.save();
+
+    // Convert buffer to Base64 for response (Optional: for previewing small files)
+    const base64Resume = `data:${mimetype};base64,${buffer.toString("base64")}`;
+
+    res.status(200).json({
+      success: true,
+      message: "Resume uploaded successfully!",
+      resume: base64Resume, // Returning base64-encoded resume
+      title: originalname,
+    });
+
+  } catch (error) {
+    console.error("Upload Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const deleteStudentResume = async (req, res) => {
+  try {
+    const { rollNumber, resumeId } = req.params; // Get rollNumber & resumeId from URL params
+    const { username } = req.user; // Get logged-in user
+
+    // Find the student by rollNumber
+    const student = await StudentDetails.findOne({ rollNumber });
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found!" });
+    }
+
+    // Check authorization (Only the owner can delete)
+    if (student.rollNumber !== username) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete resumes for this student!",
+      });
+    }
+
+    // Find the resume to delete
+    const resumeIndex = student.resumes.findIndex((r) => r._id.toString() === resumeId);
+
+    if (resumeIndex === -1) {
       return res.status(404).json({ success: false, message: "Resume not found!" });
     }
 
-    // Extract public ID from the Cloudinary URL
-    const publicId = resume.resumeUrl.split("/").pop().split(".")[0];
-
-    // Delete the file from Cloudinary
-    await cloudinary.uploader.destroy(`CS-AI_PORTAL/resumes/${publicId}`, { resource_type: "raw" });
-
     // Remove the resume from the array
-    student.resumes = student.resumes.filter((r) => r._id.toString() !== resumeId);
+    student.resumes.splice(resumeIndex, 1);
 
     await student.save(); // Save updated student data
 

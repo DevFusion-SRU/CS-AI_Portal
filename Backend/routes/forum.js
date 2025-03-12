@@ -6,7 +6,7 @@ import { createPost, getAllPosts, getPostById, editPost, deletePost, toggleLikeP
 import { addComment, getComments, editComment, deleteComment, likeUnlikeComment } from "../controllers/Forums/comments.js";
 import { addReply, getReplies, editReply, deleteReply, likeUnlikeReply } from "../controllers/Forums/replies.js";
 import { reportPost, reportComment, reportReply, fetchReportedItems, deleteReportedItem } from "../controllers/Forums/report.js";
-import { createJobForum, createJobPost, addMember, getJobPosts, deleteJobForum } from "../controllers/Forums/jobForum.js";
+import { createJobForum, createJobPost, addMember, getJobPosts, deleteJobForum, searchByTitle } from "../controllers/Forums/jobForum.js";
 
 const router = express.Router();
 
@@ -62,6 +62,9 @@ router.post("/jobforum/addmember", authenticateToken, authorizeRole(["admin", "s
 
 router.get("/jobforum/posts/:jobId", authenticateToken, getJobPosts);
 router.delete("/jobforum/delete/:jobId", authenticateToken, authorizeRole(["admin", "staff"]), deleteJobForum);
+router.get("/jobforum/posts/title", authenticateToken, authorizeRole(["student", "staff"]), searchByTitle);
+
+
 
 export default router;
 
