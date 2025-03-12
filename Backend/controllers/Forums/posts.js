@@ -51,7 +51,7 @@ export const getAllPosts = async (req, res) => {
             mostCommented: { comments: -1 },
         };
 
-        const posts = await Post.find()
+        const posts = await Post.find({ jobId: { $exists: false } })
             .sort(sortOptions[sort] || sortOptions.latest)
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
@@ -220,3 +220,52 @@ export const toggleLikePost = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+
+export const summarizePost = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { page = 1, limit = 5 } = req.query;
+
+        // Fetch post details
+        const post = await Post.findOne({ postId })
+            .select("title description -_id") // Exclude _id
+            .lean();
+
+        if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+        // Fetch paginated comments (include commentId for internal use but remove later)
+        const comments = await Comment.find({ postId })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit))
+            .select("text commentId -_id") // Fetch commentId temporarily
+            .lean();
+
+        // Fetch replies for each comment
+        const commentsWithReplies = await Promise.all(
+            comments.map(async (comment) => {
+                const replies = await Reply.find({ commentId: comment.commentId }) // Correct lookup
+                    .sort({ createdAt: -1 })
+                    .limit(3)
+                    .select("text -_id") // Exclude _id
+                    .lean();
+
+                // Remove `commentId` before returning
+                const { commentId, ...filteredComment } = comment;
+                return { ...filteredComment, replies };
+            })
+        );
+
+        res.status(200).json({
+            success: true,
+            data: { post, comments: commentsWithReplies }
+        });
+
+    } catch (error) {
+        console.error("Error fetching post:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+

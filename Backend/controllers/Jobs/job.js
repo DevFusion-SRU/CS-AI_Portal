@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import Job from "../../models/Jobs/Job.js"; // Job model using jobDB
+import JobForum from "../../models/Forums/jobForum.js"; // Import JobForum model
 
 export const getJobById = async (req, res) => {
     const { jobId } = req.params;  // Assuming jobId is passed as a route parameter
@@ -224,21 +225,47 @@ export const searchCompanies = async (req, res) => {
 
 
 export const addJob = async (req, res) => {
-    const job = req.body;
-    if (!job.modeOfWork || !job.jobId || !job.title || !job.type || !job.company || !job.location || !job.description.text || !job.applyLink) {
+    const { forumTitle, ...jobData } = req.body; // Extract forumTitle separately
+
+    // Validate required job fields
+    if (!jobData.modeOfWork || !jobData.jobId || !jobData.title || !jobData.type || 
+        !jobData.company || !jobData.location || !jobData.description.text || !jobData.applyLink) {
         return res.status(400).json({ success: false, message: "Provide all required fields!!" });
     }
 
-    const newJob = new Job(job);
     try {
-        await newJob.save();
-        res.status(201).json({ success: true, data: newJob });
-    } catch (error) {
-        // Check if it's a duplicate key error (unique constraint violation)
-        if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: "Job with this id already exists!" });
+        // Check if a job with the same jobId already exists
+        const existingJob = await Job.findOne({ jobId: jobData.jobId });
+        if (existingJob) {
+            return res.status(400).json({ success: false, message: "Job with this ID already exists!" });
         }
-        console.error("Error in entering Job details: ", error.message);
+
+        // Create and save the job
+        const newJob = new Job(jobData);
+        await newJob.save();
+
+        let jobForum = null;
+
+        // If forumTitle is provided, create a JobForum
+        if (forumTitle) {
+            jobForum = new JobForum({
+                title: forumTitle,
+                jobId: jobData.jobId, // Link forum to job
+                members: [], // Empty at creation, members can join later
+                posts: []   // No posts initially
+            });
+
+            await jobForum.save();
+        }
+
+        res.status(201).json({
+            success: true,
+            data: newJob,
+            jobForum: jobForum ? jobForum : null // Return JobForum details if created
+        });
+
+    } catch (error) {
+        console.error("Error in adding job: ", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };

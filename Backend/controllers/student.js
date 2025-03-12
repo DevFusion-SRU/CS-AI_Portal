@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import axios from "axios";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
+import sharp from "sharp"; // Import Sharp for image resizing
+
 dotenv.config();
 import cloudinary from "../config/cloudinary.js";
 import StudentDetails from "../models/Students/Student.Details.js";
@@ -56,10 +58,13 @@ export const getStudents = async (req, res) => {
   }
 };
 
+
 export const getStudentDetails = async (req, res) => {
   const { rollNumber } = req.params;
+
   try {
     const studentDetails = await StudentDetails.findOne({ rollNumber });
+
     if (!studentDetails) {
       return res.status(404).json({
         success: false,
@@ -80,64 +85,25 @@ export const getStudentDetails = async (req, res) => {
       personalMail: studentDetails.personalMail || "",
       website: studentDetails.website || "",
       about: studentDetails.about || "",
-      experiences: studentDetails.experiences.map((exp) => ({
-        _id: exp._id,
-        title: exp.title,
-        company: exp.company,
-        duration: {
-          startDate: exp.duration.startDate ? exp.duration.startDate.toISOString().split("T")[0] : null,
-          endDate: exp.duration.endDate ? exp.duration.endDate.toISOString().split("T")[0] : null,
-        },
-        location: exp.location,
-        description: exp.description,
-        certificate: exp.certificate, // Matches frontend 'certificate'
-      })) || [],
-      education: studentDetails.education.map((edu) => ({
-        _id: edu._id,
-        institution: edu.institution,
-        degree: edu.degree,
-        specialization: edu.specialization,
-        duration: {
-          startDate: edu.duration.startDate ? edu.duration.startDate.toISOString().split("T")[0] : null,
-          endDate: edu.duration.endDate ? edu.duration.endDate.toISOString().split("T")[0] : null,
-        },
-        cgpa: edu.cgpa,
-      })) || [],
-      certifications: studentDetails.certifications.map((cert) => ({
-        _id: cert._id,
-        title: cert.title, // Matches frontend 'provider'
-        issuer: cert.issuer,
-        courseName: cert.courseName, // Matches frontend 'title'
-        validTime: {
-          startDate: cert.validTime.startDate ? cert.validTime.startDate.toISOString().split("T")[0] : null,
-          endDate: cert.validTime.endDate ? cert.validTime.endDate.toISOString().split("T")[0] : null,
-        },
-        certificateId: cert.certificateId, // Matches frontend 'certificateUrl'
-      })) || [],
-      skills: studentDetails.skills.map((skill) => ({
-        _id: skill._id,
-        name: skill.name,
-        level: skill.level,
-      })) || [],
-      resumes: studentDetails.resumes.map((resume) => ({
-        _id: resume._id,
-        title: resume.title,
-        resumeUrl: resume.resumeUrl, // Matches frontend 'url'
-        size: resume.size || "N/A",
-      })) || [],
+      skills: studentDetails.skills || [],
+      experiences: studentDetails.experiences || [],
+      education: studentDetails.education || [],
+      certifications: studentDetails.certifications || [],
+      resumes: studentDetails.resumes?.map((resume) => resume.title) || [],
     };
 
-    if (studentDetails.photoUrl) {
+    // 🔹 Check if the student has a stored photo buffer
+    if (studentDetails.photo && studentDetails.photoType) {
       try {
-        const resizedImageUrl = studentDetails.photoUrl.replace(
-          "/upload/",
-          "/upload/w_400,h_400,c_fill,q_auto/"
-        );
-        const imgResponse = await axios.get(resizedImageUrl, { responseType: "arraybuffer" });
-        const contentType = imgResponse.headers["content-type"];
-        response.photo = `data:${contentType};base64,${Buffer.from(imgResponse.data).toString("base64")}`;
+        // ✅ Resize the image while maintaining original dimensions
+        const resizedImageBuffer = await sharp(studentDetails.photo)
+          .resize({ width: 400, height: 400, fit: "cover" }) // Center cropping
+          .toBuffer();
+
+        // ✅ Convert to Base64
+        response.photo = `data:${studentDetails.photoType};base64,${resizedImageBuffer.toString("base64")}`;
       } catch (error) {
-        console.error("Error fetching or converting image:", error.message);
+        console.error("Error processing image:", error.message);
         response.photo = null;
       }
     } else {
@@ -150,6 +116,7 @@ export const getStudentDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
+
 
 export const addStudent = async (req, res) => {
   const student = req.body;
@@ -190,55 +157,90 @@ export const addStudent = async (req, res) => {
 
 export const uploadStudentPhoto = async (req, res) => {
   try {
+    const { rollNumber } = req.params; // Get rollNumber from URL params
+    const {username} = req.user;
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: "No file uploaded!" });
+    }
+    console.log("File received:", req.file);
+    const { buffer, mimetype } = req.file; // Get original image buffer & MIME type
+
+
+    // Validate File Type
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(mimetype)) {
+      return res.status(400).json({ success: false, message: "Only JPG and PNG files are allowed!" });
+    }
+
+    
+    // Find the student by rollNumber
+    const student = await StudentDetails.findOne({ rollNumber });
+    if (!student) {
+        return res.status(404).json({ success: false, message: "Student not found!" });
+    }
+    if(student.rollNumber !== username){
+      return res.status(403).json({ success: false, message: "You are not authorized to upload photo for this student!" });
+    }
+
+    // Store original image in the database
+    student.photo = buffer;
+    student.photoType = mimetype;
+    await student.save(); // Save the original image in MongoDB
+
+    // Generate a resized, center-cropped version (400x400)
+    const resizedImageBuffer = await sharp(buffer)
+        .resize(400, 400, { fit: "cover", position: "center" }) // Center crop
+        .toBuffer();
+
+    // Convert resized image to Base64
+    const base64Image = `data:${mimetype};base64,${resizedImageBuffer.toString("base64")}`;
+
+    res.status(200).json({
+        success: true,
+        message: "Photo uploaded successfully!",
+        image: base64Image, // 🔹 Sending resized image in response
+    });
+} catch (error) {
+    console.error("Upload Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+}
+
+
+};
+
+export const uploadStudentResume = async (req, res) => {
+  try {
     const { rollNumber } = req.params;
+    const { username } = req.user;
+
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded!" });
     }
 
-    const fileUrl = req.file.path;
+    console.log("File received:", req.file);
+
+    const { buffer, mimetype, originalname } = req.file; // Extract file details
+
+    // Validate file type (Allow only PDFs and DOCX)
+    const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    if (!allowedTypes.includes(mimetype)) {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF and DOCX files are allowed for resumes!",
+      });
+    }
+
+    // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
 
     if (!student) {
       return res.status(404).json({ success: false, message: "Student not found!" });
     }
 
-    student.photoUrl = fileUrl;
-    await student.save();
-
-    const resizedImageUrl = fileUrl.replace("/upload/", "/upload/w_400,h_400,c_fill/");
-    const response = await axios.get(resizedImageUrl, { responseType: "arraybuffer" });
-    const contentType = response.headers["content-type"];
-    const base64Image = `data:${contentType};base64,${Buffer.from(response.data).toString("base64")}`;
-
-    res.status(200).json({
-      success: true,
-      message: "Photo uploaded successfully!",
-      image: base64Image,
-    });
-  } catch (error) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
+    if (student.rollNumber !== username) {
+      return res.status(403).json({
         success: false,
-        message: "File size exceeds the limit of 2MB.",
+        message: "You are not authorized to upload resumes for this student!",
       });
-    }
-    if (error.message.includes("Invalid image type")) {
-      return res.status(400).json({
-        success: false,
-        message: "Only JPG, JPEG, and PNG files are allowed for images!",
-      });
-    }
-    console.error("Upload Error:", error.message);
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
-  }
-};
-export const uploadStudentResume = async (req, res) => {
-  try {
-    const { rollNumber } = req.params;
-    const student = await StudentDetails.findOne({ rollNumber });
-
-    if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found!" });
     }
 
     if (student.resumes.length >= 3) {
@@ -248,73 +250,62 @@ export const uploadStudentResume = async (req, res) => {
       });
     }
 
-    let fileUrl;
-    let fileSize = "N/A";
-    let title = req.body.title || "Untitled"; // Use custom title from frontend, fallback to "Untitled"
+    // Store resume buffer in MongoDB
+    student.resumes.push({
+      resume: buffer,
+      title: originalname,
+      type: mimetype,
+    });
 
-    if (req.file) {
-      // Handle file upload
-      fileUrl = req.file.path; // Cloudinary URL
-      title = req.body.title || req.file.originalname; // Prefer custom title over filename
-      fileSize = `${(req.file.size / 1024 / 1024).toFixed(2)} MB`;
-    } else if (req.body.resumeUrl) {
-      // Handle URL input
-      fileUrl = req.body.resumeUrl;
-    } else {
-      return res.status(400).json({ success: false, message: "No file uploaded or URL provided!" });
-    }
-
-    const newResume = {
-      title,
-      resumeUrl: fileUrl,
-      size: fileSize,
-      uploadedAt: new Date(),
-    };
-
-    student.resumes.push(newResume);
     await student.save();
+
+    // Convert buffer to Base64 for response (Optional: for previewing small files)
+    const base64Resume = `data:${mimetype};base64,${buffer.toString("base64")}`;
 
     res.status(200).json({
       success: true,
       message: "Resume uploaded successfully!",
-      data: {
-        _id: newResume._id,
-        title: newResume.title,
-        resumeUrl: newResume.resumeUrl,
-        size: newResume.size,
-      },
+      resume: base64Resume, // Returning base64-encoded resume
+      title: originalname,
     });
+
   } catch (error) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
-        success: false,
-        message: "File size exceeds the limit of 5MB.", // Match Multer config
-      });
-    }
-    console.error("Upload Error:", error.message, error.stack); // Enhanced logging
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    console.error("Upload Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
 export const deleteStudentResume = async (req, res) => {
   try {
-    const { rollNumber, resumeId } = req.params;
+    const { rollNumber, resumeId } = req.params; // Get rollNumber & resumeId from URL params
+    const { username } = req.user; // Get logged-in user
+
+    // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
 
     if (!student) {
       return res.status(404).json({ success: false, message: "Student not found!" });
     }
 
-    const resume = student.resumes.find((r) => r._id.toString() === resumeId);
-    if (!resume) {
+    // Check authorization (Only the owner can delete)
+    if (student.rollNumber !== username) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete resumes for this student!",
+      });
+    }
+
+    // Find the resume to delete
+    const resumeIndex = student.resumes.findIndex((r) => r._id.toString() === resumeId);
+
+    if (resumeIndex === -1) {
       return res.status(404).json({ success: false, message: "Resume not found!" });
     }
 
-    const publicId = resume.resumeUrl.split("/").pop().split(".")[0];
-    await cloudinary.uploader.destroy(`CS-AI_PORTAL/resumes/${publicId}`, { resource_type: "raw" });
+    // Remove the resume from the array
+    student.resumes.splice(resumeIndex, 1);
 
-    student.resumes = student.resumes.filter((r) => r._id.toString() !== resumeId);
-    await student.save();
+    await student.save(); // Save updated student data
 
     res.status(200).json({
       success: true,
