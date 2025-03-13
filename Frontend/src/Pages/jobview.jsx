@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
   Location, Briefcase, Wallet1, People, Star, Book, MedalStar, Timer, Element2,
-  Messages3, Hashtag, ClipboardTick, ProfileTick, Calendar, Book1, ArrowRight2
+  Messages3, Hashtag, ClipboardTick, ProfileTick, Calendar, Book1, ArrowRight2,
+  ArrowLeft2
 } from "iconsax-react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -50,7 +51,8 @@ const JobDetails = () => {
             <ArrowRight2 className="w-3 h-3 mr-1 rotate-180" />
             <span>Back to Launchpad</span>
           </button>
-          <p className="text-gray-400">></p>
+          {/* <p className="text-gray-400"></p> */}
+          <ArrowLeft2 className="w-3 h-3 mr-1 rotate-180" />
           <span className="text-gray-900 font-semibold truncate">
             {job.title || "Health Coach III"}, {job.company || "Realcube"}
           </span>
