@@ -81,20 +81,20 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
         <NavLink
           to="/discussions"
           className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isSidebarOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
           <Profile size="24" variant="Linear" />
-          {isOpen && <span className="ml-4 text-lg">My Account</span>}
+          {isSidebarOpen && <span className="ml-4 text-lg">My Account</span>}
         </NavLink>
         <NavLink
           to="/discussions"
           className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isSidebarOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
           <Messages3 size="24" variant="Linear" />
-          {isOpen && <span className="ml-4 text-lg">Discussions</span>}
+          {isSidebarOpen && <span className="ml-4 text-lg">Discussions</span>}
         </NavLink>
       </nav>
 
