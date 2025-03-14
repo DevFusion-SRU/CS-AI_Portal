@@ -8,9 +8,19 @@ import axios from "axios";
 import FilterMenu from "../Component/Filterandsort";
 import debounce from "lodash.debounce";
 
+const SkeletonJobCard = () => (
+  <div className="animate-pulse bg-gray-100 rounded-lg p-4 shadow-sm">
+    <div className="h-3 bg-gray-300 rounded w-3/4 mb-2"></div>
+    <div className="h-2 bg-gray-300 rounded w-1/2 mb-2"></div>
+    <div className="h-2 bg-gray-300 rounded w-2/3 mb-2"></div>
+    <div className="h-8 bg-gray-300 rounded w-full"></div>
+  </div>
+);
+
 const Launchpad = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({});
   const { BASE_URL } = useAuth();
@@ -18,197 +28,198 @@ const Launchpad = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const contentRef = useRef(null);
   const [hasMore, setHasMore] = useState(true);
-  const handleScrollRef = useRef(null);
-  const searchQueryRef = useRef(searchQuery);
-const currentPageRef = useRef(currentPage);
-const filtersRef = useRef(filters);
-
 
   const LIMIT = 25;
 
+  const buildQueryParams = () => {
+    const params = [`page=${currentPage}`, `limit=${LIMIT}`];
+    const keyMapping = {
+      jobType: "type",
+      industry: "category",
+      modeOfWork: "modeOfWork",
+      compensation: "compensationType",
+      skills: "skills",
+      sort: "sort",
+    };
 
-const buildQueryParams = () => {
-  const params = [`page=${currentPage}`]; // Start with page parameter
+    Object.entries(filters).forEach(([key, value]) => {
+      const mappedKey = keyMapping[key] || key;
+      if (Array.isArray(value) && value.length > 0) {
+        params.push(`${mappedKey}=${value.join(",")}`);
+      } else if (typeof value === "string" && value.trim() !== "") {
+        params.push(`${mappedKey}=${value === "Newest" ? "-createdAt" : "createdAt"}`);
+      }
+    });
 
-  const keyMapping = {
-    jobType: "type",
-    industry: "category",
-    modeOfWork: "modeOfWork",
-    compensation: "compensationType",
-    skills: "skills",
+    return params.join("&");
   };
 
-  Object.entries(filters).forEach(([key, value]) => {
-    const mappedKey = keyMapping[key] || key;
-
-    if (Array.isArray(value) && value.length > 0) {
-      params.push(`${mappedKey}=${value.join(",")}`); // ✅ Manually construct query
-    } else if (typeof value === "string" && value.trim() !== "") {
-      params.push(`${mappedKey}=${value}`);
-    }
-  });
-
-  const queryString = params.join("&"); // ✅ Join all parameters
-  console.log("Final Query String:", queryString); // Debugging output
-  return queryString;
-};
- 
-
-  
-
-  // Fetch job listings
   const fetchAPI = async () => {
     if (loading || !hasMore) return;
     setLoading(true);
-  
+
     try {
       let url = "";
-      const params = buildQueryParams(); // ✅ Get query parameters
-  
+      const params = buildQueryParams();
+
       if (searchQuery.trim() !== "") {
-        // ✅ Only fetch from search API when searching
-        url = `${BASE_URL}jobs/searchCompanies?query=${encodeURIComponent(searchQuery)}&${params}`;
+        url = `${BASE_URL}jobs/searchCompanies?query=${encodeURIComponent(searchQuery.trim())}&${params}`;
       } else {
-        // ✅ Otherwise, fetch normal jobs
         url = `${BASE_URL}jobs?${params}`;
       }
-  
-      console.log("API Call:", url); // ✅ Now logs the correct updated URL
-  
+
       const response = await axios.get(url);
-  
+
       if (response.data.success && Array.isArray(response.data.data)) {
+        const newJobs = response.data.data;
         setOpportunities((prevJobs) =>
-          currentPage === 1 ? response.data.data : [...prevJobs, ...response.data.data] // ✅ Append if scrolling
-        );}
+          currentPage === 1 ? newJobs : [...prevJobs, ...newJobs]
+        );
+        setHasMore(newJobs.length === LIMIT);
+      } else {
+        setHasMore(false);
+      }
     } catch (error) {
       console.error("Error fetching data:", error.response?.data || error.message);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
-  
-  
+
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      fetchAPI();
-    }
+    setInitialLoading(true);
+    fetchAPI();
   }, [currentPage, filters]);
 
   useEffect(() => {
-    if (searchQuery.trim() !== "") {
-      setCurrentPage(1); // ✅ Reset page on new search
-      setOpportunities([]); // ✅ Clear old jobs before fetching new ones
-      setHasMore(true);
-      fetchAPI();
-    }
-    else {
-      setCurrentPage(1); // ✅ Reset page when clearing search
-      setOpportunities([]); // ✅ Clear search results
-      setHasMore(true);
-      fetchAPI(); // ✅ Fetch default job listings when searchQuery is empty
-    }
+    setCurrentPage(1);
+    setOpportunities([]);
+    setHasMore(true);
+    fetchAPI();
   }, [searchQuery]);
-  
-
-  
-
-
 
   const handleScroll = useCallback(
     debounce(() => {
       const container = contentRef.current;
       if (!container || loading || !hasMore) return;
-  
+
       const bottomReached =
         container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
-  
+
       if (bottomReached) {
         setCurrentPage((prevPage) => prevPage + 1);
       }
     }, 300),
     [loading, hasMore]
   );
-  
+
   useEffect(() => {
     const container = contentRef.current;
     if (!container) return;
-  
-    container.addEventListener("scroll", handleScroll);
-    console.log("Scroll listener added");
-  
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-      console.log("Scroll listener removed");
-    };
-  }, []);
-  
 
-  // Apply filters and reset page
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
   const handleFilterApply = (selectedFilters) => {
-    console.log(selectedFilters)
     setFilters(selectedFilters);
     setCurrentPage(1);
-    setOpportunities([]); // Reset the job list on filter change
+    setOpportunities([]);
     setHasMore(true);
   };
 
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      setSearchQuery(query);
+    }, 300),
+    []
+  );
 
   const handleSearchChange = (e) => {
     const query = e.target.value.trim();
     setSearchQuery(query);
-    setCurrentPage(1);
-    setHasMore(true);
+    debouncedSearch(query);
   };
-  
-  
-  
-  
+
   return (
     <main
       ref={contentRef}
-      className="w-full h-screen overflow-y-auto flex flex-col items-center px-4 py-8 
-                scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 scrollbar-thumb-rounded-md">
-      <section className="w-full flex-1 p-10 max-w-8xl">
-        <div className="flex justify-between items-center border-b pb-4">
-          <h1 className="font-quickstand text-h6 text-[#0A3D91] font-bold leading-[72px] flex items-center">
+      className="w-full min-h-screen overflow-y-auto flex flex-col items-center 
+                 p-2
+                 scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 
+                 scrollbar-thumb-rounded-md"
+    >
+      <section className="w-full flex-1 p-3 sm:p-5 md:p-8 max-w-[1600px]">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center 
+                       border-b pb-3 gap-3 sm:gap-0">
+          <h1 className="font-quickstand text-xl sm:text-3xl md:text-5xl 
+                        text-[#0A3D91] font-bold 
+                        flex items-center whitespace-nowrap">
             Launchpad
             <span>
-              <img src={images["svgg.png"]} alt="Launchpad Icon" className="w-10 h-10 ml-2" />
+              <img 
+                src={images["svgg.png"]} 
+                alt="Launchpad Icon" 
+                className="w-6 h-6 sm:w-8 sm:h-8 ml-2" 
+              />
             </span>
           </h1>
-          <div className="relative flex items-center space-x-2">
-          <input
-  type="text"
-  placeholder="Search for jobs"
-  className="px-4 py-2 pl-10 rounded-md shadow-md"
-  value={searchQuery}
-  onChange={handleSearchChange}
-/>
-            <SearchNormal
-              size={25}
-              color="#0A3D91"
-              className="absolute left-1 top-1/2 transform -translate-y-1/2"
-            />
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center 
+                         gap-2 sm:gap-2 w-full sm:w-auto">
+            <div className="relative flex items-center w-full sm:w-auto">
+              <SearchNormal
+                size={18}
+                color="#0A3D91"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2"
+              />
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                className="w-full sm:w-60 px-7 py-1.5 rounded-md shadow-md 
+                          text-sm focus:outline-none focus:ring-2 
+                          focus:ring-blue-300"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
             <FilterMenu onApplyFilters={handleFilterApply} />
           </div>
         </div>
-        <div className="mt-2 flex flex-col gap-y-4 w-full">
 
-  {opportunities.length > 0 ? (
-    opportunities.map((job) => (
-      <JobCard key={job.id} job={job} />
-    ))
-  ) : (
-    !loading && <p className="text-gray-500 text-center">No jobs found</p>
-  )}
+        <div className="mt-3 flex flex-col gap-3 w-full">
+          {initialLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array(6)
+                .fill()
+                .map((_, index) => (
+                  <SkeletonJobCard key={index} />
+                ))}
+            </div>
+          ) : opportunities.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {opportunities.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-6 text-sm">
+              No jobs found matching your criteria
+            </p>
+          )}
 
-  {loading && <p className="text-gray-500 text-center">Loading more jobs...</p>}
-</div>
-
+          {loading && !initialLoading && (
+            <div className="flex justify-center items-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 
+                            border-b-2 border-blue-500"></div>
+              <p className="ml-2 text-gray-600 text-xs">Loading more jobs...</p>
+            </div>
+          )}
+        </div>
       </section>
     </main>
-  ); 
+  );
 };
 
 export default Launchpad;

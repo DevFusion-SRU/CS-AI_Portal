@@ -1,17 +1,66 @@
-import React, { useState } from "react";
-import { Message, Logout } from "iconsax-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Message, Logout, User, Heart } from "iconsax-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
 
-const Navbar = ({ userData, setUserData, signout, isSidebarOpen, setIsSidebarOpen }) => {
+const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+  const { signout, currentUserRole } = useAuth();
+  const dropdownRef = useRef(null); // Create a ref for the dropdown
 
+  // Toggle dropdown
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const handleLogout = () => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    // Add event listener when dropdown is open
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]); // Dependency array includes dropdownOpen
+
+  const handleViewProfile = () => {
     setDropdownOpen(false);
-    setUserData({ firstName: "", lastName: "", email: "", dob: "", rollNumber: "", mobile: "", course: "", photo: "" });
-    signout();
+    navigate("/myaccount");
+  };
+
+  const handleViewSavedJobs = () => {
+    setDropdownOpen(false);
+    navigate("/saved-jobs");
+  };
+
+  const handleLogout = async () => {
+    try {
+      setDropdownOpen(false);
+      setUserData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        dob: "",
+        rollNumber: "",
+        mobile: "",
+        course: "",
+        photo: "",
+      });
+      await signout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const toggleSidebar = () => {
@@ -21,7 +70,7 @@ const Navbar = ({ userData, setUserData, signout, isSidebarOpen, setIsSidebarOpe
   return (
     <div
       className={`fixed top-0 right-0 z-40 flex justify-between items-center h-16 bg-white shadow-md border-b-2 border-gray-200 px-4 transition-all duration-300 w-full ${
-        isSidebarOpen ? 'sm:pl-64 lg:pl-64 pl-16' : 'sm:pl-20 lg:pl-20 pl-10'
+        isSidebarOpen ? "sm:pl-64 lg:pl-64 pl-16" : "sm:pl-20 lg:pl-20 pl-10"
       }`}
     >
       {/* Hamburger Menu for Mobile */}
@@ -41,13 +90,15 @@ const Navbar = ({ userData, setUserData, signout, isSidebarOpen, setIsSidebarOpe
           <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full"></span>
         </button>
 
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={toggleDropdown}>
-          <div className="text-right hidden lg:block">
-            <div className="font-medium text-gray-800 text-base">{userData?.firstName} {userData?.lastName}</div>
+        <div ref={dropdownRef} className="flex items-center space-x-3 cursor-pointer">
+          <div className="text-right hidden lg:block" onClick={toggleDropdown}>
+            <div className="font-medium text-gray-800 text-base">
+              {userData?.firstName} {userData?.lastName}
+            </div>
             <div className="text-sm text-gray-500">{userData?.email}</div>
           </div>
 
-          <div className="relative">
+          <div className="relative" onClick={toggleDropdown}>
             {userData?.photo ? (
               <img
                 src={userData.photo}
@@ -61,10 +112,24 @@ const Navbar = ({ userData, setUserData, signout, isSidebarOpen, setIsSidebarOpe
             )}
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <button
+                  onClick={handleViewProfile}
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                >
+                  <User size="20" className="mr-2 text-blue-500" />
+                  View Profile
+                </button>
+                <button
+                  onClick={handleViewSavedJobs}
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                >
+                  <Heart size="20" className="mr-2 text-green-500" />
+                  Saved Jobs
+                </button>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full"
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
                 >
                   <Logout size="20" className="mr-2 text-red-500" />
                   Logout
