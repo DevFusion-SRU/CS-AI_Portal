@@ -8,6 +8,7 @@ dotenv.config();
 import cloudinary from "../config/cloudinary.js"; // Import Cloudinary config
 import StudentDetails from "../models/Students/Student.Details.js"; // StudentDetails model using studentDB
 import StudentCredentials from "../models/Students/Student.Credentials.js"; // StudentCredentials model using studentDB
+import StudentFiles from "../models/Students/Student.Files.js"; // StudentFiles model using studentDB
 
 export const getStudents = async (req, res) => {
   const { rollNumber, firstName, lastName } = req.query;
@@ -174,54 +175,71 @@ export const addStudent = async (req, res) => {
 
 export const uploadStudentPhoto = async (req, res) => {
   try {
-    const { rollNumber } = req.params; // Get rollNumber from URL params
-    const {username} = req.user;
+    const { rollNumber } = req.params;
+    const { username } = req.user;
+
     if (!req.file) {
-        return res.status(400).json({ success: false, message: "No file uploaded!" });
+      return res.status(400).json({ success: false, message: "No file uploaded!" });
     }
+
     console.log("File received:", req.file);
-    const { buffer, mimetype } = req.file; // Get original image buffer & MIME type
+    const { buffer, mimetype } = req.file;
 
-
-    // Validate File Type
+    // Validate file type (Only JPG & PNG allowed)
     if (!["image/jpeg", "image/png", "image/jpg"].includes(mimetype)) {
       return res.status(400).json({ success: false, message: "Only JPG and PNG files are allowed!" });
     }
 
-    
-    // Find the student by rollNumber
+    // Find student details
     const student = await StudentDetails.findOne({ rollNumber });
     if (!student) {
-        return res.status(404).json({ success: false, message: "Student not found!" });
+      return res.status(404).json({ success: false, message: "Student not found!" });
     }
-    if(student.rollNumber !== username){
+
+    // Authorization check
+    if (student.rollNumber !== username) {
       return res.status(403).json({ success: false, message: "You are not authorized to upload photo for this student!" });
     }
 
-    // Store original image in the database
-    student.photo = buffer;
-    student.photoType = mimetype;
-    await student.save(); // Save the original image in MongoDB
+    // Check if StudentFiles entry exists for the student
+    let studentFiles = await StudentFiles.findOne({ rollNumber });
 
-    // Generate a resized, center-cropped version (400x400)
+    if (!studentFiles) {
+      // Create new StudentFiles entry
+      studentFiles = new StudentFiles({
+        rollNumber,
+        profilePhoto: { data: buffer, contentType: mimetype },
+      });
+    } else {
+      // Update existing profile photo
+      studentFiles.profilePhoto = { data: buffer, contentType: mimetype };
+    }
+
+    await studentFiles.save(); // Save the file in StudentFiles
+
+    // Store reference to StudentFiles in StudentDetails
+    student.profilePhotoId = studentFiles.profilePhoto._id; // 🔹 Store the ID of StudentFiles, NOT the photo itself
+    await student.save();
+
+    // Generate a resized, center-cropped version (400x400) for response
     const resizedImageBuffer = await sharp(buffer)
-        .resize(400, 400, { fit: "cover", position: "center" }) // Center crop
-        .toBuffer();
+      .resize(400, 400, { fit: "cover", position: "center" }) // Center crop
+      .toBuffer();
 
-    // Convert resized image to Base64
+    // Convert resized image to Base64 (for immediate preview)
     const base64Image = `data:${mimetype};base64,${resizedImageBuffer.toString("base64")}`;
 
     res.status(200).json({
-        success: true,
-        message: "Photo uploaded successfully!",
-        image: base64Image, // 🔹 Sending resized image in response
+      success: true,
+      message: "Photo uploaded successfully!",
+      profilePhotoId:  studentFiles.profilePhoto._id, // 🔹 Reference to the saved photo
+      preview: base64Image, // 🔹 Resized image preview
     });
-} catch (error) {
+
+  } catch (error) {
     console.error("Upload Error:", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
-}
-
-
+  }
 };
 
 export const uploadStudentResume = async (req, res) => {
@@ -234,55 +252,57 @@ export const uploadStudentResume = async (req, res) => {
     }
 
     console.log("File received:", req.file);
-
     const { buffer, mimetype, originalname } = req.file; // Extract file details
 
     // Validate file type (Allow only PDFs and DOCX)
     const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
     if (!allowedTypes.includes(mimetype)) {
-      return res.status(400).json({
-        success: false,
-        message: "Only PDF and DOCX files are allowed for resumes!",
-      });
+      return res.status(400).json({ success: false, message: "Only PDF and DOCX files are allowed for resumes!" });
     }
 
     // Find the student by rollNumber
     const student = await StudentDetails.findOne({ rollNumber });
-
     if (!student) {
       return res.status(404).json({ success: false, message: "Student not found!" });
     }
 
+    // Ensure the authenticated user is uploading their own resume
     if (student.rollNumber !== username) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to upload resumes for this student!",
-      });
+      return res.status(403).json({ success: false, message: "You are not authorized to upload resumes for this student!" });
     }
 
+    // Restrict to a maximum of 3 resumes
     if (student.resumes.length >= 3) {
-      return res.status(400).json({
-        success: false,
-        message: "You can upload a maximum of 3 resumes.",
-      });
+      return res.status(400).json({ success: false, message: "You can upload a maximum of 3 resumes." });
     }
 
-    // Store resume buffer in MongoDB
-    student.resumes.push({
-      resume: buffer,
-      title: originalname,
-      type: mimetype,
-    });
+    // Store resume file in StudentFiles
+    let studentFiles = await StudentFiles.findOne({ rollNumber });
 
+    if (!studentFiles) {
+      // Create new record if studentFiles entry doesn't exist
+      studentFiles = new StudentFiles({ rollNumber, resumes: [] });
+    }
+
+    const newResume = {
+      data: buffer,
+      contentType: mimetype,
+    };
+
+    studentFiles.resumes.push(newResume);
+    await studentFiles.save(); // Save resume file
+
+    // Get the resumeId of the last added resume
+    const resumeId = studentFiles.resumes[studentFiles.resumes.length - 1]._id;
+
+    // Store resume title & reference in StudentDetails
+    student.resumes.push({ title: originalname, resumeId });
     await student.save();
-
-    // Convert buffer to Base64 for response (Optional: for previewing small files)
-    const base64Resume = `data:${mimetype};base64,${buffer.toString("base64")}`;
 
     res.status(200).json({
       success: true,
       message: "Resume uploaded successfully!",
-      resume: base64Resume, // Returning base64-encoded resume
+      resumeId,
       title: originalname,
     });
 
