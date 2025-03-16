@@ -7,23 +7,41 @@ const Login = () => {
   const passwordRef = useRef();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, currentUser} = useAuth(); 
+  const { login, currentUser,currentUserRole} = useAuth(); 
   const navigate=useNavigate()
-  if (currentUser){
-    console.log(user.email)
-  }
+  
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
+    setError('');
+  
     try {
-      await login(emailRef.current.value, passwordRef.current.value);
-      navigate('/');
+      await login(emailRef.current.value, passwordRef.current.value,"student"); // Call login function
     } catch {
       setError("Failed to login");
+      setLoading(false);
     }
-    setLoading(false);
   }
+  
+  // ✅ Check user role after authentication
+  useEffect(() => {
+    if (currentUser) {
+      console.log("Logged-in user:", currentUser);
+  
+      if (currentUserRole !== "student") {
+        setError("Invalid credentials. Only students can log in here.");
+        signout(); // 🚀 Immediately log out unauthorized user
+        setLoading(false);
+        return;
+      }
+  
+      navigate('/'); // ✅ Redirect only if the role is correct
+    }
+  }, [currentUserRole]); // Runs when `currentUserRole` updates
+  
+  
+  
 
 
   return (
@@ -47,7 +65,10 @@ const Login = () => {
           </div>
 
           <button disabled={loading} onClick={handleSubmit} className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">{loading ? 'loging in...' : 'login'}</button>
-        </div>
+        </div >
+        <div className="text-right">
+        <NavLink to='/adminlogin' className="text-sm text-blue-500 hover:underline">login as Staff</NavLink>
+                  </div>
 
         {/* <div className='flex flex-row justify-end mt-2'>
           <span>Have an account?</span>

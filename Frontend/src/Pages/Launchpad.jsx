@@ -18,13 +18,8 @@ const Launchpad = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const contentRef = useRef(null);
   const [hasMore, setHasMore] = useState(true);
-  const handleScrollRef = useRef(null);
-  const searchQueryRef = useRef(searchQuery);
-const currentPageRef = useRef(currentPage);
-const filtersRef = useRef(filters);
 
 
-  const LIMIT = 25;
 
 
 const buildQueryParams = () => {
@@ -180,7 +175,7 @@ const buildQueryParams = () => {
           <div className="relative flex items-center space-x-2">
           <input
   type="text"
-  placeholder="Search for jobs"
+  placeholder="Search by company"
   className="px-4 py-2 pl-10 rounded-md shadow-md"
   value={searchQuery}
   onChange={handleSearchChange}

@@ -19,6 +19,8 @@ import AddUsers from './Pages/AddUsers';
 import Forgotpassword from "./Pages/Forgotpassword";
 import Discussions from "./Pages/Discussions";
 import JobView from './Pages/jobview';
+import Adminlogin from "./Pages/adminlogin";
+import DiscussionPods  from "./Pages/discussionpods";
 
 
 
@@ -67,6 +69,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgotpassword" element={<Forgotpassword />} />
+        <Route path="/adminlogin" element={<Adminlogin />} />
       </Route>
       <Route element={<PrivateRoutes />}>
         <Route
@@ -89,6 +92,8 @@ const App = () => {
             element={<Profile userData={userData} setUserData={setUserData} />}
           />
           <Route path="discussions" element={<Discussions/>}/>
+          <Route path="/discussions/:postId" element ={<DiscussionPods />} />
+
         </Route>
       </Route>
 

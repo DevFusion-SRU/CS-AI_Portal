@@ -87,15 +87,17 @@ const JobCard = ({ job }) => {
 
         {/* View Details Button */}
         <div className="mt-4 md:mt-0">
-          <a
+          <button
+
+          
             
             onClick={handleViewClick}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-gradient-to-r from-blue-600 to-blue-400 text-white font-lato font-medium px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
->
+            className="bg-gradient-to-r from-blue-600 to-blue-400 text-white font-lato font-medium px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all">
+
             View Details
-          </a>
+            </button>
         </div>
       </div>
     </div>

@@ -38,27 +38,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, password, role = "student") => { 
     try {
-      const response = await axios.post(
-        `${BASE_URL}auth/login`,
-        { username: email, password: password },
-        { withCredentials: true }
-      );
-      if (response.data.success) {
-        isMounted.current = true;
-        checkAuthState();
-        return () => {
-          isMounted.current = false;
-        };
-      } else {
-        handleError("Invalid login credentials.");
-      }
+        const endpoint = role === "admin" ? `${BASE_URL}auth/slogin` : `${BASE_URL}auth/login`;
+
+        const response = await axios.post(
+            endpoint,
+            { username: email, password: password },
+            { withCredentials: true }
+        );
+
+        if (response.data.success) {
+            isMounted.current = true;
+            checkAuthState();
+            return () => {
+                isMounted.current = false;
+            };
+        } else {
+            handleError("Invalid login credentials.");
+        }
     } catch (error) {
-      console.error("Login error:", error);
-      handleError(error.response?.data?.message || "Failed to login. Check your credentials.");
+        console.error("Login error:", error);
+        handleError(error.response?.data?.message || "Failed to login. Check your credentials.");
     }
-  };
+};
+
 
   const signout = async () => {
     try {
@@ -145,5 +149,5 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={value}>
       {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
-  );
+  );
 };

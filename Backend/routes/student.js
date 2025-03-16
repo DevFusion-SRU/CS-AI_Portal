@@ -11,7 +11,6 @@ import {
   uploadStudentPhoto,
   uploadStudentResume,
   deleteStudentResume,
-  deleteStudentSectionItem,
   uploadCertificateFile,
   editStudent,
 } from "../controllers/student.js";
@@ -52,7 +51,6 @@ router.delete(
   "/:rollNumber/:section/:id",
   authenticateToken,
   authorizeRole("student"),
-  deleteStudentSectionItem
 );
 
 export default router;

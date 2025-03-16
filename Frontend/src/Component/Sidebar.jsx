@@ -53,7 +53,7 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
           {isSidebarOpen && <span className="ml-4 text-lg">Launchpad</span>}
         </NavLink>
 
-        {/* <NavLink
+        <NavLink
           to="/usermanagement"
           className={({ isActive }) =>
             `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${
@@ -61,11 +61,11 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
             } ${isActive ? "bg-blue-700" : ""}`
           }
         >
-          {currentUserRole === "admin" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
+          {currentUserRole === "staff" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
           {isSidebarOpen && (
-            <span className="ml-4 text-lg">{currentUserRole === "admin" ? "User Management" : "My Applications"}</span>
+            <span className="ml-4 text-lg">{currentUserRole === "staff" ? "User Management" : "My Applications"}</span>
           )}
-        </NavLink> */}
+        </NavLink>
 
         <NavLink
           to="/myaccount"
@@ -81,20 +81,20 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
         <NavLink
           to="/discussions"
           className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isSidebarOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
           <Profile size="24" variant="Linear" />
-          {isOpen && <span className="ml-4 text-lg">My Account</span>}
+          {isSidebarOpen && <span className="ml-4 text-lg">My Account</span>}
         </NavLink>
         <NavLink
           to="/discussions"
           className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
+            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isSidebarOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
           <Messages3 size="24" variant="Linear" />
-          {isOpen && <span className="ml-4 text-lg">Discussions</span>}
+          {isSidebarOpen && <span className="ml-4 text-lg">Discussions</span>}
         </NavLink>
       </nav>
 

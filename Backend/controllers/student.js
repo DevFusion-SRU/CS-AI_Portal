@@ -587,7 +587,6 @@ export default {
   uploadStudentPhoto,
   uploadStudentResume,
   deleteStudentResume,
-  deleteStudentSectionItem,
   addStudentBatch,
   deleteStudent,
   uploadCertificateFile,
