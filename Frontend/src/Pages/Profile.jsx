@@ -21,6 +21,11 @@ import SkillsModal from "./SkillsModal";
 import AttachmentModal from "./AttachmentModal";
 import ExperienceModal from "./ExperienceModal";
 
+const buttonStyles = {
+  primary: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all duration-200 text-sm font-medium",
+  secondary: "text-blue-600 hover:text-blue-800 transition-all duration-200 text-sm font-medium flex items-center gap-1",
+};
+
 const Body = () => {
   const { currentUser, BASE_URL } = useAuth();
   const [isEditingAbout, setIsEditingAbout] = useState(false);
@@ -79,7 +84,7 @@ const Body = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
       const data = response.data.data;
-      
+
       setProfileImage(data.photo || "https://via.placeholder.com/150");
       setAboutText(data.about || "Add something about yourself...");
       setFirstName(data.firstName || currentUser?.firstName || "First");
@@ -92,7 +97,6 @@ const Body = () => {
         address: data.address || "",
       });
 
-      // Sort Experiences by most recent first
       const sortedExperiences = (data.experiences || []).sort((a, b) => {
         const dateA = new Date(a.duration?.startDate || 0);
         const dateB = new Date(b.duration?.startDate || 0);
@@ -100,10 +104,8 @@ const Body = () => {
       });
       setExperiences(sortedExperiences);
 
-      // Add default education if none exists, then sort by date
-      const educationData = data.education && data.education.length > 0 
-        ? data.education 
-        : [defaultEducation];
+      const educationData =
+        data.education && data.education.length > 0 ? data.education : [defaultEducation];
       const sortedEducations = educationData.sort((a, b) => {
         const dateA = new Date(a.duration?.startDate || 0);
         const dateB = new Date(b.duration?.startDate || 0);
@@ -111,7 +113,6 @@ const Body = () => {
       });
       setEducations(sortedEducations);
 
-      // Sort Certifications by most recent first
       const sortedCertifications = (data.certifications || []).sort((a, b) => {
         const dateA = new Date(a.validTime?.startDate || 0);
         const dateB = new Date(b.validTime?.startDate || 0);
@@ -119,18 +120,24 @@ const Body = () => {
       });
       setCertifications(sortedCertifications);
 
-      // Sort Skills by most recently added (assuming _id timestamp)
       const sortedSkills = (data.skills || []).sort((a, b) => {
-        const dateA = a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
-        const dateB = b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
+        const dateA = a._id
+          ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000)
+          : new Date(0);
+        const dateB = b._id
+          ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000)
+          : new Date(0);
         return dateB - dateA;
       });
       setSkills(sortedSkills);
 
-      // Sort Attachments by most recently added
       const sortedAttachments = (data.resumes || []).sort((a, b) => {
-        const dateA = a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
-        const dateB = b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
+        const dateA = a._id
+          ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000)
+          : new Date(0);
+        const dateB = b._id
+          ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000)
+          : new Date(0);
         return dateB - dateA;
       });
       setAttachments(sortedAttachments);
@@ -164,12 +171,16 @@ const Body = () => {
     formData.append("photo", file);
 
     try {
-      const response = await axios.patch(`${BASE_URL}students/${currentUser.username}/photo`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
+      const response = await axios.patch(
+        `${BASE_URL}students/${currentUser.username}/photo`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
       setProfileImage(response.data.image);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to upload profile image");
@@ -228,9 +239,10 @@ const Body = () => {
       certificate: data.certificateUrl || (data.file ? "" : null),
     };
 
-    const updatedExperiences = editingExperienceIndex !== null
-      ? experiences.map((exp, i) => (i === editingExperienceIndex ? experienceData : exp))
-      : [...experiences, experienceData];
+    const updatedExperiences =
+      editingExperienceIndex !== null
+        ? experiences.map((exp, i) => (i === editingExperienceIndex ? experienceData : exp))
+        : [...experiences, experienceData];
 
     try {
       const response = await axios.patch(
@@ -261,9 +273,10 @@ const Body = () => {
       cgpa: data.grade,
     };
 
-    const updatedEducations = editingEducationIndex !== null
-      ? educations.map((edu, i) => (i === editingEducationIndex ? educationData : edu))
-      : [...educations, educationData];
+    const updatedEducations =
+      editingEducationIndex !== null
+        ? educations.map((edu, i) => (i === editingEducationIndex ? educationData : edu))
+        : [...educations, educationData];
 
     try {
       const response = await axios.patch(
@@ -294,9 +307,10 @@ const Body = () => {
       certificateId: data.certificateUrl || "",
     };
 
-    const updatedCertifications = editingCertificationIndex !== null
-      ? certifications.map((cert, i) => (i === editingCertificationIndex ? certificationData : cert))
-      : [...certifications, certificationData];
+    const updatedCertifications =
+      editingCertificationIndex !== null
+        ? certifications.map((cert, i) => (i === editingCertificationIndex ? certificationData : cert))
+        : [...certifications, certificationData];
 
     try {
       const response = await axios.patch(
@@ -310,7 +324,8 @@ const Body = () => {
         formData.append("certificate", data.file);
         const certResponse = await axios.patch(
           `${BASE_URL}students/profile/${currentUser.username}/certifications/${
-            certificationData._id || response.data.data.certifications[response.data.data.certifications.length - 1]._id
+            certificationData._id ||
+            response.data.data.certifications[response.data.data.certifications.length - 1]._id
           }/certificate`,
           formData,
           {
@@ -342,9 +357,10 @@ const Body = () => {
       level: data.level,
     };
 
-    const updatedSkills = editingSkillIndex !== null
-      ? skills.map((skill, i) => (i === editingSkillIndex ? skillData : skill))
-      : [...skills, skillData];
+    const updatedSkills =
+      editingSkillIndex !== null
+        ? skills.map((skill, i) => (i === editingSkillIndex ? skillData : skill))
+        : [...skills, skillData];
 
     try {
       const response = await axios.patch(
@@ -503,7 +519,9 @@ const Body = () => {
   const formatDateRange = (startDate, endDate) => {
     if (!startDate) return "Start date not specified";
     return `${new Date(startDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })} - ${
-      endDate ? new Date(endDate).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Present"
+      endDate
+        ? new Date(endDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        : "Present"
     }`;
   };
 
@@ -513,38 +531,60 @@ const Body = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Profile Header */}
-      <div className="fixed flex flex-col lg:-mt-2 lg:top-20 sm:-mt-6 sm:top-15 -mt-4 top-15 left-0 right-0 bg-white h-auto shadow-md z-30 transition-all duration-300">
-        <div className="max-w-7xl mx-auto p-4 flex flex-row justify-center sm:flex-row items-center sm:items-start gap-4">
+      <div
+        className={`fixed top-12 pt-10 left-0 right-0 bg-white shadow-md z-30 transition-all duration-300 ${
+          isScrolled ? "h-12 py-1" : "h-24 py-4"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 flex flex-row items-center justify-center gap-4 h-full">
           <div className="relative">
             <img
               src={profileImage}
               alt="Profile"
               className={`rounded-full border-2 border-blue-600 object-cover transition-all duration-300 ${
-                isScrolled ? "w-16 h-16" : "w-20 h-20 lg:w-20 lg:h-20"
+                isScrolled ? "w-8 h-8" : "w-16 h-16"
               }`}
             />
-            <label className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1 cursor-pointer">
-              <Edit size={15} className="text-white" />
+            <label
+              className={`absolute bottom-0 right-0 bg-blue-600 rounded-full cursor-pointer hover:bg-blue-700 transition-colors ${
+                isScrolled ? "p-0.5" : "p-1"
+              }`}
+            >
+              <Edit size={isScrolled ? 12 : 16} className="text-white" />
               <input type="file" accept="image/*" className="hidden" onChange={handleProfileImageChange} />
             </label>
           </div>
-          <div className="flex flex-col items-center sm:items-start">
-            <h1 className="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">
+          <div className="flex flex-col items-center sm:items-start transition-all duration-300">
+            <h1
+              className={`font-bold text-gray-900 whitespace-nowrap ${
+                isScrolled ? "text-sm" : "text-xl"
+              }`}
+            >
               {firstName} {lastName}
             </h1>
-            <p className="text-gray-600 text-sm lg:text-base">{currentUser?.username || "N/A"}</p>
+            <p
+              className={`text-gray-600 whitespace-nowrap ${
+                isScrolled ? "text-xs" : "text-base"
+              }`}
+            >
+              {currentUser?.username || "N/A"}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Main Layout */}
-      <div className="flex gap-4 md:pt-24 pt-20 relative max-w-7xl mx-auto w-full">
-        {/* Sidebar */}
+      <div
+        className={`flex gap-4 transition-all duration-300 ${
+          isScrolled ? "pt-15" : "pt-20"
+        } relative max-w-7xl mx-auto w-full`}
+      >
+        {/* Sidebar - Hidden on small screens */}
         <div
-          className={`fixed md:top-[15rem] top-[15rem] left-[rem] md:h-[calc(100vh-auto)] h-[calc(100vh-auto)] bg-white rounded-lg 
-            md:p-2 p-1 shadow-md transition-all duration-300 ease-in-out z-30 ${
-            isSidebarMinimized ? "md:w-16 w-12" : "md:w-48 w-40"
-          }`}
+          className={`fixed md:top-[13rem] top-[15rem] left-15 ml-5 md:h-[calc(100vh-auto)] h-[calc(100vh-auto)] bg-white rounded-lg 
+            md:p-2 p-1 shadow-md transition-all duration-300 ease-in-out z-30 
+            ${isSidebarMinimized ? "md:w-16 w-12" : "md:w-48 w-40"} 
+            hidden md:block`}
         >
           <div className="flex flex-col md:gap-2 gap-1">
             <button
@@ -554,12 +594,12 @@ const Body = () => {
               {isSidebarMinimized ? <Menu size={20} /> : <CloseCircle size={20} />}
             </button>
             {[
-              { icon: User, label: "Information", ref: infoRef },
-              { icon: Briefcase, label: "Experiences", ref: experiencesRef },
-              { icon: Building, label: "Education", ref: educationRef },
-              { icon: MedalStar, label: "Certifications", ref: certificationsRef },
-              { icon: Crown, label: "Skills", ref: skillsRef },
-              { icon: DocumentText, label: "Attachments", ref: attachmentsRef },
+                 { icon: User, label: "Information", ref: aboutRef },
+                 { icon: Briefcase, label: "Experiences", ref: infoRef },
+                 { icon: Building, label: "Education", ref: experiencesRef },
+                 { icon: MedalStar, label: "Certifications", ref: educationRef },
+                 { icon: Crown, label: "Skills", ref: certificationsRef },
+                 { icon: DocumentText, label: "Attachments", ref: skillsRef },
             ].map((item, index) => (
               <button
                 key={index}
@@ -579,7 +619,7 @@ const Body = () => {
         {/* Main Content Area */}
         <div
           className={`flex-1 p-4 md:p-6 transition-all duration-300 ${
-            isSidebarMinimized ? "md:ml-20 ml-16" : "md:ml-52 ml-44"
+            isSidebarMinimized ? "md:ml-20 ml-0" : "md:ml-52 ml-0"
           }`}
         >
           {/* About Section */}
@@ -588,9 +628,9 @@ const Body = () => {
               <h2 className="text-lg md:text-xl font-semibold text-gray-900">About</h2>
               <button
                 onClick={() => setIsEditingAbout(!isEditingAbout)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.secondary}
               >
-                {isEditingAbout ? "Cancel" : "Edit"}
+                <Edit size={16} /> {isEditingAbout ? "Cancel" : "Edit"}
               </button>
             </div>
             {isEditingAbout ? (
@@ -601,10 +641,7 @@ const Body = () => {
                   className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   rows={4}
                 />
-                <button
-                  onClick={handleSaveAbout}
-                  className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
-                >
+                <button onClick={handleSaveAbout} className={buttonStyles.primary}>
                   Save
                 </button>
               </div>
@@ -621,9 +658,9 @@ const Body = () => {
               </h2>
               <button
                 onClick={() => setIsEditingInfo(!isEditingInfo)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.secondary}
               >
-                {isEditingInfo ? "Cancel" : "Edit"}
+                <Edit size={16} /> {isEditingInfo ? "Cancel" : "Edit"}
               </button>
             </div>
             {isEditingInfo ? (
@@ -675,7 +712,7 @@ const Body = () => {
                 </div>
                 <button
                   onClick={handleSaveInfo}
-                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm sm:col-span-2"
+                  className={`${buttonStyles.primary} mt-4 sm:col-span-2`}
                 >
                   Save
                 </button>
@@ -688,13 +725,13 @@ const Body = () => {
                 </div>
                 <div>
                   <p className="text-gray-600">Phone Number</p>
-                  <p className="text-gray-800">{info.phone || '-'}</p>
+                  <p className="text-gray-800">{info.phone || "-"}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Website</p>
                   {info.website ? (
                     <a
-                      href={info.website.startsWith('http') ? info.website : `https://${info.website}`}
+                      href={info.website.startsWith("http") ? info.website : `https://${info.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline break-all"
@@ -707,11 +744,11 @@ const Body = () => {
                 </div>
                 <div>
                   <p className="text-gray-600">Gender</p>
-                  <p className="text-gray-800">{info.gender || '-'}</p>
+                  <p className="text-gray-800">{info.gender || "-"}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Address</p>
-                  <p className="text-gray-800">{info.address || '-'}</p>
+                  <p className="text-gray-800">{info.address || "-"}</p>
                 </div>
               </div>
             )}
@@ -725,9 +762,9 @@ const Body = () => {
               </h2>
               <button
                 onClick={() => setIsExperienceModalOpen(true)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.primary}
               >
-                Add Experience
+                + Add Experience
               </button>
             </div>
             <div className="space-y-4">
@@ -736,12 +773,20 @@ const Body = () => {
                   <Briefcase size={20} className="text-blue-600" />
                   <div className="flex-1">
                     <h3 className="text-base font-medium text-gray-900">{exp.title || "Untitled"}</h3>
-                    <p className="text-gray-800 text-sm md:text-base">{exp.company || "Unknown Company"}</p>
-                    <p className="text-gray-600 text-sm md:text-base">{exp.location || "Unknown Location"}</p>
-                    <p className="text-gray-600 text-sm md:text-base">
-                      {exp.duration ? formatDateRange(exp.duration.startDate, exp.duration.endDate) : "N/A"}
+                    <p className="text-gray-800 text-sm md:text-base">
+                      {exp.company || "Unknown Company"}
                     </p>
-                    <p className="text-gray-600 text-sm md:text-base mt-1">{exp.description || "No description"}</p>
+                    <p className="text-gray-600 text-sm md:text-base">
+                      {exp.location || "Unknown Location"}
+                    </p>
+                    <p className="text-gray-600 text-sm md:text-base">
+                      {exp.duration
+                        ? formatDateRange(exp.duration.startDate, exp.duration.endDate)
+                        : "N/A"}
+                    </p>
+                    <p className="text-gray-600 text-sm md:text-base mt-1">
+                      {exp.description || "No description"}
+                    </p>
                     {exp.certificate && (
                       <a
                         href={exp.certificate}
@@ -754,10 +799,16 @@ const Body = () => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEditExperience(index)} className="text-blue-600 hover:text-blue-800">
-                      <Edit size={16} />
+                    <button
+                      onClick={() => handleEditExperience(index)}
+                      className={buttonStyles.secondary}
+                    >
+                      <Edit size={16} /> Edit
                     </button>
-                    <button onClick={() => handleDeleteExperience(index)} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => handleDeleteExperience(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
                       <Trash size={16} />
                     </button>
                   </div>
@@ -791,9 +842,9 @@ const Body = () => {
               </h2>
               <button
                 onClick={() => setIsEducationModalOpen(true)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.primary}
               >
-                Add Education
+                + Add Education
               </button>
             </div>
             <div className="space-y-4">
@@ -801,19 +852,33 @@ const Body = () => {
                 <div key={index} className="flex items-start gap-4 border-b pb-4">
                   <Building size={20} className="text-blue-600" />
                   <div className="flex-1">
-                    <h3 className="text-base font-medium text-gray-900">{edu.institution || "Unknown Institution"}</h3>
-                    <p className="text-gray-800 text-sm md:text-base">{edu.degree || "Unknown Degree"}</p>
-                    <p className="text-gray-600 text-sm md:text-base">{edu.specialization || "Unknown Specialization"}</p>
+                    <h3 className="text-base font-medium text-gray-900">
+                      {edu.institution || "Unknown Institution"}
+                    </h3>
+                    <p className="text-gray-800 text-sm md:text-base">
+                      {edu.degree || "Unknown Degree"}
+                    </p>
+                    <p className="text-gray-600 text-sm md:text-base">
+                      {edu.specialization || "Unknown Specialization"}
+                    </p>
                     <p className="text-gray-600 text-sm md:text-base">
                       CGPA: {edu.cgpa || "N/A"} |{" "}
-                      {edu.duration ? formatDateRange(edu.duration.startDate, edu.duration.endDate) : "N/A"}
+                      {edu.duration
+                        ? formatDateRange(edu.duration.startDate, edu.duration.endDate)
+                        : "N/A"}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEditEducation(index)} className="text-blue-600 hover:text-blue-800">
-                      <Edit size={16} />
+                    <button
+                      onClick={() => handleEditEducation(index)}
+                      className={buttonStyles.secondary}
+                    >
+                      <Edit size={16} /> Edit
                     </button>
-                    <button onClick={() => handleDeleteEducation(index)} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => handleDeleteEducation(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
                       <Trash size={16} />
                     </button>
                   </div>
@@ -847,43 +912,59 @@ const Body = () => {
               </h2>
               <button
                 onClick={() => setIsCertificationModalOpen(true)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.primary}
               >
-                Add Certification
+                + Add Certification
               </button>
             </div>
             <div className="space-y-4">
-              {(showAllCertifications ? certifications : certifications.slice(0, 2)).map((cert, index) => (
-                <div key={index} className="flex items-start gap-4 border-b pb-4">
-                  <MedalStar size={20} className="text-blue-600" />
-                  <div className="flex-1">
-                    <h3 className="text-base font-medium text-gray-900">{cert.title || "Unknown Provider"}</h3>
-                    <p className="text-gray-800 text-sm md:text-base">{cert.issuer || "Unknown Issuer"}</p>
-                    <p className="text-gray-800 text-sm md:text-base">{cert.courseName || "Unknown Course"}</p>
-                    <p className="text-gray-600 text-sm md:text-base">
-                      {cert.validTime ? formatDateRange(cert.validTime.startDate, cert.validTime.endDate) : "N/A"}
-                    </p>
-                    {cert.certificateId && (
-                      <a
-                        href={cert.certificateId}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 text-sm md:text-base mt-1 flex items-center gap-1 hover:underline"
+              {(showAllCertifications ? certifications : certifications.slice(0, 2)).map(
+                (cert, index) => (
+                  <div key={index} className="flex items-start gap-4 border-b pb-4">
+                    <MedalStar size={20} className="text-blue-600" />
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {cert.title || "Unknown Provider"}
+                      </h3>
+                      <p className="text-gray-800 text-sm md:text-base">
+                        {cert.issuer || "Unknown Issuer"}
+                      </p>
+                      <p className="text-gray-800 text-sm md:text-base">
+                        {cert.courseName || "Unknown Course"}
+                      </p>
+                      <p className="text-gray-600 text-sm md:text-base">
+                        {cert.validTime
+                          ? formatDateRange(cert.validTime.startDate, cert.validTime.endDate)
+                          : "N/A"}
+                      </p>
+                      {cert.certificateId && (
+                        <a
+                          href={cert.certificateId}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 text-sm md:text-base mt-1 flex items-center gap-1 hover:underline"
+                        >
+                          <Link size={14} /> View Certificate
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditCertification(index)}
+                        className={buttonStyles.secondary}
                       >
-                        <Link size={14} /> View Certificate
-                      </a>
-                    )}
+                        <Edit size={16} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCertification(index)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEditCertification(index)} className="text-blue-600 hover:text-blue-800">
-                      <Edit size={16} />
-                    </button>
-                    <button onClick={() => handleDeleteCertification(index)} className="text-red-500 hover:text-red-700">
-                      <Trash size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
             {certifications.length > 2 && !showAllCertifications && (
               <button
@@ -901,7 +982,9 @@ const Body = () => {
               setEditingCertificationIndex(null);
             }}
             onSave={handleAddCertification}
-            initialData={editingCertificationIndex !== null ? certifications[editingCertificationIndex] : {}}
+            initialData={
+              editingCertificationIndex !== null ? certifications[editingCertificationIndex] : {}
+            }
           />
 
           {/* Skills */}
@@ -912,9 +995,9 @@ const Body = () => {
               </h2>
               <button
                 onClick={() => setIsSkillsModalOpen(true)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.primary}
               >
-                Add Skill
+                + Add Skill
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -924,14 +1007,22 @@ const Body = () => {
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                 >
                   <div>
-                    <p className="text-gray-900 font-medium text-sm md:text-base">{item.name || "Unknown Skill"}</p>
+                    <p className="text-gray-900 font-medium text-sm md:text-base">
+                      {item.name || "Unknown Skill"}
+                    </p>
                     <p className="text-gray-600 text-xs md:text-sm">{item.level || "N/A"}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEditSkill(index)} className="text-blue-600 hover:text-blue-800">
-                      <Edit size={16} />
+                    <button
+                      onClick={() => handleEditSkill(index)}
+                      className={buttonStyles.secondary}
+                    >
+                      <Edit size={16} /> Edit
                     </button>
-                    <button onClick={() => handleDeleteSkill(index)} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => handleDeleteSkill(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
                       <Trash size={16} />
                     </button>
                   </div>
@@ -965,9 +1056,9 @@ const Body = () => {
               </h2>
               <button
                 onClick={() => setIsAttachmentModalOpen(true)}
-                className="text-blue-600 text-sm hover:underline"
+                className={buttonStyles.primary}
               >
-                Add File
+                + Add File
               </button>
             </div>
             <div className="space-y-4">
@@ -975,7 +1066,9 @@ const Body = () => {
                 <div key={index} className="flex items-start gap-4 border-b pb-4">
                   <DocumentDownload size={20} className="text-blue-600" />
                   <div className="flex-1">
-                    <p className="text-gray-900 font-medium text-sm md:text-base">{item.title || "Unnamed File"}</p>
+                    <p className="text-gray-900 font-medium text-sm md:text-base">
+                      {item.title || "Unnamed File"}
+                    </p>
                     <p className="text-gray-600 text-sm md:text-base">
                       {item.type || "Unknown Type"} | {item.size || "Unknown Size"}
                     </p>
@@ -991,10 +1084,16 @@ const Body = () => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEditAttachment(index)} className="text-blue-600 hover:text-blue-800">
-                      <Edit size={16} />
+                    <button
+                      onClick={() => handleEditAttachment(index)}
+                      className={buttonStyles.secondary}
+                    >
+                      <Edit size={16} /> Edit
                     </button>
-                    <button onClick={() => handleDeleteAttachment(index)} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => handleDeleteAttachment(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
                       <Trash size={16} />
                     </button>
                   </div>
