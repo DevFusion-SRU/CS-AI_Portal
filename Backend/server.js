@@ -11,6 +11,8 @@ import authRoutes from "./routes/auth.js";
 import studentRoutes from "./routes/student.js";
 import staffRoutes from "./routes/staff.js";
 import forumRoutes from "./routes/forum.js";
+import jobAnalyticsRoutes from "./routes/jobAnalytics.js";
+
 const app = express();
 
 // Configure CORS options
@@ -38,7 +40,7 @@ app.use("/api/appliedJobs", appliedJobsRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/forums", forumRoutes);
-
+app.use("/api/jobAnalytics", jobAnalyticsRoutes);
 // Start server
 const PORT = process.env.PORT || 5000;
 

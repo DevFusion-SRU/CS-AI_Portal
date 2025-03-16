@@ -5,9 +5,10 @@ import { addStaff, getStaffDetails, uploadStaffPhoto } from "../controllers/staf
 
 const router = express.Router();
 
+
 // Multer configuration
 const storage = multer.memoryStorage(); // Store file in memory as a Buffer
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.post("/", authenticateToken, addStaff);
 router.get("/:employeeId", authenticateToken, authorizeRole("staff"), getStaffDetails);

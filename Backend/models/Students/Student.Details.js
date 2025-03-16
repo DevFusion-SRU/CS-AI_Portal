@@ -6,14 +6,15 @@ const studentSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: false },
     course: { type: String, required: true },
-    graduationYear: {type: Number, required: true},
+    graduationYear: { type: Number, required: true },
     email: { type: String, required: true },
-    gender:{type: String, required: false},
-    Address:{type: String, required: false},
+    gender: { type: String, required: false },
+    address: { type: String, required: false },
     personalMail: { type: String, required: false },
     mobile: { type: Number, required: false },
     website: { type: String, required: false },
     about: { type: String, required: false },
+
     // Experiences stored as an array of objects
     experiences: [{
         title: { type: String, required: false },
@@ -24,60 +25,63 @@ const studentSchema = new mongoose.Schema({
         },
         location: { type: String, required: false },
         description: { type: String, required: false },
-        certificateId: { type: String, required: false },
-        certificate: { type: Buffer, required: false }, 
-        certificateType: { type: String, required: false },
+        certificationId: { 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: "StudentFiles", 
+            default: null // Prevents errors from empty strings
+        },
     }],
 
-  education: [{
-    institution: { type: String, required: false },
-    degree: { type: String, required: false },
-    specialization: { type: String, required: false },
-    duration: {
-      startDate: { type: Date, required: false },
-      endDate: { type: Date, required: false },
-    },
-    cgpa: { type: String, required: false },
-  }],
-
-    // Certifications stored as an array of objects
-    certifications: [{
-        title: { type: String, required: true },
-        issuer: { type: String, required: true },
-        courseName: { type: String, required: false },
-        validTime: {
+    // Education stored as an array of objects
+    education: [{
+        institution: { type: String, required: false },
+        degree: { type: String, required: false },
+        specialization: { type: String, required: true },
+        duration: {
             startDate: { type: Date, required: false },
             endDate: { type: Date, required: false }
         },
-        certificateId: { type: String, required: false },
-        certificate: { type: Buffer, required: false }, 
-        certificateType: { type: String, required: false },
+        cgpa: { type: String, required: false }
     }],
+
+    // // Certifications stored as an array of objects
+    // certifications: [{
+    //     title: { type: String, required: true },
+    //     issuer: { type: String, required: true },
+    //     courseName: { type: String, required: false },
+    //     validTime: {
+    //         startDate: { type: Date, required: false },
+    //         endDate: { type: Date, required: false }
+    //     },
+    //     certificateId: { 
+    //         type: mongoose.Schema.Types.ObjectId, 
+    //         ref: "StudentFiles", 
+    //         default: null // Prevents errors when certificateId is empty
+    //     },
+    // }],
     
     // Skills stored as an array of objects
     skills: [{
         name: { type: String, required: true },
         level: { type: String, required: false }
     }],
-    
-    photo: { type: Buffer }, // 🔹 Binary image data if stored locally
-    photoType: { type: String }, // 🔹 MIME type (e.g., image/png, image/jpeg)   
 
-
-    photoUrl: { type: String, required: false }, // URL of uploaded image in Cloudinary
-    // photoPublicId: { type: String, required: false } // To track & delete images in Cloudinary
-    
+    profilePhotoId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "StudentFiles", 
+        default: null // Ensures no empty string issue
+    },
 
     // Resumes stored as an array of objects
     resumes: [{
         title: { type: String, required: false },
-        resume: { type: Buffer, required: false }, // Cloudinary URL
-        resumeType: { type: String, required: false },
-        uploadedAt: { type: Date, default: Date.now }
+        resumeId: { 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: "StudentFiles",
+            default: null // Fix for empty string issue
+        }
     }]
-},{timestamps:true});
+}, { timestamps: true });
 
-
-const StudentDetails = studentDB.model("Profile", studentSchema);
-
+const StudentDetails = studentDB.model("Student", studentSchema);
 export default StudentDetails;
