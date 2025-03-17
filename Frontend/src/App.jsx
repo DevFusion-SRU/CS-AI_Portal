@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-axios.defaults.withCredentials = true
+axios.defaults.withCredentials = true;
 import { Routes, Route } from "react-router-dom";
 import Launchpad from "./Pages/Launchpad";
 import Reports from "./Pages/Reports";
@@ -19,41 +19,48 @@ import AddUsers from './Pages/AddUsers';
 import Forgotpassword from "./Pages/Forgotpassword";
 import Discussions from "./Pages/Discussions";
 import JobView from './Pages/jobview';
-
-
+import SavedJobs from "./Pages/SavedJobs";
 
 const App = () => {
   const { currentUser, currentUserRole, BASE_URL } = useAuth();
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  
   const fetchUserData = async () => {
     try {
-      if (!currentUser) return;
+      if (!currentUser || !currentUser.rollNumber) {  // Change to rollNumber
+        console.log("No currentUser or rollNumber, skipping fetch");
+        return;
+      }
       let endpoint;
-
       if (currentUserRole === "staff") {
-        endpoint = `${BASE_URL}staff/${currentUser.username}`;
+        endpoint = `${BASE_URL}staff/${currentUser.rollNumber}`;  // Adjust if staff uses different ID
       } else if (currentUserRole === "student") {
-        endpoint = `${BASE_URL}students/${currentUser.username}`;
+        endpoint = `${BASE_URL}students/${currentUser.rollNumber}`;
       } else {
         throw new Error("Unknown role or unauthorized access");
       }
+      console.log("Current User:", currentUser.username);
+      console.log("Fetching from:", endpoint);
+      const token = localStorage.getItem("authToken");
       const response = await axios.get(endpoint, {
-        withCredentials: true, // Ensure cookies are sent with the request
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
-
-      const data = await response.data;
-      setUserData(data.data);
+  
+      setUserData(response.data.data);
     } catch (err) {
-      console.error("Failed to fetch user data:", err);
-      setError("Error fetching user data");
+      console.error("Failed to fetch user data:", err.response?.status, err.response?.data || err.message);
+      if (err.response?.status === 404) {
+        setUserData({ rollNumber: currentUser.rollNumber, role: currentUserRole });  // Update here too
+      }else {
+        setError("Error fetching user data");
+      }
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchUserData();
   }, [currentUser]);
@@ -75,12 +82,10 @@ const App = () => {
         >
           <Route index element={<Launchpad />} />
           <Route path="myreports" element={<Reports />} />
-          <Route path="jobview/:jobId" element={<JobView />} />
-
+          <Route path="jobs/:jobId" element={<JobView />} />
           <Route element={<AdminRoute />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="addjobs" element={<Addjobs />} />
-
             <Route path="usermanagement" element={<UserManagement />} />
             <Route path="addusers" element={<AddUsers />} />
           </Route>
@@ -88,10 +93,10 @@ const App = () => {
             path="myaccount"
             element={<Profile userData={userData} setUserData={setUserData} />}
           />
-          <Route path="discussions" element={<Discussions/>}/>
+          <Route path="discussions" element={<Discussions />} />
+          <Route path="/saved-jobs" element={<SavedJobs />} />
         </Route>
       </Route>
-
     </Routes>
   );
 };

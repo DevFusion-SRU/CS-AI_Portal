@@ -9,11 +9,11 @@ import FilterMenu from "../Component/Filterandsort";
 import debounce from "lodash.debounce";
 
 const SkeletonJobCard = () => (
-  <div className="animate-pulse bg-gray-100 rounded-lg p-4 shadow-sm">
-    <div className="h-3 bg-gray-300 rounded w-3/4 mb-2"></div>
-    <div className="h-2 bg-gray-300 rounded w-1/2 mb-2"></div>
-    <div className="h-2 bg-gray-300 rounded w-2/3 mb-2"></div>
-    <div className="h-8 bg-gray-300 rounded w-full"></div>
+  <div className="animate-pulse bg-gray-200 rounded-lg p-4 shadow-md">
+    <div className="h-4 bg-gray-300 rounded w-3/4 mb-3"></div>
+    <div className="h-3 bg-gray-400 rounded w-1/2 mb-3"></div>
+    <div className="h-3 bg-gray-400 rounded w-2/3 mb-3"></div>
+    <div className="h-10 bg-gray-300 rounded w-full"></div>
   </div>
 );
 
@@ -146,13 +146,13 @@ const Launchpad = () => {
     <main
       ref={contentRef}
       className="w-full min-h-screen overflow-y-auto flex flex-col items-center 
-                 p-2
+                 bg-gray-50 p-2
                  scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 
                  scrollbar-thumb-rounded-md"
     >
-      <section className="w-full flex-1 p-3 sm:p-5 md:p-8 max-w-[1600px]">
+      <section className="w-full flex-1 p-3 sm:p-5 md:p-8 max-w-[1600px] bg-white rounded-lg shadow-lg">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center 
-                       border-b pb-3 gap-3 sm:gap-0">
+                       border-b border-gray-200 pb-3 gap-3 sm:gap-0">
           <h1 className="font-quickstand text-xl sm:text-3xl md:text-5xl 
                         text-[#0A3D91] font-bold 
                         flex items-center whitespace-nowrap">
@@ -167,19 +167,20 @@ const Launchpad = () => {
           </h1>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center 
-                         gap-2 sm:gap-2 w-full sm:w-auto">
-            <div className="relative flex items-center w-full sm:w-auto">
+                         gap-2 sm:gap-4 w-full sm:w-auto">
+            <div className="relative flex items-center w-full sm:w-72">
               <SearchNormal
-                size={18}
+                size={20}
                 color="#0A3D91"
-                className="absolute left-2 top-1/2 transform -translate-y-1/2"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2"
               />
               <input
                 type="text"
                 placeholder="Search jobs..."
-                className="w-full sm:w-60 px-7 py-1.5 rounded-md shadow-md 
-                          text-sm focus:outline-none focus:ring-2 
-                          focus:ring-blue-300"
+                className="w-full pl-10 pr-4 py-2 rounded-lg shadow-sm bg-gray-100 
+                          text-sm text-gray-800 placeholder-gray-500 
+                          focus:outline-none focus:ring-2 focus:ring-blue-400 
+                          transition duration-200"
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
@@ -188,9 +189,9 @@ const Launchpad = () => {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-col gap-3 w-full">
+        <div className="mt-4 flex flex-col gap-4 w-full">
           {initialLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array(6)
                 .fill()
                 .map((_, index) => (
@@ -198,22 +199,30 @@ const Launchpad = () => {
                 ))}
             </div>
           ) : opportunities.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {opportunities.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <JobCard 
+                  key={job.id} 
+                  job={job} 
+                  className="bg-white hover:bg-blue-50 border border-gray-200 
+                            shadow-md hover:shadow-lg transition duration-200 
+                            rounded-lg p-4" 
+                />
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-6 text-sm">
+            <p className="text-gray-600 text-center py-8 text-base font-medium">
               No jobs found matching your criteria
             </p>
           )}
 
           {loading && !initialLoading && (
             <div className="flex justify-center items-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-t-2 
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 
                             border-b-2 border-blue-500"></div>
-              <p className="ml-2 text-gray-600 text-xs">Loading more jobs...</p>
+              <p className="ml-3 text-gray-600 text-sm font-medium">
+                Loading more jobs...
+              </p>
             </div>
           )}
         </div>

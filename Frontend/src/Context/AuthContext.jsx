@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
         `${BASE_URL}auth/login`,
         { username: email, password: password },
         { withCredentials: true }
+        
       );
       if (response.data.success) {
         isMounted.current = true;

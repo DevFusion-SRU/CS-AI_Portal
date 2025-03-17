@@ -27,7 +27,7 @@ const Layout = ({ userData, setUserData }) => {
           setIsSidebarOpen={setIsSidebarOpen}
         />
 
-        <main className={`flex-1 p-4 sm:p-6 lg:p-8 mt-16 overflow-y-auto transition-all duration-300 ${
+        <main className={`flex-1 p-4 sm:p-6 lg:p-4 mt-16 overflow-y-auto transition-all duration-300 ${
           isSidebarOpen ? 'sm:ml-64 lg:ml-64' : 'sm:ml-20 lg:ml-20'
         }`}>
           <Outlet />

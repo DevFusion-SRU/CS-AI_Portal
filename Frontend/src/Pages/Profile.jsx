@@ -158,6 +158,7 @@ const Body = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [BASE_URL, currentUser]);
+  
 
   const handleProfileImageChange = async (e) => {
     const file = e.target.files[0];

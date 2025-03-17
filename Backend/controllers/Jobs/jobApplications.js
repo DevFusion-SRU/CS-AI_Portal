@@ -1,60 +1,40 @@
 import mongoose from "mongoose";
 import axios from "axios";
 import Job from "../../models/Jobs/Job.js";
+import SavedJobs from "../../models/Jobs/savedJobs.js";
+
 // import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
 import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
 import AppliedStudents from "../../models/Jobs/appliedStudents.js"; // AppliedStudents model using jobDB
-
+// controllers/Jobs/jobApplications.js
 export const addApplication = async (req, res) => {
     const { rollNumber, jobId } = req.body;
-
+  
     if (!rollNumber || !jobId) {
-        return res.status(400).json({ success: false, message: "Provide rollNumber and jobId!" });
+      return res.status(400).json({ success: false, message: "Provide rollNumber and jobId!" });
     }
-
+  
     try {
-        // Step 1: Updating the student's applied jobs in AppliedJobs collection
-        // let appliedJobsEntry = await AppliedJobs.findOne({ rollNumber });
-
-        // if (!appliedJobsEntry) {
-        //     // Create a new entry if it doesn't exist
-        //     appliedJobsEntry = new AppliedJobs({ rollNumber, jobIds: [jobId] });
-        // } else {
-        //     // Add the jobId to the array if it doesn't already exist
-        //     if (!appliedJobsEntry.jobIds.includes(jobId)) {
-        //         appliedJobsEntry.jobIds.push(jobId);
-        //     } else {
-        //         return res.status(400).json({ success: false, message: "Job ID already exists for this student!" });
-        //     }
-        // }
-
-        // await appliedJobsEntry.save();
-
-        // Step 2: Updating the job's applied students in AppliedStudents collection
-        let appliedStudentsEntry = await AppliedStudents.findOne({ jobId });
-
-        if (!appliedStudentsEntry) {
-            // If no entry exists for this job, create one
-            appliedStudentsEntry = new AppliedStudents({ jobId, applications: [rollNumber] });
-        } else {
-            // If entry exists, add the student's rollNumber if not already present
-            if (!appliedStudentsEntry.applications.includes(rollNumber)) {
-                appliedStudentsEntry.applications.push(rollNumber);
-            } else {
-                return res.status(400).json({ success: false, message: "This student has already applied for this job!" });
-            }
-        }
-
-        // Save the appliedStudentsEntry to the database
-        await appliedStudentsEntry.save();
-
-        res.status(201).json({ success: true, AppliedJobs: appliedJobsEntry, AppliedStudents: appliedStudentsEntry });
+      let appliedStudentsEntry = await AppliedStudents.findOne({ jobId });
+  
+      if (!appliedStudentsEntry) {
+        appliedStudentsEntry = new AppliedStudents({ jobId, applications: [rollNumber] });
+      } else if (!appliedStudentsEntry.applications.includes(rollNumber)) {
+        appliedStudentsEntry.applications.push(rollNumber);
+      } else {
+        return res.status(400).json({ success: false, message: "This student has already applied for this job!" });
+      }
+  
+      await appliedStudentsEntry.save();
+  
+      // Return only the relevant data
+      res.status(201).json({ success: true, data: appliedStudentsEntry });
     } catch (error) {
-        console.error("Error in adding applied job: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
+      console.error("Error in adding applied job:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
     }
-};
+  };
 
 export const addView = async (req, res) => {
     const { rollNumber, jobId } = req.body;
@@ -237,7 +217,53 @@ export const getApplications = async (req, res) => {
 };
 
 
-
+export const addSavedJob = async (req, res) => {
+    const { rollNumber, jobId } = req.body;
+  
+    if (!rollNumber || !jobId) {
+      return res.status(400).json({ success: false, message: "Provide rollNumber and jobId!" });
+    }
+  
+    try {
+      let savedJobsEntry = await SavedJobs.findOne({ rollNumber });
+  
+      if (!savedJobsEntry) {
+        // Create new entry if it doesn't exist
+        savedJobsEntry = new SavedJobs({ rollNumber, jobIds: [jobId] });
+      } else if (!savedJobsEntry.jobIds.includes(jobId)) {
+        // Add jobId if not already saved
+        savedJobsEntry.jobIds.push(jobId);
+      } else {
+        return res.status(400).json({ success: false, message: "This job is already saved!" });
+      }
+  
+      await savedJobsEntry.save();
+  
+      res.status(201).json({ success: true, data: savedJobsEntry });
+    } catch (error) {
+      console.error("Error in adding saved job:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
+  
+  export const getSavedJobs = async (req, res) => {
+    const { rollNumber } = req.params;
+  
+    try {
+      const savedJobsEntry = await SavedJobs.findOne({ rollNumber });
+      if (!savedJobsEntry || !savedJobsEntry.jobIds.length) {
+        return res.status(404).json({ success: false, message: "No saved jobs found!" });
+      }
+  
+      // Fetch job details for saved jobIds
+      const jobDetails = await Job.find({ jobId: { $in: savedJobsEntry.jobIds } });
+  
+      res.status(200).json({ success: true, data: jobDetails });
+    } catch (error) {
+      console.error("Error fetching saved jobs:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 
 export const getAppliedPeers = async (req, res) => {
     const { jobId } = req.params;
@@ -300,7 +326,59 @@ export const getAppliedPeers = async (req, res) => {
     }
 
 };
-
+// Get Most Applied Jobs (New)
+export const getMostAppliedJobs = async (req, res) => {
+    try {
+      const topJobs = await AppliedStudents.aggregate([
+        { $unwind: "$applications" }, // Unwind applications array
+        { $group: { _id: "$jobId", totalApplications: { $sum: 1 } } }, // Count applications per job
+        { $sort: { totalApplications: -1 } }, // Sort by application count descending
+        { $limit: 15 }, // Limit to top 15
+      ]);
+  
+      // Fetch job details for the top jobIds
+      const jobIds = topJobs.map(job => job._id);
+      const jobDetails = await Job.find({ jobId: { $in: jobIds } });
+  
+      // Merge job details with application counts
+      const enrichedTopJobs = topJobs.map(topJob => {
+        const jobDetail = jobDetails.find(job => job.jobId === topJob._id) || {};
+        return {
+          _id: topJob._id,
+          company: jobDetail.company || "Unknown",
+          title: jobDetail.title || "Untitled",
+          totalApplications: topJob.totalApplications,
+        };
+      });
+  
+      res.status(200).json({ success: true, topJobs: enrichedTopJobs });
+    } catch (error) {
+      console.error("Error fetching most applied jobs:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
+  
+  // Get In-Demand Skills (New)
+  export const getInDemandSkills = async (req, res) => {
+    try {
+      const inDemandSkills = await Job.aggregate([
+        { $unwind: { path: "$description.skills", preserveNullAndEmptyArrays: true } }, // Unwind skills array
+        { $group: { _id: "$description.skills", count: { $sum: 1 } } }, // Count occurrences of each skill
+        { $match: { _id: { $ne: null } } }, // Exclude null skills
+        { $sort: { count: -1 } }, // Sort by count descending
+        { $limit: 5 }, // Limit to top 5 skills
+      ]);
+  
+      res.status(200).json({
+        success: true,
+        message: "In-demand skills fetched successfully",
+        inDemandSkills,
+      });
+    } catch (error) {
+      console.error("Error fetching in-demand skills:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 export const getAppliedStudents = async (req, res) => {
     const filters = {};
 
