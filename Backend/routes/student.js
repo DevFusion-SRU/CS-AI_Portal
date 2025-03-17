@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import {uploadImage, uploadResume, uploadCertificate} from "../middleware/multer.js";
+// import { uploadResume, atsResumeChecker } from "../middleware/resumeCheck.js";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
     addStudent,
@@ -20,7 +20,6 @@ const router = express.Router();
 // Multer configuration
 const storage = multer.memoryStorage(); // Store file in memory as a Buffer
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
-
 
 // Admin-only routes for adding, updating, or retrieving students data
 router.get("/", authenticateToken, authorizeRole("staff"), getStudents);

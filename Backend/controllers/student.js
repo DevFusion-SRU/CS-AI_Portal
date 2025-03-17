@@ -3,6 +3,7 @@ import axios from "axios";
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
 import sharp from "sharp"; // Import Sharp for image resizing
+import { getProfilePhoto } from "../utils/profilePhoto.js";
 
 dotenv.config();
 import cloudinary from "../config/cloudinary.js"; // Import Cloudinary config
@@ -108,12 +109,12 @@ export const getStudentDetails = async (req, res) => {
     if (studentDetails.photo && studentDetails.photoType) {
       try {
         // ✅ Resize the image while maintaining original dimensions
-        const resizedImageBuffer = await sharp(studentDetails.photo)
-          .resize({ width: 400, height: 400, fit: "cover" }) // Center cropping
-          .toBuffer();
+        // const resizedImageBuffer = await sharp(studentDetails.photo)
+        //   .resize({ width: 400, height: 400, fit: "cover" }) // Center cropping
+        //   .toBuffer();
 
-        // ✅ Convert to Base64
-        response.photo = `data:${studentDetails.photoType};base64,${resizedImageBuffer.toString("base64")}`;
+        // // ✅ Convert to Base64
+        response.photo = await getProfilePhoto(rollNumber, "Student", 400);
       } catch (error) {
         console.error("Error processing image:", error.message);
         response.photo = null;

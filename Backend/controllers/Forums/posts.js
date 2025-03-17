@@ -55,7 +55,7 @@ export const getAllPosts = async (req, res) => {
 
         const posts = await Post.find({ jobId: { $exists: false } })
             // .populate('postedBy')
-            .select("-comments") // Exclude `comments` directly
+            .select("-comments -__v -likedUserType -_id") // Exclude `comments` directly
             .sort(sortOptions[sort] || sortOptions.latest)
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
@@ -63,7 +63,7 @@ export const getAllPosts = async (req, res) => {
 
        // Fetch user details based on userType
        for (const post of posts) {
-
+        post.likesCount = post.likes.length;
 
         if (post.userType === "Student") {
             const student = await StudentDetails.findOne({ rollNumber: post.postedBy }).select("firstName lastName ");

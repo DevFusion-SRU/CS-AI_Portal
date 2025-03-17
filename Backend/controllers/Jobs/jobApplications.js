@@ -381,3 +381,47 @@ export const getAppliedStudents = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+
+
+
+export const getRecommendedJobs = async (req, res) => {
+    try {
+        const { username } = req.user; // Student's rollNumber from request
+        const { limit = 5, page = 1 } = req.query;
+
+        // Fetch student details & extract skill names
+        const student = await StudentDetails.findOne({ rollNumber: username }).select("skills");
+        if (!student || !student.skills || student.skills.length === 0) {
+            return res.status(404).json({ success: false, message: "No skills found for recommendations" });
+        }
+
+        // Extract skill names from objects
+        const studentSkills = student.skills.map(skill => skill.name);
+        // console.log("Extracted Skills:", studentSkills);
+
+        // Find jobs that match any of the student's skills
+        const matchingJobs = await Job.find({ "description.skills": { $in: studentSkills } })
+            .sort({ createdAt: -1 }) // Latest jobs first
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
+            .lean();
+
+        // console.log("Matching Jobs:", matchingJobs);
+
+        // Add total pages calculation
+        const totalJobs = await Job.countDocuments({ "description.skills": { $in: studentSkills } });
+        const totalPages = Math.ceil(totalJobs / limit);
+
+        res.status(200).json({
+            success: true,
+            data: matchingJobs,
+            pagination: { totalPages, currentPage: Number(page) }
+        });
+
+    } catch (error) {
+        console.error("Error fetching recommended jobs:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+

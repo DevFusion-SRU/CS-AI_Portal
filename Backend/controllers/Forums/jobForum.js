@@ -3,8 +3,7 @@ import Comment from "../../models/Forums/Comment.js";
 import Reply from "../../models/Forums/Reply.js";
 import Report from "../../models/Forums/Report.js";
 import jobForum from "../../models/Forums/jobForum.js";
-
-
+import { getProfilePhoto } from "../../utils/profilePhoto.js";
 
 
 export const createJobForum = async (req, res) => {
@@ -103,6 +102,7 @@ export const createJobPost = async (req, res) => {
     }
 };
 
+
 export const addMember = async (req, res) => {
     try {
         const { jobId, rollNumber } = req.body;
@@ -156,13 +156,39 @@ export const getJobPosts = async (req, res) => {
             .limit(parseInt(limit))
             .lean();
 
-        res.status(200).json({ success: true, data: posts });
+        // Fetch user details for each post
+        for (const post of posts) {
+            if (post.userType === "Student") {
+                const student = await StudentDetails.findOne({ rollNumber: post.postedBy }).select("firstName lastName");
+                if (student) {
+                    post.firstName = student.firstName;
+                    post.lastName = student.lastName;
+                    post.profilePhoto = await getProfilePhoto(post.postedBy, post.userType, 50);
+                }
+            } else if (post.userType === "Staff") {
+                const staff = await StaffDetails.findOne({ employeeId: post.postedBy }).select("firstName lastName");
+                if (staff) {
+                    post.firstName = staff.firstName;
+                    post.lastName = staff.lastName;
+                    post.profilePhoto = await getProfilePhoto(post.postedBy, post.userType, 50);
+                }
+            }
+        }
+
+        // Calculate total pages
+        const totalPosts = await Post.countDocuments({ jobId });
+        const totalPages = Math.ceil(totalPosts / limit);
+
+        res.status(200).json({
+            success: true,
+            data: posts,
+            pagination: { totalPages, currentPage: Number(page) }
+        });
     } catch (error) {
         console.error("Error fetching job posts:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
-
 
 
 export const deleteJobForum = async (req, res) => {
@@ -207,7 +233,6 @@ export const deleteJobForum = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
-
 
 
 export const searchByTitle = async (req, res) => {
