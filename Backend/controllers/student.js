@@ -1,11 +1,15 @@
 import mongoose from "mongoose";
 import axios from "axios";
-import bcrypt from "bcrypt";
+import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
+// import sharp from "sharp"; // Import Sharp for image resizing
+import { getProfilePhoto } from "../utils/profilePhoto.js";
+
 dotenv.config();
-import cloudinary from "../config/cloudinary.js";
-import StudentDetails from "../models/Students/Student.Details.js";
-import StudentCredentials from "../models/Students/Student.Credentials.js";
+import cloudinary from "../config/cloudinary.js"; // Import Cloudinary config
+import StudentDetails from "../models/Students/Student.Details.js"; // StudentDetails model using studentDB
+import StudentCredentials from "../models/Students/Student.Credentials.js"; // StudentCredentials model using studentDB
+import StudentFiles from "../models/Students/Student.Files.js"; // StudentFiles model using studentDB
 
 export const getStudents = async (req, res) => {
   const { rollNumber, firstName, lastName } = req.query;
@@ -58,8 +62,10 @@ export const getStudents = async (req, res) => {
 
 export const getStudentDetails = async (req, res) => {
   const { rollNumber } = req.params;
+
   try {
     const studentDetails = await StudentDetails.findOne({ rollNumber });
+
     if (!studentDetails) {
       return res.status(404).json({
         success: false,
@@ -76,78 +82,39 @@ export const getStudentDetails = async (req, res) => {
       email: studentDetails.email,
       mobile: studentDetails.mobile || "",
       gender: studentDetails.gender || "",
-      address: studentDetails.address || "", // Map to 'location' in frontend
+      address: studentDetails.Address || "",
       personalMail: studentDetails.personalMail || "",
       website: studentDetails.website || "",
       about: studentDetails.about || "",
-      experiences: studentDetails.experiences.map((exp) => ({
-        _id: exp._id,
-        title: exp.title,
-        company: exp.company,
-        duration: {
-          startDate: exp.duration.startDate ? exp.duration.startDate.toISOString().split("T")[0] : null,
-          endDate: exp.duration.endDate ? exp.duration.endDate.toISOString().split("T")[0] : null,
-        },
-        location: exp.location,
-        description: exp.description,
-        certificate: exp.certificate, // Matches frontend 'certificate'
-      })) || [],
-      education: studentDetails.education.map((edu) => ({
-        _id: edu._id,
-        institution: edu.institution,
-        degree: edu.degree,
-        specialization: edu.specialization,
-        duration: {
-          startDate: edu.duration.startDate ? edu.duration.startDate.toISOString().split("T")[0] : null,
-          endDate: edu.duration.endDate ? edu.duration.endDate.toISOString().split("T")[0] : null,
-        },
-        cgpa: edu.cgpa,
-      })) || [],
-      certifications: studentDetails.certifications.map((cert) => ({
-        _id: cert._id,
-        title: cert.title, // Matches frontend 'provider'
-        issuer: cert.issuer,
-        courseName: cert.courseName, // Matches frontend 'title'
-        validTime: {
-          startDate: cert.validTime.startDate ? cert.validTime.startDate.toISOString().split("T")[0] : null,
-          endDate: cert.validTime.endDate ? cert.validTime.endDate.toISOString().split("T")[0] : null,
-        },
-        certificateId: cert.certificateId, // Matches frontend 'certificateUrl'
-      })) || [],
-      skills: studentDetails.skills.map((skill) => ({
-        _id: skill._id,
-        name: skill.name,
-        level: skill.level,
-      })) || [],
-      resumes: studentDetails.resumes.map((resume) => ({
-        _id: resume._id,
-        title: resume.title,
-        resumeUrl: resume.resumeUrl, // Matches frontend 'url'
-        size: resume.size || "N/A",
-      })) || [],
+      skills: studentDetails.skills || [],
+      experiences: studentDetails.experiences || [],
+      education: studentDetails.education || [],
+      certifications: studentDetails.certifications || [],
+      resumes: studentDetails.resumes?.map((resume) => resume.title) || [],
     };
 
-    if (studentDetails.photoUrl) {
+    // 🔹 Check if the student has a stored photo buffer
+    // if (studentDetails.photoUrl) {
       try {
-        const resizedImageUrl = studentDetails.photoUrl.replace(
-          "/upload/",
-          "/upload/w_400,h_400,c_fill,q_auto/"
-        );
-        const imgResponse = await axios.get(resizedImageUrl, { responseType: "arraybuffer" });
-        const contentType = imgResponse.headers["content-type"];
-        response.photo = `data:${contentType};base64,${Buffer.from(imgResponse.data).toString("base64")}`;
+        // ✅ Resize the image while maintaining original dimensions
+        // const resizedImageBuffer = await sharp(studentDetails.photo)
+        //   .resize({ width: 400, height: 400, fit: "cover" }) // Center cropping
+        //   .toBuffer();
+
+        // // ✅ Convert to Base64
+        response.photo = await getProfilePhoto(rollNumber, "Student", 400);
       } catch (error) {
-        console.error("Error fetching or converting image:", error.message);
+        console.error("Error processing image:", error.message);
         response.photo = null;
       }
-    } else {
-      response.photo = null;
-    }
+    // } else {
+    //   response.photo = null; // If no photo exists, return null
+    // }
 
     res.status(200).json({ success: true, data: response });
   } catch (error) {
-    console.error("Error fetching student details:", error.message);
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    console.error("Error fetching student details: ", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
