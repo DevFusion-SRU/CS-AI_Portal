@@ -6,7 +6,8 @@ import {
     deleteJob,
     getJobs,
     getJobById,
-    searchCompanies
+    searchCompanies,
+    updateJob
 } from "../controllers/Jobs/job.js";
 
 const router = express.Router();
@@ -22,5 +23,6 @@ router.get("/:jobId", authenticateToken, getJobById);
 router.post("/", authenticateToken, authorizeRole("staff"), addJob);
 router.post("/batch", authenticateToken, authorizeRole("staff"), addJobsBatch);
 router.delete("/:jobId", authenticateToken, authorizeRole("staff"), deleteJob);
+router.patch("/:jobId", authenticateToken, authorizeRole("staff"), updateJob);
 
 export default router;

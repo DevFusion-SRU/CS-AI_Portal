@@ -8,7 +8,9 @@ import {
     getAppliedStudents,
     getAppliedPeers,
     getRecommendedJobs,
-    updateJobStatus
+    updateJobStatus,
+    getSavedJobs,
+    addSavedJob
 } from "../controllers/Jobs/jobApplications.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -22,6 +24,7 @@ router.get("/student/:rollNumber", authenticateToken, authorizeRole("student"), 
 router.get("/job/:jobId", authenticateToken, authorizeRole("student"),  getAppliedPeers);
 router.get("/recommendedJobs", authenticateToken, authorizeRole("student"), getRecommendedJobs);
 router.post("/:jobId/update-status", authenticateToken, upload.single("file"), updateJobStatus);
-
+router.post("/saveJob", authenticateToken, authorizeRole("student"), addSavedJob); // New endpoint
+router.get("/saved", authenticateToken, authorizeRole("student"), getSavedJobs);
 
 export default router;

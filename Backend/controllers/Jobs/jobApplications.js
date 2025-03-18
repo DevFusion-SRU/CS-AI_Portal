@@ -7,7 +7,7 @@ import Job from "../../models/Jobs/Job.js";
 import JobForum from "../../models/Forums/jobForum.js"; // Import JobForum model
 import StaffDetails from "../../models/Staff/Staff.Details.js";
 // import AppliedJobs from "../../models/Jobs/appliedJobs.js";
-
+import SavedJobs from "../../models/Jobs/savedJobs.js";
 import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
 import AppliedStudents from "../../models/Jobs/appliedStudents.js"; // AppliedStudents model using jobDB
 
@@ -530,6 +530,54 @@ const parseCSV = async (buffer) => {
 
 
 
+export const addSavedJob = async (req, res) => {
+    const { jobId } = req.body;
+    const rollNumber = req.user.username;
+  
+    if (!rollNumber || !jobId) {
+      return res.status(400).json({ success: false, message: "Provide rollNumber and jobId!" });
+    }
+  
+    try {
+      let savedJobsEntry = await SavedJobs.findOne({ rollNumber});
+  
+      if (!savedJobsEntry) { 
+        // Create new entry if it doesn't exist
+        savedJobsEntry = new SavedJobs({ rollNumber, jobIds: [jobId] });
+      } else if (!savedJobsEntry.jobIds.includes(jobId)) {
+        // Add jobId if not already saved
+        savedJobsEntry.jobIds.push(jobId);
+      } else {
+        return res.status(400).json({ success: false, message: "This job is already saved!" });
+      }
+  
+      await savedJobsEntry.save();
+  
+      res.status(201).json({ success: true, data: savedJobsEntry });
+    } catch (error) {
+      console.error("Error in adding saved job:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
+  
+  export const getSavedJobs = async (req, res) => {
+    const rollNumber  = req.user.username;
+  
+    try {
+      const savedJobsEntry = await SavedJobs.findOne({ rollNumber });
+      if (!savedJobsEntry || !savedJobsEntry.jobIds.length) {
+        return res.status(404).json({ success: false, message: "No saved jobs found!" });
+      }
+  
+      // Fetch job details for saved jobIds
+      const jobDetails = await Job.find({ jobId: { $in: savedJobsEntry.jobIds } });
+  
+      res.status(200).json({ success: true, data: jobDetails });
+    } catch (error) {
+      console.error("Error fetching saved jobs:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 
 
 

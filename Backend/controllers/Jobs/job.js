@@ -311,3 +311,30 @@ export const deleteJob = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+
+export const updateJob = async (req, res) => {
+    const { jobId } = req.params;
+    const jobData = req.body;
+
+    if (!jobData) {
+        return res.status(400).json({ success: false, message: "Provide job details to update" });
+    }
+
+    try {
+        const updatedJob = await Job.findOneAndUpdate(
+            { jobId: jobId },
+            { $set: jobData },
+            { new: true }
+        );
+
+        if (!updatedJob) {
+            return res.status(404).json({ success: false, message: "Job not found!" });
+        }
+
+        res.status(200).json({ success: true, data: updatedJob });
+    } catch (error) {
+        console.error("Error updating job: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
