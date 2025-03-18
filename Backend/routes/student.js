@@ -35,6 +35,15 @@ router.patch("/:rollNumber/photo", authenticateToken, authorizeRole("student"), 
 
 router.post("/:rollNumber/resume", authenticateToken, authorizeRole("student"), upload.single("resume"), uploadStudentResume);
 
+// router.post(
+//     "/:rollNumber/resume",
+//     authenticateToken,      // Auth middleware
+//     authorizeRole("student"), // Only students can upload
+//     uploadResume,          // Upload using Multer (memory storage)
+//     atsResumeChecker,      // ATS compliance check
+//     uploadStudentResume    // Proceed with upload if ATS check passes
+// );
+
 router.delete("/resume/:rollNumber/:resumeId", authenticateToken, deleteStudentResume);
 
 router.patch("/profile/:rollNumber/:section/:id/certificate", upload.single("certificate"), uploadCertificateFile);

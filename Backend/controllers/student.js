@@ -106,7 +106,7 @@ export const getStudentDetails = async (req, res) => {
     };
 
     // 🔹 Check if the student has a stored photo buffer
-    if (studentDetails.photo && studentDetails.photoType) {
+    // if (studentDetails.photo && studentDetails.photoType) {
       try {
         // ✅ Resize the image while maintaining original dimensions
         // const resizedImageBuffer = await sharp(studentDetails.photo)
@@ -119,9 +119,9 @@ export const getStudentDetails = async (req, res) => {
         console.error("Error processing image:", error.message);
         response.photo = null;
       }
-    } else {
-      response.photo = null; // If no photo exists, return null
-    }
+    // } else {
+    //   response.photo = null; // If no photo exists, return null
+    // }
 
     res.status(200).json({ success: true, data: response });
   } catch (error) {

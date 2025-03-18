@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
 import axios from "axios";
 import sharp from "sharp";
+import streamifier from "streamifier";
+import csvParser from "csv-parser";
 import Job from "../../models/Jobs/Job.js";
 import JobForum from "../../models/Forums/jobForum.js"; // Import JobForum model
-
+import StaffDetails from "../../models/Staff/Staff.Details.js";
 // import AppliedJobs from "../../models/Jobs/appliedJobs.js";
 
 import StudentDetails from "../../models/Students/Student.Details.js"; // StudentDetails model using studentDB
@@ -91,6 +93,7 @@ export const addView = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
 
 // export const getApplications = async (req, res) => {
 //     const { rollNumber } = req.params;
@@ -295,7 +298,6 @@ export const getAppliedPeers = async (req, res) => {
 
 
 
-
 export const getAppliedStudents = async (req, res) => {
     const filters = {};
 
@@ -381,8 +383,7 @@ export const getAppliedStudents = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
-
-
+ 
 
 
 export const getRecommendedJobs = async (req, res) => {
@@ -424,4 +425,111 @@ export const getRecommendedJobs = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+
+
+/**
+ * Controller to update shortlisted or placed students for a job
+ * @route PATCH /jobs/:jobId/update-applications
+ */
+
+
+
+
+
+// Controller to update job status
+
+
+export const updateJobStatus = async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const { statusType } = req.body; // "shortlisted" or "placed"
+
+        if (!["shortlisted", "placed"].includes(statusType)) {
+            return res.status(400).json({ success: false, message: "Invalid status type" });
+        }
+
+        // Fetch job details
+        const job = await Job.findOne({ jobId });
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
+
+        // const isOnCampus = job.category === "On-Campus"; // Check if job is on-campus
+        const appliedData = await AppliedStudents.findOne({ jobId });
+
+        if (!appliedData) {
+            return res.status(404).json({ success: false, message: "No applications found for this job" });
+        }
+
+        // Parse CSV to get roll numbers
+        const rollNumbers = await parseCSV(req.file.buffer);
+
+        // if (isOnCampus) {
+            // On-campus: Only Admin can update
+            const admin = await StaffDetails.findOne({ employeeId: req.user.username });
+            if (!admin) {
+                return res.status(403).json({ success: false, message: "Only admin can update on-campus jobs" });
+            }
+
+            // Ensure roll numbers exist in `applications`
+            const validRollNumbers = rollNumbers.filter(roll => appliedData.applications.includes(roll));
+
+            if (validRollNumbers.length === 0) {
+                return res.status(400).json({ success: false, message: "No valid applicants found in the applications list" });
+            }
+
+            await AppliedStudents.updateOne({ jobId }, { $addToSet: { [statusType]: { $each: validRollNumbers } } });
+
+        // } else {
+        //     // Off-campus: Students must submit recruiter email proof
+        //     const student = await StudentDetails.findOne({ rollNumber: req.user.username });
+
+        //     if (!student) {
+        //         return res.status(403).json({ success: false, message: "Only students can update off-campus job status" });
+        //     }
+
+        //     const emailVerified = await storeRecruiterEmail(req.user.email, jobId);
+        //     if (!emailVerified) {
+        //         return res.status(400).json({ success: false, message: "Verification failed. Submit recruiter email proof." });
+        //     }
+
+        //     // Ensure student is in applications list before adding them
+        //     if (!appliedData.applications.includes(student.rollNumber)) {
+        //         return res.status(400).json({ success: false, message: "You have not applied for this job" });
+        //     }
+
+        //     await AppliedStudents.updateOne({ jobId }, { $addToSet: { [statusType]: student.rollNumber } });
+        // }
+
+        res.status(200).json({ success: true, message: `${statusType} list updated successfully` });
+    } catch (error) {
+        console.error("Error updating job status:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+
+// Function to parse CSV and extract roll numbers
+const parseCSV = async (buffer) => {
+    return new Promise((resolve, reject) => {
+        const rollNumbers = [];
+        streamifier.createReadStream(buffer)
+            .pipe(csvParser())
+            .on("data", (row) => {
+                if (row.rollNumber) {
+                    rollNumbers.push(row.rollNumber.trim());
+                }
+            })
+            .on("end", () => resolve(rollNumbers))
+            .on("error", (error) => reject(error));
+    });
+};
+
+
+
+
+
+
 

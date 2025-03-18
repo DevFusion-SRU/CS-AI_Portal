@@ -10,7 +10,7 @@ const jobSchema = new mongoose.Schema({
         enum: ["Full-time", "Internship", "Hackathon","part-time"]  // 🔹 Job type filter
     },
     company: { type: String, required: true },
-
+    jobType:{ type: String, required: false, enum: ["off-campus","on-campus"] },
     location: { type: String, required:false },
     deadline: { type: String, required: false },
     stipend: { type: Number, required: false },
@@ -40,7 +40,7 @@ const jobSchema = new mongoose.Schema({
         },
         required: false,
     },
-
+    forumTitle: { type: String, required: false },
     applyLink: { type: String, required: true },
 }, { timestamps: true } // Enables createdAt and updatedAt
 );
