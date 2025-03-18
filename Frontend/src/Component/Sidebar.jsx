@@ -1,10 +1,11 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, User, Messages3 } from "iconsax-react"; 
+import { Home2, TrendUp, Personalcard, Profile, Logout, ArrowSquareLeft, HambergerMenu, Messages3 } from "iconsax-react";
 
 const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
   const { signout, currentUserRole } = useAuth();
+
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -13,8 +14,8 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
   return (
     <div
       className={`fixed top-0 left-0 z-50 h-screen p-4 bg-gray-800 text-white flex flex-col transition-all duration-500 ease-in-out ${
-        isSidebarOpen ? 'w-64' : 'w-20 sm:w-20 lg:w-20'
-      } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}
+        isSidebarOpen ? "w-64" : "w-20 sm:w-20 lg:w-20"
+      } ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}`}
     >
       <div className="flex items-center justify-between mb-6">
         {isSidebarOpen && (
@@ -29,6 +30,7 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
       </div>
 
       <nav className="flex-1">
+        {/* Dashboard */}
         <NavLink
           to={currentUserRole === "student" ? "/myreports" : "/dashboard"}
           className={({ isActive }) =>
@@ -41,6 +43,7 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
           {isSidebarOpen && <span className="ml-4 text-lg">Dashboard</span>}
         </NavLink>
 
+        {/* Launchpad */}
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -53,49 +56,51 @@ const Sidebar = ({ setUserData, setIsSidebarOpen, isSidebarOpen }) => {
           {isSidebarOpen && <span className="ml-4 text-lg">Launchpad</span>}
         </NavLink>
 
-        {/* <NavLink
-          to="/usermanagement"
-          className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${
-              isSidebarOpen ? "justify-start" : "justify-center"
-            } ${isActive ? "bg-blue-700" : ""}`
-          }
-        >
-          {currentUserRole === "admin" ? <Personalcard size="24" variant="Linear" /> : <Personalcard size="24" variant="Linear" />}
-          {isSidebarOpen && (
-            <span className="ml-4 text-lg">{currentUserRole === "admin" ? "User Management" : "My Applications"}</span>
-          )}
-        </NavLink> */}
+          {/* Admin-specific: User Management */}
+        {currentUserRole === "staff" && (
+          <NavLink
+            to="/usermanagement"
+            className={({ isActive }) =>
+              `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${
+                isSidebarOpen ? "justify-start" : "justify-center"
+              } ${isActive ? "bg-blue-700" : ""}`
+            }
+          >
+            <Personalcard size="24" variant="Linear" />
+            {isSidebarOpen && <span className="ml-4 text-lg">User Management</span>}
+          </NavLink>
+        )}
 
+        
+        {/* Discussions */}
         <NavLink
-          to="/myaccount"
+          to="/discussions"
           className={({ isActive }) =>
             `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${
               isSidebarOpen ? "justify-start" : "justify-center"
             } ${isActive ? "bg-blue-700" : ""}`
-          }
-        >
-          <Profile size="24" variant="Linear" />
-          {isSidebarOpen && <span className="ml-4 text-lg">My Account</span>}
-        </NavLink>
-        <NavLink
-          to="/discussions"
-          className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isSidebarOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
-          }
-        >
-          <Profile size="24" variant="Linear" />
-          {isSidebarOpen && <span className="ml-4 text-lg">My Account</span>}
-        </NavLink>
-        <NavLink
-          to="/discussions"
-          className={({ isActive }) =>
-            `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${isSidebarOpen ? "justify-start" : "justify-center"} ${isActive ? "bg-blue-700" : ""}`
           }
         >
           <Messages3 size="24" variant="Linear" />
           {isSidebarOpen && <span className="ml-4 text-lg">Discussions</span>}
         </NavLink>
+
+        
+
+        {/* Account */}
+        
+          <NavLink
+            to="/myaccount"
+            className={({ isActive }) =>
+              `flex items-center p-3 my-2 rounded-lg hover:bg-blue-400 cursor-pointer ${
+                isSidebarOpen ? "justify-start" : "justify-center"
+              } ${isActive ? "bg-blue-700" : ""}`
+            }
+          >
+            <Profile size="24" variant="Linear" />
+            {isSidebarOpen && <span className="ml-4 text-lg">My Account</span>}
+          </NavLink>
+        
       </nav>
 
       {/* Logout Button */}

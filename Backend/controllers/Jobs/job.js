@@ -1,6 +1,81 @@
 import mongoose from "mongoose";
 
 import Job from "../../models/Jobs/Job.js"; // Job model using jobDB
+const predefinedBenefits = {
+    salary: "Competitive salary and stock options",
+    health: "Health and wellness programs",
+    learning: "Learning and development budget",
+    workOptions: "Remote or hybrid work options based on location",
+  };
+  
+  export const addJob = async (req, res) => {
+    const {
+      jobId,
+      title,
+      company,
+      type,
+      modeOfWork,
+      applyLink,
+      location,
+      deadline,
+      stipend,
+      category,
+      compensationType,
+      description,
+    } = req.body;
+  
+    // Validate required fields
+    if (!jobId || !title || !company || !type || !modeOfWork || !applyLink) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId, title, company, type, modeOfWork, and applyLink are required",
+      });
+    }
+  
+    try {
+      // Check if jobId already exists
+      const existingJob = await Job.findOne({ jobId });
+      if (existingJob) {
+        return res.status(400).json({ success: false, message: "Job ID already exists" });
+      }
+  
+      // Construct benefits object based on what's included
+      const benefits = {};
+      if (description?.benefits) {
+        if (description.benefits.salary) benefits.salary = predefinedBenefits.salary;
+        if (description.benefits.health) benefits.health = predefinedBenefits.health;
+        if (description.benefits.learning) benefits.learning = predefinedBenefits.learning;
+        if (description.benefits.workOptions) benefits.workOptions = predefinedBenefits.workOptions;
+      }
+  
+      const newJob = new Job({
+        jobId,
+        title,
+        company,
+        type,
+        modeOfWork,
+        applyLink,
+        location,
+        deadline,
+        stipend: stipend ? parseFloat(stipend) : undefined,
+        category,
+        compensationType,
+        description: description
+          ? {
+              text: description.text,
+              requirements: description.requirements || {},
+              benefits: Object.keys(benefits).length > 0 ? benefits : undefined,
+            }
+          : undefined,
+      });
+  
+      await newJob.save();
+      res.status(201).json({ success: true, message: "Job added successfully" });
+    } catch (error) {
+      console.error("Error adding job:", error);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 
 export const getJobById = async (req, res) => {
     const { jobId } = req.params;  // Assuming jobId is passed as a route parameter
@@ -218,31 +293,6 @@ export const searchCompanies = async (req, res) => {
     }
 };
 
-
-
-
-
-
-export const addJob = async (req, res) => {
-    const job = req.body;
-    if (!job.modeOfWork || !job.jobId || !job.title || !job.type || !job.company || !job.location || !job.description.text || !job.applyLink) {
-        return res.status(400).json({ success: false, message: "Provide all required fields!!" });
-    }
-
-    const newJob = new Job(job);
-    try {
-        await newJob.save();
-        res.status(201).json({ success: true, data: newJob });
-    } catch (error) {
-        // Check if it's a duplicate key error (unique constraint violation)
-        if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: "Job with this id already exists!" });
-        }
-        console.error("Error in entering Job details: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
-};
-
 export const addJobsBatch = async (req, res) => {
     const jobs = req.body;
 
@@ -281,6 +331,46 @@ export const deleteJob = async (req, res) => {
         res.status(200).json({ success: true, message: "Job deleted" });
     } catch (error) {
         console.error("Error deleting job: ", error.message);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+// Add editJob function
+export const editJob = async (req, res) => {
+    const { jobId } = req.params;
+    const updatedJobData = req.body;
+
+    if (!jobId) {
+        return res.status(400).json({ success: false, message: "Job ID is required." });
+    }
+
+    // Required fields validation
+    if (!updatedJobData.title || !updatedJobData.type || !updatedJobData.company || !updatedJobData.modeOfWork || !updatedJobData.applyLink) {
+        return res.status(400).json({ success: false, message: "Provide all required fields: title, type, company, modeOfWork, applyLink" });
+    }
+
+    // If description is provided, text is required
+    if (updatedJobData.description && (!updatedJobData.description.text || updatedJobData.description.text.trim() === "")) {
+        return res.status(400).json({ success: false, message: "Description text is required if description is provided" });
+    }
+
+    try {
+        const job = await Job.findOneAndUpdate(
+            { jobId: jobId.trim() },
+            { $set: updatedJobData },
+            { new: true, runValidators: true }
+        );
+
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Job not found." });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: job,
+            message: "Job updated successfully."
+        });
+    } catch (error) {
+        console.error("Error updating job:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };

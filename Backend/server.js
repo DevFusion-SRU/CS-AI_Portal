@@ -55,6 +55,8 @@ const PORT = process.env.PORT || 5000;
 //     res.status(500).json({ success: false, message: "Server error" });
 //   }
 // });
+
+
 const startServer = async () => {
   try {
     // Wait for the DB connection to be established

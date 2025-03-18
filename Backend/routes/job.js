@@ -7,6 +7,7 @@ import {
   getJobs,
   getJobById,
   searchCompanies,
+  editJob,
 } from "../controllers/Jobs/job.js";
 import { getInDemandSkills } from "../controllers/Jobs/jobAnalytics.js";
 import {
@@ -17,7 +18,7 @@ import {
 import Job from "../models/Jobs/Job.js";
 
 const router = express.Router();
-
+router.put("/:jobId", editJob);
 // Public routes
 router.get("/", getJobs);
 router.get("/searchCompanies", searchCompanies);

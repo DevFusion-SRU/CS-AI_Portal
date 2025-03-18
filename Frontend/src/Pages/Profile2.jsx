@@ -49,17 +49,7 @@ const Profile = ({ userData, setUserData }) => {
 
   // Define fields dynamically based on role
   const userFields =
-    currentUserRole === "student"
-      ? [
-          { label: "First Name", value: userData.firstName },
-          { label: "Last Name", value: userData.lastName },
-          { label: "Email", value: userData.email },
-          { label: "Date of Birth", value: userData.dob },
-          { label: "Roll Number", value: userData.rollNumber },
-          { label: "Phone", value: userData.mobile },
-          { label: "Course", value: userData.course },
-        ]
-      : [
+    [
           { label: "First Name", value: userData.firstName },
           { label: "Last Name", value: userData.lastName },
           { label: "Email", value: userData.email },

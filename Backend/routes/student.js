@@ -28,7 +28,9 @@ router.post("/", authenticateToken, authorizeRole("staff"), addStudent);
 router.post("/batch", authenticateToken, authorizeRole("staff"), addStudentBatch);
 router.delete("/:rollNumber", authenticateToken, authorizeRole("staff"), deleteStudent);
 
+
 // Accessible by both staff and students
+
 router.get("/:rollNumber", authenticateToken, authorizeRole(["staff", "student"]), getStudentDetails);
 
 // Student-only routes

@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Message, Logout, User, Heart } from "iconsax-react";
+import { Message, Logout, User, Heart, UserAdd, Additem } from "iconsax-react"; // Added Plus for staff options
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import { User2 } from "lucide-react";
 
 const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { signout, currentUserRole } = useAuth();
-  const dropdownRef = useRef(null); // Create a ref for the dropdown
+  const dropdownRef = useRef(null);
+  
 
   // Toggle dropdown
   const toggleDropdown = () => {
@@ -22,17 +24,16 @@ const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
       }
     };
 
-    // Add event listener when dropdown is open
     if (dropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
-    // Cleanup event listener
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dropdownOpen]); // Dependency array includes dropdownOpen
+  }, [dropdownOpen]);
 
+  // Navigation handlers
   const handleViewProfile = () => {
     setDropdownOpen(false);
     navigate("/myaccount");
@@ -41,6 +42,16 @@ const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
   const handleViewSavedJobs = () => {
     setDropdownOpen(false);
     navigate("/saved-jobs");
+  };
+
+  const handleAddJobs = () => {
+    setDropdownOpen(false);
+    navigate("/addjobs"); // Navigate to add jobs page
+  };
+
+  const handleAddStudents = () => {
+    setDropdownOpen(false);
+    navigate("/addusers"); // Navigate to add students page
   };
 
   const handleLogout = async () => {
@@ -66,7 +77,7 @@ const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-
+  console.log("Current user role:", currentUserRole);
   return (
     <div
       className={`fixed top-0 right-0 z-40 flex justify-between items-center h-16 bg-white shadow-md border-b-2 border-gray-200 px-4 transition-all duration-300 w-full ${
@@ -113,6 +124,7 @@ const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                {/* Common option for both roles */}
                 <button
                   onClick={handleViewProfile}
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
@@ -120,13 +132,36 @@ const Navbar = ({ userData, setUserData, isSidebarOpen, setIsSidebarOpen }) => {
                   <User size="20" className="mr-2 text-blue-500" />
                   View Profile
                 </button>
-                <button
-                  onClick={handleViewSavedJobs}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-                >
-                  <Heart size="20" className="mr-2 text-green-500" />
-                  Saved Jobs
-                </button>
+
+                {/* Conditional options based on role */}
+                {currentUserRole === "student" ? (
+                  <button
+                    onClick={handleViewSavedJobs}
+                    className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    <Heart size="20" className="mr-2 text-green-500" />
+                    Saved Jobs
+                  </button>
+                ) : currentUserRole === "staff" ? (
+                  <>
+                    <button
+                      onClick={handleAddJobs}
+                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <Additem size="20" className="mr-2 text-green-500" />
+                      Add Jobs
+                    </button>
+                    <button
+                      onClick={handleAddStudents}
+                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <UserAdd size="20" className="mr-2 text-green-500" />
+                      Add Students
+                    </button>
+                  </>
+                ) : null}
+
+                {/* Common option for both roles */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"

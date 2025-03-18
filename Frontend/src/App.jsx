@@ -13,54 +13,57 @@ import PrivateRoutes from "./Context/PrivateRoutes";
 import Private from "./Context/Private";
 import Addjobs from "./Pages/Addjobs";
 import { useAuth } from "./Context/AuthContext";
-import AdminRoute from './Context/AdminRoute';
-import UserManagement from './Pages/UserManagement';
-import AddUsers from './Pages/AddUsers';
+import AdminRoute from "./Context/AdminRoute";
+import UserManagement from "./Pages/UserManagement";
+import AddUsers from "./Pages/AddUsers";
 import Forgotpassword from "./Pages/Forgotpassword";
 import Discussions from "./Pages/Discussions";
-import JobView from './Pages/jobview';
+import JobView from "./Pages/jobview";
 import SavedJobs from "./Pages/SavedJobs";
+import Adminlogin from "./Pages/Adminlogin";
+import ProfileView from "./Pages/ProfileView"; // Import the new ProfileView component
+import EditJob from "./Pages/EditJob";
 
 const App = () => {
   const { currentUser, currentUserRole, BASE_URL } = useAuth();
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   const fetchUserData = async () => {
     try {
-      if (!currentUser || !currentUser.rollNumber) {  // Change to rollNumber
-        console.log("No currentUser or rollNumber, skipping fetch");
+      if (!currentUser || !currentUser.username) {
+        console.log("No currentUser or username, skipping fetch");
         return;
       }
       let endpoint;
       if (currentUserRole === "staff") {
-        endpoint = `${BASE_URL}staff/${currentUser.rollNumber}`;  // Adjust if staff uses different ID
+        endpoint = `${BASE_URL}staff/${currentUser.username}`;
       } else if (currentUserRole === "student") {
-        endpoint = `${BASE_URL}students/${currentUser.rollNumber}`;
+        endpoint = `${BASE_URL}students/${currentUser.username}`;
       } else {
         throw new Error("Unknown role or unauthorized access");
       }
       console.log("Current User:", currentUser.username);
       console.log("Fetching from:", endpoint);
-      const token = localStorage.getItem("authToken");
+
       const response = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
-  
+
       setUserData(response.data.data);
     } catch (err) {
       console.error("Failed to fetch user data:", err.response?.status, err.response?.data || err.message);
       if (err.response?.status === 404) {
-        setUserData({ rollNumber: currentUser.rollNumber, role: currentUserRole });  // Update here too
-      }else {
+        setUserData({ username: currentUser.username, role: currentUserRole });
+      } else {
         setError("Error fetching user data");
       }
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchUserData();
   }, [currentUser]);
@@ -74,6 +77,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgotpassword" element={<Forgotpassword />} />
+        <Route path="/adminlogin" element={<Adminlogin />} />
       </Route>
       <Route element={<PrivateRoutes />}>
         <Route
@@ -95,6 +99,11 @@ const App = () => {
           />
           <Route path="discussions" element={<Discussions />} />
           <Route path="/saved-jobs" element={<SavedJobs />} />
+          <Route path="/editjob/:jobId" element={<EditJob />} />
+          <Route
+            path="profile/:studentId"
+            element={<ProfileView />}
+          /> {/* New route for viewing profiles by student ID */}
         </Route>
       </Route>
     </Routes>

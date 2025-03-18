@@ -2,45 +2,38 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { NavLink, useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Adminlogin = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [attempts, setAttempts] = useState(0); // Track login attempts
-  const { login, currentUser, currentUserRole } = useAuth();
+  const { login, currentUser, signout, currentUserRole } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      await login(emailRef.current.value, passwordRef.current.value, "student");
-    } catch (error) {
-      setAttempts((prev) => prev + 1); // Increment attempts on failure
-      if (attempts + 1 >= 3) {
-        setError("Wrong credentials, try again."); // Keep default message
-        alert("You have exceeded 3 login attempts. Please contact your college administration.");
-      } else {
-        setError(error.message || "Wrong credentials, try again.");
-      }
+      await login(emailRef.current.value, passwordRef.current.value, "admin");
+    } catch (err) {
+      setError("Wrong credentials, try again."); // Simple error message for admin
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUserRole) {
       console.log("Logged-in user:", currentUser);
-      if (currentUserRole !== "student") {
-        setError("Invalid credentials. Only students can log in here.");
+      if (currentUserRole !== "staff") {
+        setError("Invalid credentials. Only admins can log in here.");
+        signout();
         setLoading(false);
         return;
       }
       navigate("/");
     }
-  }, [currentUser, currentUserRole, navigate]);
+  }, [currentUserRole, navigate, signout]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-200 to-blue-100">
@@ -79,7 +72,7 @@ const Login = () => {
           SRU<span className="text-xs align-bottom">CS-AI</span>
         </h1>
         <p className="text-center text-lg font-medium text-gray-600 mb-6">
-          Student Login
+          Admin Login
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -87,7 +80,7 @@ const Login = () => {
             <input
               type="text"
               ref={emailRef}
-              placeholder="Enter User ID"
+              placeholder="Enter Admin ID"
               required
               className="w-full p-4 pl-5 pr-12 bg-gray-100 rounded-lg border-none outline-none text-gray-700 font-medium placeholder-gray-400 focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
@@ -116,7 +109,7 @@ const Login = () => {
 
           <button
             type="submit"
-            disabled={loading} // Only disable during loading, not after 3 attempts
+            disabled={loading}
             className="w-full p-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 shadow-md disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
             {loading ? "Logging in..." : "Login"}
@@ -127,4 +120,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Adminlogin;
