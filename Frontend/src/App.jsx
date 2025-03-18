@@ -23,6 +23,7 @@ import SavedJobs from "./Pages/SavedJobs";
 import Adminlogin from "./Pages/Adminlogin";
 import ProfileView from "./Pages/ProfileView"; // Import the new ProfileView component
 import EditJob from "./Pages/EditJob";
+import DiscussionPods from "./Pages/discussionpods";
 
 const App = () => {
   const { currentUser, currentUserRole, BASE_URL } = useAuth();
@@ -98,12 +99,15 @@ const App = () => {
             element={<Profile userData={userData} setUserData={setUserData} />}
           />
           <Route path="discussions" element={<Discussions />} />
+          <Route path="/discussions/:postId" element ={<DiscussionPods />} />
+
           <Route path="/saved-jobs" element={<SavedJobs />} />
           <Route path="/editjob/:jobId" element={<EditJob />} />
           <Route
             path="profile/:studentId"
             element={<ProfileView />}
           /> {/* New route for viewing profiles by student ID */}
+
         </Route>
       </Route>
     </Routes>

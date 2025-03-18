@@ -12,6 +12,7 @@ import studentRoutes from "./routes/student.js";
 import staffRoutes from "./routes/staff.js";
 import jobAnalyticsRoutes from "./routes/jobAnalytics.js"
 import noticeRoutes from "./routes/noticeRoutes.js";
+import forumRoutes from "./routes/forum.js";
 import student from "./controllers/student.js";
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/api/students", studentRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/jobs/analytics", jobAnalyticsRoutes);
 app.use("/api/notices", noticeRoutes);
+app.use("/api/forums", forumRoutes);
 // Start server
 const PORT = process.env.PORT || 5000;
 // app.get("/api/students/:username", async (req, res) => {
