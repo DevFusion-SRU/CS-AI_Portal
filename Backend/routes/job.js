@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
     addJob,
@@ -12,6 +13,10 @@ import {
 
 const router = express.Router();
 
+// Multer configuration for handling image uploads
+const storage = multer.memoryStorage(); // Stores image in memory as Buffer
+const upload = multer({ storage });
+
 // Public route
 router.get("/", getJobs);
 router.get("/searchCompanies", searchCompanies);
@@ -20,7 +25,7 @@ router.get("/searchCompanies", searchCompanies);
 router.get("/:jobId", authenticateToken, getJobById);
 
 // Protected routes for admin
-router.post("/", authenticateToken, authorizeRole("staff"), addJob);
+router.post("/", authenticateToken, authorizeRole("staff"),upload.single("logo") ,addJob);
 router.post("/batch", authenticateToken, authorizeRole("staff"), addJobsBatch);
 router.delete("/:jobId", authenticateToken, authorizeRole("staff"), deleteJob);
 router.patch("/:jobId", authenticateToken, authorizeRole("staff"), updateJob);

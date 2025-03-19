@@ -41,6 +41,8 @@ const jobSchema = new mongoose.Schema({
         required: false,
     },
     forumTitle: { type: String, required: false },
+        logo: { type: String, required: false },
+        contentType: { type: String, required: false },
     applyLink: { type: String, required: true },
 }, { timestamps: true } // Enables createdAt and updatedAt
 );

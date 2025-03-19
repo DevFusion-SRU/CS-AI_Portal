@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import sharp from "sharp"; // For image processing
 import Job from "../../models/Jobs/Job.js"; // Job model using jobDB
 import JobForum from "../../models/Forums/jobForum.js"; // Import JobForum model
 
@@ -221,54 +221,124 @@ export const searchCompanies = async (req, res) => {
 
 
 
+// export const addJob = async (req, res) => {
+//     const { forumTitle, ...jobData } = req.body; // Extract forumTitle separately
+
+//     // Validate required job fields
+//     if (!jobData.modeOfWork || !jobData.jobId || !jobData.title || !jobData.type || 
+//         !jobData.company || !jobData.location || !jobData.description.text || !jobData.applyLink) {
+//         return res.status(400).json({ success: false, message: "Provide all required fields!!" });
+//     }
+
+//     try {
+//         // Check if a job with the same jobId already exists
+//         const existingJob = await Job.findOne({ jobId: jobData.jobId });
+//         if (existingJob) {
+//             return res.status(400).json({ success: false, message: "Job with this ID already exists!" });
+//         }
+        
+//         // Create and save the job
+//         const newJob = new Job(jobData);
+//         await newJob.save();
+
+//         let jobForum = null;
+
+//         // If forumTitle is provided, create a JobForum
+//         if (forumTitle) {
+//             jobForum = new JobForum({
+//                 title: forumTitle,
+//                 jobId: jobData.jobId, // Link forum to job
+//                 members: [], // Empty at creation, members can join later
+//                 posts: []   // No posts initially
+//             });
+
+//             await jobForum.save();
+//         }
+
+//         res.status(201).json({
+//             success: true,
+//             data: newJob,
+//             jobForum: jobForum ? jobForum : null // Return JobForum details if created
+//         });
+
+//     } catch (error) {
+//         console.error("Error in adding job: ", error.message);
+//         res.status(500).json({ success: false, message: "Server Error" });
+//     }
+// };
 
 
 
+/**
+ * Add a new job with an optional logo
+ */
 export const addJob = async (req, res) => {
-    const { forumTitle, ...jobData } = req.body; // Extract forumTitle separately
-
-    // Validate required job fields
-    if (!jobData.modeOfWork || !jobData.jobId || !jobData.title || !jobData.type || 
-        !jobData.company || !jobData.location || !jobData.description.text || !jobData.applyLink) {
-        return res.status(400).json({ success: false, message: "Provide all required fields!!" });
-    }
-
     try {
+        const { forumTitle, description, ...jobData } = req.body;
+
+        // Parse the description in case it's sent as a JSON string
+        let parsedDescription;
+        try {
+            parsedDescription = typeof description === "string" ? JSON.parse(description) : description;
+        } catch (error) {
+            return res.status(400).json({ success: false, message: "Invalid description format" });
+        }
+
+        // Validate required fields
+        if (!jobData.modeOfWork || !jobData.jobId || !jobData.title || !jobData.type || 
+            !jobData.company || !jobData.location || !parsedDescription?.text || !jobData.applyLink) {
+            return res.status(400).json({ success: false, message: "Provide all required fields!" });
+        }
+
         // Check if a job with the same jobId already exists
         const existingJob = await Job.findOne({ jobId: jobData.jobId });
         if (existingJob) {
             return res.status(400).json({ success: false, message: "Job with this ID already exists!" });
         }
 
-        // Create and save the job
+        // Attach description
+        jobData.description = parsedDescription;
+
+        // Process the uploaded logo (if provided)
+        if (req.file) {
+            jobData.logo = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+            jobData.contentType = req.file.mimetype; // Store file type
+        }
+
+        // Save the job
         const newJob = new Job(jobData);
         await newJob.save();
 
+        // Create a job forum if forumTitle is provided
         let jobForum = null;
-
-        // If forumTitle is provided, create a JobForum
         if (forumTitle) {
-            jobForum = new JobForum({
-                title: forumTitle,
-                jobId: jobData.jobId, // Link forum to job
-                members: [], // Empty at creation, members can join later
-                posts: []   // No posts initially
-            });
-
+            jobForum = new JobForum({ title: forumTitle, jobId: jobData.jobId, members: [], posts: [] });
             await jobForum.save();
         }
+
+         // Generate a resized, center-cropped version (400x400) for response
+        // const resizedImageBuffer = await sharp(req.file.buffer)
+        //       .resize(400, 400, { fit: "cover", position: "center" }) // Center crop
+        //       .toBuffer();
+        
+        //     // Convert resized image to Base64 (for immediate preview)
+        // const base64Image = `data:${req.file.mimetype};base64,${resizedImageBuffer.toString("base64")}`;
+
 
         res.status(201).json({
             success: true,
             data: newJob,
-            jobForum: jobForum ? jobForum : null // Return JobForum details if created
+            // base64Image: base64Image,
+            jobForum: jobForum || null
         });
 
     } catch (error) {
-        console.error("Error in adding job: ", error.message);
+        console.error("Error adding job:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+
 
 export const addJobsBatch = async (req, res) => {
     const jobs = req.body;
@@ -338,3 +408,5 @@ export const updateJob = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+
