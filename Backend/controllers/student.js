@@ -1,213 +1,586 @@
 import mongoose from "mongoose";
+import axios from "axios";
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 import dotenv from "dotenv";
-dotenv.config();
+// import sharp from "sharp"; // Import Sharp for image resizing
+import { getProfilePhoto } from "../utils/profilePhoto.js";
 
+dotenv.config();
+import cloudinary from "../config/cloudinary.js"; // Import Cloudinary config
 import StudentDetails from "../models/Students/Student.Details.js"; // StudentDetails model using studentDB
 import StudentCredentials from "../models/Students/Student.Credentials.js"; // StudentCredentials model using studentDB
+import StudentFiles from "../models/Students/Student.Files.js"; // StudentFiles model using studentDB
 
 export const getStudents = async (req, res) => {
-    const { rollNumber, firstName, lastName } = req.query;
+  const { rollNumber, firstName, lastName } = req.query;
 
-    // Ensure only one filter is applied at a time
-    if ((rollNumber && firstName) || (rollNumber && lastName) || (firstName && lastName)) {
-        return res.status(400).json({
-            success: false,
-            message: "Only one search filter (rollNumber, firstName, or lastName) is allowed at a time.",
-        });
+  if (
+    (rollNumber && firstName) ||
+    (rollNumber && lastName) ||
+    (firstName && lastName)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Only one search filter (rollNumber, firstName, or lastName) is allowed at a time.",
+    });
+  }
+
+  const filters = {};
+  if (rollNumber) filters.rollNumber = new RegExp(rollNumber.trim(), "i");
+  else if (firstName) filters.firstName = new RegExp(firstName.trim(), "i");
+  else if (lastName) filters.lastName = new RegExp(lastName.trim(), "i");
+
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const skip = (page - 1) * limit;
+    const fields = "rollNumber firstName lastName course email mobile";
+
+    const [students, totalStudents] = await Promise.all([
+      StudentDetails.find(filters).skip(skip).limit(limit).select(fields),
+      StudentDetails.countDocuments(filters),
+    ]);
+
+    if (students.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No students found matching the criteria.",
+      });
     }
 
-    const filters = {};
-
-    if (rollNumber) {
-        filters.rollNumber = new RegExp(rollNumber.trim(), "i");  // Case-insensitive regex search
-    } else if (firstName) {
-        filters.firstName = new RegExp(firstName.trim(), "i"); // Case-insensitive search
-    } else if (lastName) {
-        filters.lastName = new RegExp(lastName.trim(), "i"); // Case-insensitive search
-    }
-
-    try {
-        // Pagination setup
-        const page = parseInt(req.query.page) || 1; // Default to page 1
-        const limit = parseInt(req.query.limit) || 25; // Default to 25 students per page
-        const skip = (page - 1) * limit;
-
-        // Fetch only necessary fields to optimize the data size
-        const fields = 'rollNumber firstName lastName course email mobile'; // No photo
-
-        // Parallelize querying students and counting documents to reduce response time
-        const [students, totalStudents] = await Promise.all([
-            StudentDetails.find(filters).skip(skip).limit(limit).select(fields), // Students query with pagination and fields projection
-            StudentDetails.countDocuments(filters)  // Count the filtered documents (optional but helps with pagination info)
-        ]);
-
-        if (students.length === 0) {
-            return res.status(404).json({ success: false, message: "No students found matching the criteria." });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: students,
-            totalPages: Math.ceil(totalStudents / limit), // Total pages based on filtered students
-            currentPage: page,
-        });
-    } catch (error) {
-        console.error("Error in fetching Students: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
+    res.status(200).json({
+      success: true,
+      data: students,
+      totalPages: Math.ceil(totalStudents / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error("Error in fetching Students:", error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
 };
 
 export const getStudentDetails = async (req, res) => {
-    const { rollNumber } = req.params;
-    try {
-        const studentDetails = await StudentDetails.findOne({ rollNumber });
-        if (!studentDetails) {
-            return res.status(404).json({ success: false, message: "No details found for this student!" });
-        }
+  const { rollNumber } = req.params;
 
-        const response = {
-            rollNumber: studentDetails.rollNumber,
-            firstName: studentDetails.firstName,
-            lastName: studentDetails.lastName,
-            course: studentDetails.course,
-            email: studentDetails.email,
-            mobile: studentDetails.mobile,
-        };
+  try {
+    const studentDetails = await StudentDetails.findOne({ rollNumber });
 
-        if (studentDetails.photo && studentDetails.photoType) {
-            response.photo = `data:${studentDetails.photoType};base64,${studentDetails.photo.toString("base64")}`;
-        }
-
-        res.status(200).json({ success: true, data: response });
-    } catch (error) {
-        console.error("Error fetching student details: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
+    if (!studentDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "No details found for this student!",
+      });
     }
+
+    const response = {
+      rollNumber: studentDetails.rollNumber,
+      firstName: studentDetails.firstName,
+      lastName: studentDetails.lastName || "",
+      course: studentDetails.course,
+      graduationYear: studentDetails.graduationYear,
+      email: studentDetails.email,
+      mobile: studentDetails.mobile || "",
+      gender: studentDetails.gender || "",
+      address: studentDetails.Address || "",
+      personalMail: studentDetails.personalMail || "",
+      website: studentDetails.website || "",
+      about: studentDetails.about || "",
+      skills: studentDetails.skills || [],
+      experiences: studentDetails.experiences || [],
+      education: studentDetails.education || [],
+      certifications: studentDetails.certifications || [],
+      resumes: studentDetails.resumes?.map((resume) => resume.title) || [],
+    };
+
+    // 🔹 Check if the student has a stored photo buffer
+    // if (studentDetails.photoUrl) {
+      try {
+        // ✅ Resize the image while maintaining original dimensions
+        // const resizedImageBuffer = await sharp(studentDetails.photo)
+        //   .resize({ width: 400, height: 400, fit: "cover" }) // Center cropping
+        //   .toBuffer();
+
+        // // ✅ Convert to Base64
+        response.photo = await getProfilePhoto(rollNumber, "Student", 400);
+      } catch (error) {
+        console.error("Error processing image:", error.message);
+        response.photo = null;
+      }
+    // } else {
+    //   response.photo = null; // If no photo exists, return null
+    // }
+
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error("Error fetching student details: ", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
 export const addStudent = async (req, res) => {
-    const student = req.body;
-    if (!student.rollNumber || !student.firstName || !student.email || !student.course || !student.graduationYear) {
-        return res.status(400).json({ success: false, message: "Provide all required fields!" });
+  const student = req.body;
+  if (
+    !student.rollNumber ||
+    !student.firstName ||
+    !student.email ||
+    !student.course ||
+    !student.graduationYear
+  ) {
+    return res.status(400).json({ success: false, message: "Provide all required fields!" });
+  }
+
+  const newStudent = new StudentDetails(student);
+
+  try {
+    await newStudent.save();
+    const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10);
+    const newAuthentication = new StudentCredentials({
+      username: student.rollNumber,
+      password: hashedPassword,
+      role: "student",
+    });
+    await newAuthentication.save();
+
+    res.status(201).json({ success: true, data: newStudent });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Student with this Roll Number already exists!",
+      });
     }
-
-    const newStudent = new StudentDetails(student);
-
-    try {
-        // Save student in the Student collection
-        await newStudent.save();
-
-        // Add student entry to Authentication collection
-        const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10); // Hash the default password
-        const newAuthentication = new StudentCredentials({
-            username: student.rollNumber,
-            password: hashedPassword,
-            role: "student",
-        });
-        await newAuthentication.save();
-
-        res.status(201).json({ success: true, data: newStudent });
-    } catch (error) {
-        // Check if it's a duplicate key error (unique constraint violation)
-        if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: "Student with this Roll Number already exists!" });
-        }
-        console.error("Error in adding Student details: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
+    console.error("Error in adding Student details:", error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
 };
 
 export const uploadStudentPhoto = async (req, res) => {
+  try {
     const { rollNumber } = req.params;
-
     if (!req.file) {
-        return res.status(400).json({ success: false, message: "Photo file is required!" });
+      return res.status(400).json({ success: false, message: "No file uploaded!" });
     }
 
-    const { buffer, mimetype } = req.file;
+    const fileUrl = req.file.path;
+    const student = await StudentDetails.findOne({ rollNumber });
 
-    try {
-        const student = await StudentDetails.findOne({ rollNumber });
-        if (!student) {
-            return res.status(404).json({ success: false, message: "Student not found!" });
-        }
-
-        student.photo = buffer;
-        student.photoType = mimetype;
-
-        await student.save();
-        res.status(200).json({ success: true, message: "Photo uploaded successfully!" });
-    } catch (error) {
-        console.error("Error uploading photo: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found!" });
     }
+
+    student.photoUrl = fileUrl;
+    await student.save();
+
+    const resizedImageUrl = fileUrl.replace("/upload/", "/upload/w_400,h_400,c_fill/");
+    const response = await axios.get(resizedImageUrl, { responseType: "arraybuffer" });
+    const contentType = response.headers["content-type"];
+    const base64Image = `data:${contentType};base64,${Buffer.from(response.data).toString("base64")}`;
+
+    res.status(200).json({
+      success: true,
+      message: "Photo uploaded successfully!",
+      image: base64Image,
+    });
+  } catch (error) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File size exceeds the limit of 2MB.",
+      });
+    }
+    if (error.message.includes("Invalid image type")) {
+      return res.status(400).json({
+        success: false,
+        message: "Only JPG, JPEG, and PNG files are allowed for images!",
+      });
+    }
+    console.error("Upload Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+export const uploadStudentResume = async (req, res) => {
+  try {
+    const { rollNumber } = req.params;
+    const student = await StudentDetails.findOne({ rollNumber });
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found!" });
+    }
+
+    if (student.resumes.length >= 3) {
+      return res.status(400).json({
+        success: false,
+        message: "You can upload a maximum of 3 resumes.",
+      });
+    }
+
+    let fileUrl;
+    let fileSize = "N/A";
+    let title = req.body.title || "Untitled"; // Use custom title from frontend, fallback to "Untitled"
+
+    if (req.file) {
+      // Handle file upload
+      fileUrl = req.file.path; // Cloudinary URL
+      title = req.body.title || req.file.originalname; // Prefer custom title over filename
+      fileSize = `${(req.file.size / 1024 / 1024).toFixed(2)} MB`;
+    } else if (req.body.resumeUrl) {
+      // Handle URL input
+      fileUrl = req.body.resumeUrl;
+    } else {
+      return res.status(400).json({ success: false, message: "No file uploaded or URL provided!" });
+    }
+
+    const newResume = {
+      title,
+      resumeUrl: fileUrl,
+      size: fileSize,
+      uploadedAt: new Date(),
+    };
+
+    student.resumes.push(newResume);
+    await student.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Resume uploaded successfully!",
+      data: {
+        _id: newResume._id,
+        title: newResume.title,
+        resumeUrl: newResume.resumeUrl,
+        size: newResume.size,
+      },
+    });
+  } catch (error) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File size exceeds the limit of 5MB.", // Match Multer config
+      });
+    }
+    console.error("Upload Error:", error.message, error.stack); // Enhanced logging
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+export const deleteStudentResume = async (req, res) => {
+  try {
+    const { rollNumber, resumeId } = req.params;
+    const student = await StudentDetails.findOne({ rollNumber });
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found!" });
+    }
+
+    const resume = student.resumes.find((r) => r._id.toString() === resumeId);
+    if (!resume) {
+      return res.status(404).json({ success: false, message: "Resume not found!" });
+    }
+
+    const publicId = resume.resumeUrl.split("/").pop().split(".")[0];
+    await cloudinary.uploader.destroy(`CS-AI_PORTAL/resumes/${publicId}`, { resource_type: "raw" });
+
+    student.resumes = student.resumes.filter((r) => r._id.toString() !== resumeId);
+    await student.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Resume deleted successfully!",
+    });
+  } catch (error) {
+    console.error("Resume Deletion Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+export const deleteStudentSectionItem = async (req, res) => {
+  try {
+    const { rollNumber, section, id } = req.params;
+    const student = await StudentDetails.findOne({ rollNumber });
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    const validSections = ["experiences", "education", "certifications", "skills"];
+    if (!validSections.includes(section)) {
+      return res.status(400).json({ success: false, message: "Invalid section" });
+    }
+
+    const item = student[section].find((item) => item._id.toString() === id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: `${section} item not found` });
+    }
+
+    if (section === "experiences" && item.certificate) {
+      const publicId = item.certificate.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`CS-AI_PORTAL/certificates/${publicId}`, { resource_type: "raw" });
+    } else if (section === "certifications" && item.certificateId) {
+      const publicId = item.certificateId.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`CS-AI_PORTAL/certificates/${publicId}`, { resource_type: "raw" });
+    }
+
+    student[section] = student[section].filter((item) => item._id.toString() !== id);
+    await student.save();
+
+    res.status(200).json({ success: true, message: `${section} item deleted successfully` });
+  } catch (error) {
+    console.error(`Error deleting ${req.params.section} item:`, error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
 };
 
 export const addStudentBatch = async (req, res) => {
-    const students = req.body;
+  const students = req.body;
 
-    // Check if the request body is an array
-    if (!Array.isArray(students) || students.length === 0) {
-        return res.status(400).json({ success: false, message: "Provide an array of students with all required fields!" });
+  if (!Array.isArray(students) || students.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Provide an array of students with all required fields!",
+    });
+  }
+
+  for (const student of students) {
+    if (
+      !student.rollNumber ||
+      !student.firstName ||
+      !student.email ||
+      !student.course
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Each student must include rollNumber, firstName, email, and course!",
+      });
     }
+  }
 
-    // Validate each student in the array
-    for (const student of students) {
-        if (!student.rollNumber || !student.firstName || !student.email || !student.course) {
-            return res.status(400).json({ success: false, message: "Each student must include rollNumber, firstName, email, and course!" });
-        }
-    }
+  try {
+    const newStudents = await StudentDetails.insertMany(students);
+    const authenticationEntries = await Promise.all(
+      students.map(async (student) => {
+        const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10);
+        return {
+          username: student.rollNumber,
+          password: hashedPassword,
+          role: "student",
+        };
+      })
+    );
+    await StudentCredentials.insertMany(authenticationEntries);
 
-    try {
-        // Save all students in bulk using `insertMany`
-        const newStudents = await StudentDetails.insertMany(students);
-
-        // Add each student to Authentication collection
-        const authenticationEntries = await Promise.all(
-            students.map(async (student) => {
-                const hashedPassword = await bcrypt.hash(process.env.STUDENT_PASSWORD, 10); // Hash the default password
-                return {
-                    username: student.rollNumber,
-                    password: hashedPassword,
-                    role: "student",
-                };
-            })
-        );
-        await StudentCredentials.insertMany(authenticationEntries); // Bulk insert into Credentials collection
-
-        res.status(201).json({ success: true, message: "Students batch insertion completed!" });
-    } catch (error) {
-        console.error("Error in entering Student details: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
+    res.status(201).json({ success: true, data: newStudents });
+  } catch (error) {
+    console.error("Error in entering Student details:", error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
 };
 
 export const deleteStudent = async (req, res) => {
-    const { rollNumber } = req.params;
+  const { rollNumber } = req.params;
 
-    if (!rollNumber) {
-        return res.status(400).json({ success: false, message: "Roll number is required!" });
+  if (!rollNumber) {
+    return res.status(400).json({ success: false, message: "Roll number is required!" });
+  }
+
+  try {
+    const deletedStudent = await StudentDetails.findOneAndDelete({ rollNumber });
+    if (!deletedStudent) {
+      return res.status(404).json({ success: false, message: "Student not found!" });
     }
 
-    try {
-        // Delete student from the Student collection
-        const deletedStudent = await StudentDetails.findOneAndDelete({ rollNumber });
-
-        if (!deletedStudent) {
-            return res.status(404).json({ success: false, message: "Student not found!" });
-        }
-
-        // Delete student entry from the Authentication collection
-        const deletedAuth = await StudentCredentials.findOneAndDelete({ username: rollNumber });
-
-        if (!deletedAuth) {
-            console.error("Authentication record not found for roll number:", rollNumber);
-        }
-
-        res.status(200).json({ success: true, message: "Student and authentication records deleted successfully!" });
-    } catch (error) {
-        console.error("Error in deleting Student details: ", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
+    const deletedAuth = await StudentCredentials.findOneAndDelete({ username: rollNumber });
+    if (!deletedAuth) {
+      console.error("Authentication record not found for roll number:", rollNumber);
     }
+
+    res.status(200).json({
+      success: true,
+      message: "Student and authentication records deleted successfully!",
+    });
+  } catch (error) {
+    console.error("Error in deleting Student details:", error.message);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+export const uploadCertificateFile = async (req, res) => {
+  try {
+    const { rollNumber, section, id } = req.params;
+
+    if (!rollNumber || !section || !id) {
+      return res.status(400).json({ success: false, message: "Missing required parameters" });
+    }
+
+    const student = await StudentDetails.findOne({ rollNumber });
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const certificateUrl = req.file.path;
+    let updated = false;
+
+    if (section === "experiences") {
+      const experience = student.experiences.find((exp) => exp._id.toString() === id);
+      if (!experience) {
+        return res.status(404).json({ success: false, message: "Experience not found" });
+      }
+      experience.certificate = certificateUrl;
+      updated = true;
+    } else if (section === "certifications") {
+      const certification = student.certifications.find((cert) => cert._id.toString() === id);
+      if (!certification) {
+        return res.status(404).json({ success: false, message: "Certification not found" });
+      }
+      certification.certificateId = certificateUrl; // Matches frontend 'certificateUrl'
+      updated = true;
+    }
+
+    if (!updated) {
+      return res.status(400).json({ success: false, message: "Invalid section or ID" });
+    }
+
+    await student.save();
+    res.status(200).json({
+      success: true,
+      message: "Certificate uploaded successfully",
+      certificateUrl,
+    });
+  } catch (error) {
+    console.error("Error uploading certificate:", error.message);
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+  }
+};
+
+export const editStudent = async (req, res) => {
+  const { rollNumber } = req.params;
+  const { section, data } = req.body;
+
+  try {
+    const student = await StudentDetails.findOne({ rollNumber });
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    const formatDate = (dateString) => (dateString ? new Date(dateString) : null);
+
+    switch (section) {
+      case "experiences":
+        if (!Array.isArray(data)) {
+          return res.status(400).json({ success: false, message: "Experiences data should be an array" });
+        }
+        student.experiences = data.map((item) => ({
+          _id: item._id || new mongoose.Types.ObjectId(),
+          title: item.title,
+          company: item.company,
+          duration: {
+            startDate: formatDate(item.duration.startDate),
+            endDate: formatDate(item.duration.endDate),
+          },
+          location: item.location,
+          description: item.description,
+          certificate: item.certificate || "",
+        }));
+        break;
+
+      case "education":
+        if (!Array.isArray(data)) {
+          return res.status(400).json({ success: false, message: "Education data should be an array" });
+        }
+        student.education = data.map((item) => ({
+          _id: item._id || new mongoose.Types.ObjectId(),
+          institution: item.institution,
+          degree: item.degree,
+          specialization: item.specialization,
+          duration: {
+            startDate: formatDate(item.duration.startDate),
+            endDate: formatDate(item.duration.endDate),
+          },
+          cgpa: item.cgpa,
+        }));
+        break;
+
+      case "certifications":
+        if (!Array.isArray(data)) {
+          return res.status(400).json({ success: false, message: "Certifications data should be an array" });
+        }
+        student.certifications = data.map((item) => ({
+          _id: item._id || new mongoose.Types.ObjectId(),
+          title: item.title, // Maps to frontend 'provider'
+          issuer: item.issuer,
+          courseName: item.courseName, // Maps to frontend 'title'
+          validTime: {
+            startDate: formatDate(item.validTime.startDate),
+            endDate: formatDate(item.validTime.endDate),
+          },
+          certificateId: item.certificateId || "",
+        }));
+        break;
+
+        case "skills":
+          if (!Array.isArray(data)) {
+            return res.status(400).json({ success: false, message: "Skills data must be an array" });
+          }
+          student.skills = data.map((item) => ({
+            _id: item._id || new mongoose.Types.ObjectId(),
+            name: item.name,
+            level: item.level,
+          }));
+          break;
+
+      case "resumes":
+        if (!Array.isArray(data)) {
+          return res.status(400).json({ success: false, message: "Resumes data should be an array" });
+        }
+        student.resumes = data.map((item) => ({
+          _id: item._id || new mongoose.Types.ObjectId(),
+          title: item.title,
+          resumeUrl: item.resumeUrl,
+          size: item.size || "N/A",
+          uploadedAt: item.uploadedAt ? new Date(item.uploadedAt) : new Date(),
+        }));
+        break;
+
+      case "about":
+        student.about = data;
+        break;
+
+      case "info":
+        student.email = data.email || student.email;
+        student.mobile = data.phone || student.mobile;
+        student.website = data.website || student.website;
+        student.gender = data.gender || student.gender;
+        student.address = data.address || student.address; // Maps to frontend 'location'
+        break;
+
+      default:
+        return res.status(400).json({ success: false, message: "Invalid section" });
+    }
+
+    const updatedStudent = await student.save();
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedStudent,
+    });
+  } catch (error) {
+    console.error("Error updating student profile:", error.message);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export default {
+  getStudents,
+  getStudentDetails,
+  addStudent,
+  uploadStudentPhoto,
+  uploadStudentResume,
+  deleteStudentResume,
+  deleteStudentSectionItem,
+  addStudentBatch,
+  deleteStudent,
+  uploadCertificateFile,
+  editStudent,
 };
