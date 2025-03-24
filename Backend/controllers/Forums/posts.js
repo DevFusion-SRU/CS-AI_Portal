@@ -2,7 +2,9 @@ import Post from "../../models/Forums/Post.js";
 import Comment from "../../models/Forums/Comment.js";
 import Reply from "../../models/Forums/Reply.js";
 import Report from "../../models/Forums/Report.js";
-
+import { getProfilePhoto } from "../../utils/profilePhoto.js";
+import StudentDetails from "../../models/Students/Student.Details.js";
+import StaffDetails from "../../models/Staff/Staff.Details.js";
 /**
  * @desc Create a new post
  * @route POST /api/forums/posts
@@ -51,13 +53,44 @@ export const getAllPosts = async (req, res) => {
             mostCommented: { comments: -1 },
         };
 
-        const posts = await Post.find()
+        const posts = await Post.find({ jobId: { $exists: false } })
+            // .populate('postedBy')
+            .select("-comments") // Exclude `comments` directly
             .sort(sortOptions[sort] || sortOptions.latest)
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
             .lean();
 
-        res.status(200).json({ success: true, data: posts });
+       // Fetch user details based on userType
+       for (const post of posts) {
+
+
+        if (post.userType === "Student") {
+            const student = await StudentDetails.findOne({ rollNumber: post.postedBy }).select("firstName lastName ");
+            if (student) {
+                post.firstName = student.firstName;
+                post.lastName = student.lastName;
+                post.profilePhoto = await getProfilePhoto(post.postedBy, post.userType, 50);
+            }
+        } else if (post.userType === "Staff") {
+            const staff = await StaffDetails.findOne({ employeeId: post.postedBy }).select("firstName lastName");
+            if (staff) {
+                post.firstName = staff.firstName;
+                post.lastName = staff.lastName;
+                post.profilePhoto = await getProfilePhoto(post.postedBy, post.userType, 50);
+            }
+        }
+
+
+    }
+        // const totalPages = Math.ceil(posts / limit);
+
+
+        // Calculate total pages
+        const totalPosts = await Post.countDocuments({ jobId: { $exists: false } });
+        const totalPages = Math.ceil(totalPosts / limit);
+
+        res.status(200).json({ success: true, data: posts, pagination: { totalPages, currentPage: page } });
     } catch (error) {
         console.error("Error fetching posts:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
@@ -72,46 +105,77 @@ export const getAllPosts = async (req, res) => {
 export const getPostById = async (req, res) => {
     try {
         const { postId } = req.params;
-        const { page = 1, limit = 5 } = req.query; // Default: Page 1, 5 comments per page
+        const { page = 1, limit = 5, sort = "latest" } = req.query; // Default: Page 1, 5 comments per page
+        const sortOptions = {
+            latest: { createdAt: -1 },
+            mostLiked: { likes: -1 },
+            mostReplied: { replies: -1 },
+        };
 
         // Fetch post details
         const post = await Post.findOne({ postId }).lean();
         if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
+        // Fetch user details for post author
+        if (post.userType === "Student") {
+            const student = await StudentDetails.findOne({ rollNumber: post.postedBy }).select("firstName lastName");
+            if (student) {
+                post.firstName = student.firstName;
+                post.lastName = student.lastName;
+                post.profilePhoto = await getProfilePhoto(post.postedBy, post.userType, 50);
+            }
+        } else if (post.userType === "Staff") {
+            const staff = await StaffDetails.findOne({ employeeId: post.postedBy }).select("firstName lastName");
+            if (staff) {
+                post.firstName = staff.firstName;
+                post.lastName = staff.lastName;
+                post.profilePhoto = await getProfilePhoto(post.postedBy, post.userType, 50);
+            }
+        }
+
         // Fetch paginated comments
         const comments = await Comment.find({ postId })
-            .sort({ createdAt: -1 }) // Latest first
+            .sort(sortOptions[sort] || sortOptions.latest) // Sort comments
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
             .lean();
 
-        // Fetch replies for each comment (Paginated: 3 replies per comment)
-        const commentsWithReplies = await Promise.all(
-            comments.map(async (comment) => {
-                const replies = await Reply.find({ commentId: comment.commentId })
-                    .sort({ createdAt: -1 })
-                    .limit(3) // Fetch only latest 3 replies
-                    .lean();
-                return { ...comment, replies };
-            })
-        );
+        // Fetch user details for each commenter
+        for (const comment of comments) {
+            if (comment.userType === "Student") {
+                const student = await StudentDetails.findOne({ rollNumber: comment.commentedBy }).select("firstName lastName");
+                if (student) {
+                    comment.firstName = student.firstName;
+                    comment.lastName = student.lastName;
+                    comment.profilePhoto = await getProfilePhoto(comment.commentedBy, comment.userType, 50);
+                }
+            } else if (comment.userType === "Staff") {
+                const staff = await StaffDetails.findOne({ employeeId: comment.commentedBy }).select("firstName lastName");
+                if (staff) {
+                    comment.firstName = staff.firstName;
+                    comment.lastName = staff.lastName;
+                    comment.profilePhoto = await getProfilePhoto(comment.commentedBy, comment.userType, 50);
+                }
+            }
+        }
 
-        res.status(200).json({ 
-            success: true, 
-            data: { post, comments: commentsWithReplies } 
+        // Calculate total pages for comments
+        const totalComments = await Comment.countDocuments({ postId });
+        const totalPages = Math.ceil(totalComments / limit);
+
+        res.status(200).json({
+            success: true,
+            data: { post, comments },
+            pagination: { totalPages, currentPage: page },
         });
 
     } catch (error) {
         console.error("Error fetching post:", error.message);
-
-        // Handles Mongoose Schema errors
-        if (error instanceof mongoose.Error.MissingSchemaError) {
-            return res.status(500).json({ success: false, message: "Database schema error. Try again later." });
-        }
-
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+
 
 /**
  * @desc Edit a post
@@ -220,3 +284,52 @@ export const toggleLikePost = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+
+export const summarizePost = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { page = 1, limit = 5 } = req.query;
+
+        // Fetch post details
+        const post = await Post.findOne({ postId })
+            .select("title description -_id") // Exclude _id
+            .lean();
+
+        if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+        // Fetch paginated comments (include commentId for internal use but remove later)
+        const comments = await Comment.find({ postId })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit))
+            .select("text commentId -_id") // Fetch commentId temporarily
+            .lean();
+
+        // Fetch replies for each comment
+        const commentsWithReplies = await Promise.all(
+            comments.map(async (comment) => {
+                const replies = await Reply.find({ commentId: comment.commentId }) // Correct lookup
+                    .sort({ createdAt: -1 })
+                    .limit(3)
+                    .select("text -_id") // Exclude _id
+                    .lean();
+
+                // Remove `commentId` before returning
+                const { commentId, ...filteredComment } = comment;
+                return { ...filteredComment, replies };
+            })
+        );
+
+        res.status(200).json({
+            success: true,
+            data: { post, comments: commentsWithReplies }
+        });
+
+    } catch (error) {
+        console.error("Error fetching post:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+

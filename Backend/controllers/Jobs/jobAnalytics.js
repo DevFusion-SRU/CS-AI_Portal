@@ -1,26 +1,25 @@
 import Job from "../../models/Jobs/Job.js";
 import AppliedStudents from "../../models/Jobs/appliedStudents.js";
 
+
+
+
+// controllers/Jobs/jobAnalytics.js
 export const getInDemandSkills = async (req, res) => {
     try {
-        const getInDemandSkills = await Job.aggregate([
-            { $unwind: { path: "$description.skills", preserveNullAndEmptyArrays: true } }, // Avoid errors for empty skills
-            { $group: { _id: "$description.skills", count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 5 }
-        ]);
-
-        res.json({ 
-            success: true, 
-            message: "Job analytics data fetched successfully", 
-            inDemandSkills: getInDemandSkills 
-        });
+      const inDemandSkills = await Job.aggregate([
+        { $unwind: { path: "$description.skills", preserveNullAndEmptyArrays: true } },
+        { $group: { _id: "$description.skills", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+      ]);
+  
+      res.status(200).json({ success: true, inDemandSkills });
     } catch (error) {
-        console.error("Error fetching job analytics:", error);
-        res.status(500).json({ success: false, message: "Server Error" });
+      console.error("Error fetching in-demand skills:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
     }
-};
-
+  };
 
 export const getMostAppliedJobs = async (req, res) => {
     try {
@@ -37,7 +36,15 @@ export const getMostAppliedJobs = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
-
+export const getJobsPostedCount = async (req, res) => {
+    try {
+      const count = await Job.countDocuments();
+      res.status(200).json({ success: true, count });
+    } catch (error) {
+      console.error("Error fetching jobs posted count:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 
 export const getMostAppliedCompanies = async (req, res) => {
     try {

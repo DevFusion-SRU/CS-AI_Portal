@@ -10,7 +10,10 @@ import appliedJobsRoutes from "./routes/appliedJobs.js";
 import authRoutes from "./routes/auth.js";
 import studentRoutes from "./routes/student.js";
 import staffRoutes from "./routes/staff.js";
-import jobAnalyticsRoutes from "./routes/jobAnalytics.js";
+import jobAnalyticsRoutes from "./routes/jobAnalytics.js"
+import noticeRoutes from "./routes/noticeRoutes.js";
+import forumRoutes from "./routes/forum.js";
+import student from "./controllers/student.js";
 const app = express();
 
 // Configure CORS options
@@ -37,10 +40,24 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/appliedJobs", appliedJobsRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/staff", staffRoutes);
-app.use("/api/jobAnalytics", jobAnalyticsRoutes);
-
+app.use("/api/jobs/analytics", jobAnalyticsRoutes);
+app.use("/api/notices", noticeRoutes);
+app.use("/api/forums", forumRoutes);
 // Start server
 const PORT = process.env.PORT || 5000;
+// app.get("/api/students/:username", async (req, res) => {
+//   try {
+//     const { username } = req.params;
+//     const student = await student.findOne({ username }); // Adjust for your DB
+//     if (!student) {
+//       return res.status(404).json({ success: false, message: "No details found for this student!" });
+//     }
+//     res.json({ success: true, data: student });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// });
+
 
 const startServer = async () => {
   try {
@@ -57,4 +74,4 @@ const startServer = async () => {
   }
 };
 
-startServer();   
+startServer();

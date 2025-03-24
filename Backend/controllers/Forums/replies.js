@@ -1,6 +1,9 @@
 import Reply from "../../models/Forums/Reply.js";
 import Comment from "../../models/Forums/Comment.js";
 import Report from "../../models/Forums/Report.js";
+import { getProfilePhoto } from "../../utils/profilePhoto.js";
+import StudentDetails from "../../models/Students/Student.Details.js";
+import StaffDetails from "../../models/Staff/Staff.Details.js";
 
 export const addReply = async (req, res) => {
     try {
@@ -40,24 +43,54 @@ export const getReplies = async (req, res) => {
         const { commentId } = req.params;
         const { page = 1, limit = 5 } = req.query;
 
+        // Check if the comment exists
         const commentExists = await Comment.exists({ commentId });
         if (!commentExists) {
             return res.status(404).json({ success: false, message: "Comment not found" });
         }
 
+        // Fetch paginated replies
         const replies = await Reply.find({ commentId })
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: -1 }) // Latest first
             .skip((page - 1) * limit)
             .limit(Number(limit))
             .lean();
 
-        res.status(200).json({ success: true, replies });
+        // Fetch user details for each reply
+        for (const reply of replies) {
+            if (reply.userType === "Student") {
+                const student = await StudentDetails.findOne({ rollNumber: reply.repliedBy }).select("firstName lastName");
+                if (student) {
+                    reply.firstName = student.firstName;
+                    reply.lastName = student.lastName;
+                    reply.profilePhoto = await getProfilePhoto(reply.repliedBy, reply.userType, 50);
+                }
+            } else if (reply.userType === "Staff") {
+                const staff = await StaffDetails.findOne({ employeeId: reply.repliedBy }).select("firstName lastName");
+                if (staff) {
+                    reply.firstName = staff.firstName;
+                    reply.lastName = staff.lastName;
+                    reply.profilePhoto = await getProfilePhoto(reply.repliedBy, reply.userType, 50);
+                }
+            }
+        }
+
+        // Calculate total pages for replies
+        const totalReplies = await Reply.countDocuments({ commentId });
+        const totalPages = Math.ceil(totalReplies / limit);
+
+        res.status(200).json({
+            success: true,
+            data: replies,
+            pagination: { totalPages, currentPage: page },
+        });
 
     } catch (error) {
         console.error("Error fetching replies:", error.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
 
 export const editReply = async (req, res) => {
     try {
